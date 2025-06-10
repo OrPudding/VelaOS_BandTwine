@@ -12,12 +12,13 @@
     </div>
       <text class="line font-gray" style="text-align: center">参与开发的人员</text>
       <text class="line" style="text-align: center">@OrPudding</text>
+      //禁止删除此段版权声明
       <div class="lisence">
       <text class="small line">本游戏基于BandTwine</text>
       <text class="small line">文字游戏引擎开发</text>
-      <text class="small line">程序部分遵循GPL-3协议</text>
-      <text class="small line">GitHub仓库:</text>
-      <text class="small line">OrPudding/BandTwine</text>
+      <text class="small line">程序部分遵循GPLv3协议</text>
+      <text class="small line">Copyright © 2025 OrPudding</text>
+      <text class="small line">禁止删除此段声明</text>
     </div>
       <text class="line font-gray" style="text-align: center; margin-top: 24px">
         更多资源请访问
