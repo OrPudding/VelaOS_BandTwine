@@ -1,0 +1,130 @@
+<template>
+  <div class="page">
+    <image
+    src="/common/logo.png"
+    style="height: 140px; width: 140px; object-fit: contain"
+  ></image>
+    <div class="col" style="margin-top: 18px; padding: 0 8px 90px 8px; align-items: center">
+      <text class="line">BandTwine</text>
+      <div class="info" for={{basicInfo}}>
+      <text class="item-label">{{ $item.label }}</text>
+      <text class="line">{{ $item.value }}</text>
+    </div>
+      <text class="line font-gray" style="text-align: center">参与开发的人员</text>
+      <text class="line" style="text-align: center">@OrPudding</text>
+      <div class="lisence">
+      <text class="small line">本游戏基于BandTwine</text>
+      <text class="small line">文字游戏引擎开发</text>
+      <text class="small line">程序部分遵循GPL-3协议</text>
+      <text class="small line">GitHub仓库:</text>
+      <text class="small line">OrPudding/BandTwine</text>
+    </div>
+      <text class="line font-gray" style="text-align: center; margin-top: 24px">
+        更多资源请访问
+      </text>
+      <text class="line" style="text-align: center">bandbbs.cn</text>
+    </div>
+    <input class="btn" type="button" value="返回" @click="backToHome" />
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import app from "@system.app"
+
+export default {
+  private: {
+    basicInfo: [
+      {label: "包名", value: ""},
+      {label: "版本名称", value: ""},
+      {label: "版本号", value: ""}
+    ]
+  },
+
+  onInit() {
+    this.loadAppInfo()
+  },
+
+  loadAppInfo() {
+    try {
+      const info = app.getInfo()
+
+      // 更新基本信息
+      this.basicInfo = this.basicInfo.map((item) => {
+        if (item.label === "应用名称") return {...item, value: info.name}
+        if (item.label === "包名") return {...item, value: info.packageName}
+        if (item.label === "版本名称") return {...item, value: info.versionName}
+        if (item.label === "版本号") return {...item, value: info.versionCode.toString()}
+        return item
+      })
+
+      // 更新来源信息
+      this.sourceInfo = this.sourceInfo.map((item) => {
+        if (item.label === "来源应用") return {...item, value: info.source.packageName || "N/A"}
+        if (item.label === "来源类型")
+          return {...item, value: this.formatSourceType(info.source.type)}
+        return item
+      })
+    } catch (e) {
+      console.error("获取应用信息失败:", e)
+      prompt.showToast({message: "加载应用信息失败"})
+    }
+  },
+
+  backToHome() {
+    router.push({
+      uri: "pages/index",
+      params: {
+        ___PARAM_LAUNCH_FLAG___: "clearTask"
+      }
+    })
+  }
+}
+</script>
+
+<style>
+@import url(../../common/comm.css);
+
+/* 列表容器 - 宽度充满 */
+.info-list {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+.info .lisence{
+  margin-top: 24px;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
+}
+
+.item-label {
+  color: #aaaaaa;
+  font-size: 28px;
+  font-weight: 400;
+}
+.col {
+  width: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.line {
+  color: #ffffff;
+  font-size: 35px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.small{
+  font-size: 25px;
+}
+.font-gray{
+    color: #9E9E9E;
+}
+
+.app-icon {
+  width: 140px;
+  height: 140px;
+}
+</style>

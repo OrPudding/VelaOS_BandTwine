@@ -1,0 +1,114 @@
+<template>
+  <div class="page">
+    <div class="title">
+      <text class="title-text">{{title}}</text>
+      <text class="title-text">{{ hours }}:{{ minutes }}</text>
+    </div>
+    <image src="/common/title.png" style="width:300px"></image>
+    <text class="text">游戏介绍</text>
+    <div class="main-layout" style="flex-direction:column">
+      <!-- 游戏与存档区域 -->
+      <div class="content-row" style="flex-direction: column; flex-wrap:wrap">
+        <!-- 游戏操作 -->
+        <div class="game-column">
+          <!-- 游戏操作按钮（精确控制循环范围） -->
+          <div class="game-btn" for="{{gameList}}" onclick="handleGameSelect($item)" tid="game-btn">
+            <text class="btn-text">{{$item.name}}</text>
+          </div>
+        </div>
+      </div>
+    </div>
+    <input class="btn" value="关于" @click="routeToAbout" />
+  </div>
+</div></div></template>
+
+<script>
+import router from "@system.router"
+
+export default {
+  // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
+  private: {
+    title: "游戏名",
+    hours: '00',
+    minutes: '00',
+    timer: null ,
+    gameList: [
+      { id: 1, name: '开始游戏', uri: "pages/start" },
+      { id: 2, name: '继续游戏', uri: "pages/save" }
+    ]
+  },
+
+  onInit() {
+    this.updateTime();
+    this.timer = setInterval(() => this.updateTime(), 1000); // 每秒更新
+  },
+  
+  onDestroy() {
+    clearInterval(this.timer);
+  },
+  
+  updateTime() {
+    const now = new Date();
+    this.hours = now.getHours().toString().padStart(2, '0');
+    this.minutes = now.getMinutes().toString().padStart(2, '0');
+  },
+
+    handleGameSelect(item) {
+  
+  // 直接使用 item 中的 uri 跳转
+  if (item.uri) {
+    router.push({
+      uri: item.uri
+    })
+  } else {
+    prompt.showToast({ message: '页面未配置' })
+  }
+},
+
+  routeToAbout() {
+    router.push({
+      uri: "pages/about"
+    })
+  }
+}
+</script>
+
+<style>
+@import '../../common/comm.css';
+
+.text {
+  font-size: 30px;
+  color: #FFF;
+}
+
+/* 水平布局容器 */
+.content-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  margin: 24px 0;
+}
+
+/* 游戏列样式 */
+.game-column {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+/* 游戏按钮统一样式 */
+.game-btn {
+  height: 100px;
+  width: 100%;
+  margin-bottom: 16px;
+  border: 2px solid #4A90E2;
+  border-radius: 30%;
+  background-color: rgba(74, 144, 226, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+

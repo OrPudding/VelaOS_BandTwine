@@ -1,0 +1,36 @@
+<template>
+  <div class="page">
+    <input class="btn" type="button" value="开始" @click="quickStart" />
+    <input class="btn" type="button" value="返回" @click="backToHome" />
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import prompt from '@system.prompt' 
+import { title } from "@system.audio"
+export default {
+  backToHome() {
+    router.push({
+      uri: "pages/index",
+      params: {
+        ___PARAM_LAUNCH_FLAG___: "clearTask"
+      }
+    })
+  },
+
+  Start() {},
+  quickStart() {
+    router.push({
+      uri: "pages/game",
+      params: {
+        ___PARAM_LAUNCH_FLAG___: "clearTask"
+      }
+    })
+  }
+}
+</script>
+
+<style>
+@import "../../common/comm.css";
+</style>

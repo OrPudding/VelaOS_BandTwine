@@ -1,0 +1,871 @@
+<template>
+  <scroll class="page" id="scroll" scroll-y="true">
+    <!-- 顶部时间显示 -->
+    <div class="header">
+      <text class="title-text">{{ c.c1 || '08:00' }}</text>
+      <input class="btn" value="≡" onclick="toggleMenu" />
+    </div>
+
+    <!-- 菜单系统 -->
+    <div if="{{showMenu}}" class="menu-overlay" onclick="toggleMenu">
+      <div class="menu-content" onclick="stopPropagation">
+        <!-- 标签页导航 -->
+        <div class="tabs">
+          <div class="tab {{activeTab === 'status' ? 'active-tab' : ''}}" onclick="switchTab('status')">
+            <text>状态</text>
+          </div>
+          <div class="tab {{activeTab === 'save' ? 'active-tab' : ''}}" onclick="switchTab('save')">
+            <text>存档</text>
+          </div>
+          <div class="tab {{activeTab === 'settings' ? 'active-tab' : ''}}" onclick="switchTab('settings')">
+            <text>设置</text>
+          </div>
+        </div>
+
+        <!-- 状态标签页 -->
+        <div if="{{activeTab === 'status'}}" class="tab-content">
+          <div class="status-grid">
+            <!-- A类变量（数值/字符串）-->
+            <div class="category-section">
+              <text class="category-title">普通变量</text>
+              <div class="status-item" for="{{Object.keys(a)}}">
+                <text class="status-label">{{getVarDesc('a', $item)}}:</text>
+                <text class="status-value">{{getFormattedValue('a', $item)}}</text>
+              </div>
+            </div>
+
+            <!-- B类变量（布尔值）-->
+            <div class="category-section" if="{{Object.keys(b).length > 0}}">
+              <text class="category-title">布尔变量</text>
+              <div class="status-item" for="{{Object.keys(b)}}">
+                <text class="status-label">{{getVarDesc('b', $item)}}:</text>
+                <text class="status-value">{{b[$item]}}</text>
+              </div>
+            </div>
+
+            <!-- C类变量（特殊值）-->
+            <div class="category-section">
+              <text class="category-title">时间变量</text>
+              <div class="status-item" for="{{Object.keys(c)}}">
+                <text class="status-label">{{getVarDesc('c', $item)}}:</text>
+                <text class="status-value">{{c[$item]}}</text>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 存档标签页 -->
+
+        <div if="{{activeTab === 'save'}}" class="tab-content">
+          <div class="save-grid">
+            <div class="save-item" for="{{item in saveSlots}}">
+              <div class="save-header">
+                <text class="save-title">存档{{$idx + 1}}</text>
+                <text class="save-time">{{item.time || '暂无存档'}}</text>
+              </div>
+              <div class="save-buttons">
+                <text class="save-btn" onclick="saveToSlot($idx)">保存</text>
+                <text class="load-btn" onclick="loadFromSlot($idx)">加载</text>
+                <text class="delete-btn" onclick="deleteSaveSlot($idx)">删除</text>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 设置标签页 -->
+        <div if="{{activeTab === 'settings'}}" class="tab-content">
+          <div class="setting-item">
+            <text class="menu-font">调试模式</text>
+            <switch checked="{{debugMode}}" onchange="toggleDebugMode" style="color:#4a90e2;" />
+          </div>
+          <div class="menu-btn" onclick="backToHome">
+            <text class="menu-font">返回主菜单</text>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 内容区域 -->
+    <div class="scene">
+      <block for="{{segments}}">
+        <!-- 文本片段 -->
+        <text if="$item.type === 'text'" class="normal-text">{{$item.content}}</text>
+
+        <!-- 变量显示 -->
+        <text if="$item.type === 'var'" class="var-text">{{$item.content}}</text>
+
+        <!-- 可点击链接 -->
+        <text if="$item.type === 'link'" class="link-text"
+          onclick="selectOption($item.linkIndex)">{{$item.content}}</text>
+
+        <!-- 禁用链接 -->
+        <text if="$item.type === 'disabled'" class="disabled-text">{{$item.content}}</text>
+
+        <!-- 错误提示 -->
+        <text if="$item.type === 'error'" class="error-text">{{$item.content}}</text>
+      </block>
+    </div>
+  </scroll>
+</template>
+
+<script>
+import router from "@system.router"
+import storage from "@system.storage"
+import prompt from "@system.prompt"
+import gameData from '../../common/game-data.json'
+
+export default {
+  private: {
+    debugMode: true,
+    timer: null,
+    showMenu: false,
+    activeTab: 'status',
+    saveSlots: [{ time: "" }, { time: "" }, { time: "" }],
+    currentNodeId: "index1",
+    segments: [],
+    currentLinks: [],
+    STORAGE_KEY: "game_state",
+    
+    // 变量系统初始化
+    ...['a', 'b', 'c'].reduce((acc, category) => {
+      acc[category] = Object.entries(gameData.variables[category]).reduce((vars, [key, config]) => {
+        vars[key] = config.value;
+        return vars;
+      }, {});
+      return acc;
+    }, {})
+  },
+
+  // ================= 生命周期方法 =================
+  onInit() {
+    this.loadNode(this.currentNodeId);
+    this.loadSaveSlots();
+  },
+  
+  onDestroy() {
+    clearInterval(this.timer);
+  },
+
+  // ================= 核心引擎方法 =================
+  loadNode(nodeId) {
+    try {
+      const node = gameData.nodes.find(n => n.id === nodeId);
+      if (!node) throw new Error(`节点 ${nodeId} 未找到`);
+      
+      this.executeActions(node.actions || []);
+      this.currentNodeId = nodeId;
+      this.currentLinks = node.links || [];
+      this.parseTextWithLinks(node.text);
+      this.saveGameState();
+      
+      setTimeout(() => {
+        this.$element('scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+      
+      if (this.debugMode) {
+        console.info(`加载节点: ${nodeId}，链接数: ${this.currentLinks?.length || 0}`);
+      }
+    } catch (e) {
+      console.error("节点加载错误:", e);
+      this.segments = [{ type: "text", content: `加载错误: ${e.message}` }];
+    }
+  },
+  
+  parseTextWithLinks(text) {
+    this.segments = [];
+    let lastPosition = 0;
+    
+    // 修改正则表达式以支持非单词字符（如运算符）
+    const regex = /\{([^{}]+)\}/g;
+    let match;
+    
+    while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastPosition) {
+            this.segments.push({ type: "text", content: text.substring(lastPosition, match.index) });
+        }
+        
+        const content = match[1];
+        
+        // 1. 链接处理
+        if (/^\d+$/.test(content)) {
+            this.handleLinkContent(parseInt(content));
+        }
+        // 2. 计算表达式处理（合并两个calc分支）
+        else if (content.startsWith('calc:')) {
+            const expression = content.substring(5);
+            try {
+                // 解析表达式
+                const result = this.calculateExpression(expression);
+                this.segments.push({
+                    type: "text",
+                    content: result.toString()
+                });
+            } catch(e) {
+                console.error(`计算表达式出错: ${expression}`, e);
+                this.segments.push({
+                    type: "error",
+                    content: "[计算错误]"
+                });
+            }
+        }
+        // 3. 随机选择处理
+        else if (content.startsWith('random:')) {
+            const options = content.substring(7).split('|');
+            const selected = options[Math.floor(Math.random() * options.length)];
+            this.segments.push({ type: "text", content: selected });
+        }
+        // 4. 变量处理
+        else if (/^[a-z]\d+$/i.test(content)) {
+            this.handleVariableContent(content);
+        }
+        // 5. 未知类型处理
+        else {
+            this.segments.push({ type: "text", content: `{${content}}` });
+        }
+        
+        lastPosition = match.index + match[0].length;
+    }
+    
+    if (lastPosition < text.length) {
+        this.segments.push({ type: "text", content: text.substring(lastPosition) });
+    }
+},
+
+// 新增的安全表达式计算方法
+calculateExpression(expr) {
+    // 安全替换函数 - 为每个 "random" 生成新值
+    let expression = expr;
+    
+    // 替换所有 random 为随机数
+    while (expression.includes('random')) {
+        expression = expression.replace('random', Math.random());
+    }
+    
+    // 替换所有变量
+    expression = expression.replace(/([ab])(\d+)/g, (match, category, key) => {
+        return this.getValue(category, match) || 0;
+    });
+    
+    // 替换数学函数
+    expression = expression
+        .replace(/floor\(/g, 'Math.floor(')
+        .replace(/ceil\(/g, 'Math.ceil(')
+        .replace(/round\(/g, 'Math.round(')
+        .replace(/abs\(/g, 'Math.abs(');
+    
+    // 使用 Function 构造函数安全计算
+    try {
+        return new Function(`return ${expression}`)();
+    } catch(e) {
+        console.error(`计算表达式失败: ${expression}`, e);
+        return 0;
+    }
+},
+
+// 处理变量内容
+handleVariableContent(varName) {
+    const category = varName.charAt(0);
+    const value = this.getValue(category, varName);
+    
+    if (category === 'c') {
+        // 特殊处理时间变量
+        this.segments.push({ type: "text", content: this.formatTime(value) });
+    } else if (category === 'b') {
+        // 布尔值转换为文字
+        this.segments.push({ type: "text", content: value ? "是" : "否" });
+    } else {
+        // 数值直接显示
+        this.segments.push({ type: "text", content: value.toString() });
+    }
+},
+
+// 时间格式化方法
+formatTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+},
+  
+  handleLinkContent(linkIndex) {
+    if (linkIndex >= 0 && linkIndex < this.currentLinks.length) {
+      const link = this.currentLinks[linkIndex];
+      
+      if (this.checkCondition(link.condition)) {
+        this.segments.push({ type: "link", content: link.text, linkIndex });
+      } else {
+        this.segments.push({ type: "disabled", content: link.text });
+      }
+    } else {
+      this.segments.push({ type: "error", content: `[无效链接${linkIndex}]` });
+    }
+  },
+  
+  handleVariableContent(varName) {
+    const category = varName[0].toLowerCase();
+    const value = this.getValue(category, varName);
+    this.segments.push({ type: "var", content: value?.toString() || "N/A" });
+  },
+  
+  executeActions(actions = []) {
+    actions.forEach(action => {
+      try {
+        switch (action.type) {
+          case "set":
+            this.setValue(action.target[0], action.target, action.value);
+            break;
+          case "add":
+            const current = this.getValue(action.target[0], action.target) || 0;
+            this.setValue(action.target[0], action.target, current + action.value);
+            break;
+          case "toggle":
+            const currentBool = this.getValue(action.target[0], action.target) || false;
+            this.setValue(action.target[0], action.target, !currentBool);
+            break;
+          case "advance":
+            this.advanceTime(action.value, action.unit || 'hours');
+            break;
+          case "setTime":
+            this.setValue('c', 'c1', action.value);
+            break;
+          case "randomSelect":
+            this.executeRandomSelect(action);
+            break;
+          case "randomRange":
+            this.executeRandomRange(action);
+            break;
+          case "if":
+            this.executeConditionalAction(action);
+            break;
+        }
+      } catch (e) {
+        console.error(`操作执行失败: ${JSON.stringify(action)}`, e);
+      }
+    });
+  },
+  
+  executeRandomSelect(action) {
+    const totalWeight = action.options.reduce((sum, opt) => sum + (opt.weight || 1), 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const option of action.options) {
+      random -= option.weight || 1;
+      if (random <= 0) {
+        option.actions && this.executeActions(option.actions);
+        break;
+      }
+    }
+  },
+  
+  executeRandomRange(action) {
+    const min = action.min;
+    const max = action.max;
+    const randomValue = Math.floor(Math.random() * (max - min + 1)) + min;
+    this.setValue(action.target[0], action.target, randomValue);
+  },
+  
+  executeConditionalAction(action) {
+    const conditionMet = this.checkCondition(action.condition);
+    const actionsToExecute = conditionMet ? action.true : action.false;
+    actionsToExecute && this.executeActions(actionsToExecute);
+  },
+  
+  advanceTime(amount, unit = 'hours') {
+    if (!this.c.c1) return;
+    
+    let [hours, minutes] = this.c.c1.split(':').map(Number);
+    
+    if (unit === 'minutes') minutes += amount;
+    else hours += amount;
+    
+    // 处理进位
+    if (minutes >= 60) {
+      hours += Math.floor(minutes / 60);
+      minutes %= 60;
+    }
+    
+    // 处理天数变化
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      hours %= 24;
+      this.setValue('a', 'a0', (this.a.a0 || 1) + days);
+    }
+    
+    this.setValue('c', 'c1', 
+      `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+    );
+  },
+  
+  checkCondition(condition) {
+  if (!condition) return true;
+
+  // 处理逻辑与 (&&) 运算符
+  if (condition.includes("&&")) {
+    const conditions = condition.split("&&");
+    return conditions.every(cond => this.checkCondition(cond.trim()));
+  }
+
+  // 处理布尔值变量 (b类型)
+  if (/^b\d+$/.test(condition)) {
+    const value = this.getValue('b', condition);
+    return value === true || value === 'true';
+  }
+
+  // 处理否定布尔值
+  if (condition.startsWith('!')) {
+    const boolKey = condition.substring(1);
+    if (/^b\d+$/.test(boolKey)) {
+      const value = this.getValue('b', boolKey);
+      return value !== true && value !== 'true';
+    }
+  }
+
+  // 处理比较表达式
+  const match = condition.match(/([ab])(\d+)\s*(<=|>=|==|!=|<|>)\s*(-?\d*\.?\d+|\w+)/);
+  if (!match) return false;
+  
+  const [, category, key, operator, value] = match;
+  const fullKey = `${category}${key}`;
+  
+  // 获取当前值并根据类型处理
+  if (category === 'b') {
+    // 布尔类型处理
+    const currentValue = this.getValue('b', fullKey);
+    const currentBool = typeof currentValue === 'string' 
+      ? currentValue.toLowerCase() === 'true'
+      : Boolean(currentValue);
+    
+    const targetBool = value.toLowerCase() === 'true';
+    
+    // 布尔比较 (只支持 == 和 !=)
+    switch (operator) {
+      case '==': return currentBool === targetBool;
+      case '!=': return currentBool !== targetBool;
+      default:
+        console.error(`Invalid operator for boolean: ${operator} in ${condition}`);
+        return false;
+    }
+  } else {
+    // 数值类型处理
+    const currentValue = parseFloat(this.getValue('a', fullKey) || 0);
+    const numValue = parseFloat(value);
+    
+    if (isNaN(numValue)) {
+      console.error(`Invalid number in condition: ${value} in ${condition}`);
+      return false;
+    }
+    
+    // 数值比较
+    switch (operator) {
+      case '<':  return currentValue < numValue;
+      case '>':  return currentValue > numValue;
+      case '<=': return currentValue <= numValue;
+      case '>=': return currentValue >= numValue;
+      case '==': return currentValue === numValue;
+      case '!=': return currentValue !== numValue;
+      default:
+        console.error(`Unsupported operator: ${operator} in ${condition}`);
+        return false;
+    }
+  }
+},
+  
+  // ================= 变量操作方法 =================
+  setValue(category, key, value) {
+    if (typeof value === 'string' && value.includes('floor(')) {
+      value = this.calculateFormula(value);
+    }
+    
+    if (!this[category]) this[category] = {};
+    this[category][key] = value;
+  },
+  
+  getValue(category, key) {
+    return this[category]?.[key];
+  },
+  
+  calculateFormula(formula) {
+    const varRegex = /([abc]\d+)/g;
+    const replaced = formula.replace(varRegex, (match) => {
+      const cat = match[0];
+      return this.getValue(cat, match) || 0;
+    });
+    
+    try {
+      return new Function('"use strict"; return (' + replaced + ')').call({
+        floor: Math.floor
+      });
+    } catch (e) {
+      console.error(`公式计算错误: ${formula}`, e);
+      return 0;
+    }
+  },
+  
+  // ================= 存储系统方法 =================
+  saveGameState() {
+    const state = {
+      a: {...this.a},
+      b: {...this.b},
+      c: {...this.c},
+      currentNodeId: this.currentNodeId
+    };
+    
+    storage.set({
+      key: this.STORAGE_KEY,
+      value: JSON.stringify(state),
+      success: () => this.debugMode && console.info('状态已保存'),
+      fail: (data, code) => console.error(`保存失败: code=${code}`)
+    });
+  },
+  
+  loadSaveSlots() {
+    [0, 1, 2].forEach(slotIndex => {
+      storage.get({
+        key: `save_slot_${slotIndex}`,
+        success: (data) => {
+          if (data) {
+            try {
+              const saveData = JSON.parse(data);
+              this.saveSlots[slotIndex].time = saveData.time;
+            } catch(e) {
+              this.saveSlots[slotIndex].time = "损坏存档";
+            }
+          }
+        }
+      });
+    });
+  },
+  
+  saveToSlot(slotIndex) {
+    const saveData = {
+      time: this.getFullDateTime(),
+      state: {
+        a: {...this.a},
+        c: {...this.c},
+        currentNodeId: this.currentNodeId
+      }
+    };
+    
+    storage.set({
+      key: `save_slot_${slotIndex}`,
+      value: JSON.stringify(saveData),
+      success: () => {
+        this.saveSlots[slotIndex] = {...saveData};
+        prompt.showToast({ message: `存档${slotIndex+1}成功` });
+      }
+    });
+  },
+  
+  loadFromSlot(slotIndex) {
+    storage.get({
+      key: `save_slot_${slotIndex}`,
+      success: (data) => {
+        if (data) {
+          try {
+            const saveData = JSON.parse(data);
+            const validNodeId = gameData.nodes.some(n => n.id === saveData.state.currentNodeId) 
+                              ? saveData.state.currentNodeId 
+                              : this.currentNodeId;
+            
+            this.currentNodeId = validNodeId;
+            this.loadNode(validNodeId);
+            prompt.showToast({ message: `加载存档${slotIndex+1}成功` });
+          } catch(e) {
+            prompt.showToast({ message: "存档损坏" });
+          }
+        } else {
+          prompt.showToast({ message: "无存档数据" }); 
+        }
+        this.showMenu = false;
+      },
+      fail: () => {
+        prompt.showToast({ message: "加载失败" });
+        this.showMenu = false;
+      }
+    });
+  },
+  
+  deleteSaveSlot(slotIndex) {
+    storage.delete({
+      key: `save_slot_${slotIndex}`,
+      success: () => {
+        this.saveSlots[slotIndex].time = "";
+        prompt.showToast({ message: `删除存档${slotIndex+1}成功` });
+      },
+      fail: (data, code) => console.error(`删除失败 code=${code}`)
+    });
+  },
+  
+  // ================= UI交互方法 =================
+  selectOption(linkIndex) {
+    if (linkIndex >= 0 && linkIndex < this.currentLinks.length) {
+      const link = this.currentLinks[linkIndex];
+      this.executeActions(link.actions || []);
+      setTimeout(() => this.loadNode(link.target), 150);
+    }
+  },
+  
+  toggleMenu() {
+    this.showMenu = !this.showMenu;
+    this.showMenu && (this.activeTab = 'status');
+  },
+  
+  switchTab(tabName) {
+    this.activeTab = tabName;
+  },
+  
+  stopPropagation(e) {
+    e.stopPropagation();
+  },
+  
+  backToHome() {
+    router.replace({ uri: "pages/index" });
+  },
+  
+  toggleDebugMode(e) {
+    this.debugMode = e.checked;
+    prompt.showToast({ message: `调试模式 ${e.checked ? '开启' : '关闭'}` });
+  },
+  
+  // ================= 工具方法 =================
+  getFullDateTime() {
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+  },
+  
+  getVarDesc(category, key) {
+    return gameData.variables[category]?.[key]?.desc || key;
+  },
+  
+  getFormattedValue(category, key) {
+    const value = this[category]?.[key];
+    switch(key) {
+      case 'a1': return `£${value}`;
+      case 'a3': return `${value}°C`;
+      default: return value;
+    }
+  },
+  
+  getCurrentHour() {
+    return this.c.c1 ? parseInt(this.c.c1.split(':')[0]) : 0;
+  },
+  
+  isDaytime() {
+    const hour = this.getCurrentHour();
+    return hour >= 6 && hour < 18;
+  }
+}
+</script>
+
+<style>
+@import url(../../common/comm.css);
+
+.header {
+  width: 100%;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* 菜单容器 - 小尺寸 */
+.menu-overlay {
+  width: 100%;
+  height: auto;
+  justify-content: center;
+  align-items: center;
+  color: #fff
+}
+
+.menu-content {
+  width: 100%;
+  background-color: #1a1a1a;
+  flex-direction: column;
+}
+
+.menu-font {
+  font-size: 30px;
+}
+
+/* 标签页样式 */
+.tabs {
+  flex-direction: row;
+  justify-content: space-around;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #333;
+}
+
+.tab {
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background-color: #222222;
+  font-size: 25px;
+  color: #4a90e2;
+}
+
+.active-tab {
+  background-color: #2a2a2a;
+}
+
+.tab-content {
+  flex-direction: column;
+}
+
+/* 状态网格 */
+.status-grid {
+  flex-direction: column;
+}
+
+/* 调整状态项布局 */
+.status-item {
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.status-label {
+  font-size: 28px;
+  color: #cccccc;
+}
+
+.status-value {
+  font-size: 28px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.category-section {
+  flex-direction: column;
+}
+
+.category-title {
+  font-size: 32px;
+  color: #4a90e2;
+  margin: 15px 0 10px 0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+/* 存档网格 */
+.save-grid {
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+
+.save-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #333;
+}
+
+/* 按钮样式 */
+.menu-btn {
+  height: 40px;
+  background-color: #e74c3c;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+}
+
+/* 设置项 */
+.setting-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #333;
+}
+
+
+.save-title {
+  color: #ffffff;
+  font-size: 30px;
+}
+
+.save-time {
+  color: #999999;
+  font-size: 25px;
+}
+
+/* 新增按钮样式 */
+.save-buttons {
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.save-btn {
+  color: #4a90e2;
+  padding: 5px 10px;
+  border: 1px solid #4a90e2;
+}
+
+.load-btn {
+  color: #2ecc71;
+  padding: 5px 10px;
+  border: 1px solid #2ecc71;
+}
+
+.delete-btn {
+  color: #e74c3c;
+  padding: 5px 10px;
+  border: 1px solid #e74c3c;
+}
+
+/* 原保存/加载网格调整 */
+.save-grid {
+  flex-direction: column;
+  gap: 15px;
+}
+
+.save-item {
+  flex-direction: column;
+  padding: 10px;
+  border-bottom: 1px solid #333;
+}
+
+.btn {
+  height: 60px;
+  width: 120px;
+  font-size: 50px;
+  background-color: transparent;
+  border: none;
+}
+
+.scene {
+  width: 100%;
+  padding: 10px 15px;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  flex-direction: column;
+}
+
+/* 文本样式 */
+.normal-text {
+  font-size: 35px;
+  color: #ffffff;
+}
+
+.var-text {
+  font-size: 35px;
+  color: #ffcc00;
+  font-weight: bold;
+}
+
+.link-text {
+  font-size: 35px;
+  color: #4a90e2;
+  text-decoration: underline;
+}
+
+.disabled-text {
+  font-size: 35px;
+  color: #777777;
+  text-decoration: line-through;
+}
+
+.error-text {
+  font-size: 35px;
+  color: #ff4d4f;
+}

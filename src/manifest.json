@@ -1,0 +1,49 @@
+{
+  "package": "moe.orpu.bandtwine",
+  "name": "BandTwine",
+  "versionName": "developing",
+  "versionCode": 1,
+  "minPlatformVersion": 1000,
+  "icon": "/common/logo.png",
+  "deviceTypeList": [
+    "watch"
+  ],
+  "features": [
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.prompt"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.file"
+    }
+  ],
+  "config": {
+    "logLevel": "log",
+    "designWidth": 480
+  },
+  "router": {
+    "entry": "pages/index",
+    "pages": {
+      "pages/index": {
+        "component": "index"
+      },
+      "pages/about": {
+        "component": "about"
+      },
+      "pages/start": {
+        "component": "start"
+      },
+      "pages/save": {
+        "component": "save"
+      },
+      "pages/game": {
+        "component": "game"
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+<template>
+  <div class="page">
+    <!-- 存档区域 -->
+    <div class="save-column">
+      <div class="save-btn" for="{{saveList}}" onclick="handleSaveSelect($idx)" tid="save-btn">
+        <text class="btn-text">{{ $item.name }}</text>
+      </div>
+    </div>
+    <input class="btn" value="返回" @click="backToHome" />
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+export default {
+  private: {
+    title: "DoL of Vela",
+    time: "00:00",
+    timer: null,
+    saveList: [
+      {id: 1, name: "存档 01"},
+      {id: 2, name: "存档 02"},
+      {id: 3, name: "存档 03"},
+      {id: 4, name: "存档 04"}
+    ]
+  },
+  backToHome() {
+    router.push({
+      uri: "pages/index",
+      params: {
+        ___PARAM_LAUNCH_FLAG___: "clearTask"
+      }
+    })
+  }
+}
+</script>
+
+<style>
+@import "../../common/comm.css";
+
+/* 存档列样式 */
+.save-column {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  flex-direction: row;
+  align-content: flex-start;
+}
+
+/* 存档按钮统一样式 */
+.save-btn {
+  height: 100px;
+  width: 50%;
+  margin-bottom: 12px;
+  border: 2px solid #666666;
+  border-radius: 30%;
+  background-color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

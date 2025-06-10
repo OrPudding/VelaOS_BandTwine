@@ -1,0 +1,55 @@
+{
+  "name": "BandTwine",
+  "version": "1.0.0",
+  "description": "",
+  "engines": {
+    "node": ">=8.10"
+  },
+  "scripts": {
+    "start": "aiot server --watch --open-nuttx",
+    "build": "aiot build",
+    "release": "aiot release",
+    "watch": "aiot watch --open-nuttx",
+    "lint": "eslint --format codeframe --fix --ext .ux,.js src/"
+  },
+  "lint-staged": {
+    "*.{ux,js}": [
+      "prettier --write",
+      "eslint --format codeframe --fix",
+      "git add"
+    ],
+    "*.{less,css}": [
+      "prettier --write",
+      "stylelint --fix --custom-syntax postcss-less",
+      "git add"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.3.0",
+    "@commitlint/config-conventional": "^17.3.0",
+    "aiot-toolkit": "2.0.3",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^6.0.0",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-import-resolver-node": "^0.3.7",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-ux": "^0.0.4",
+    "husky": "^8.0.1",
+    "less": "^3.12.2",
+    "less-loader": "^6.2.0",
+    "lint-staged": "^8.2.1",
+    "postcss-html": "^1.3.0",
+    "postcss-less": "^6.0.0",
+    "prettier": "^2.7.1",
+    "stylelint": "^14.5.3",
+    "stylelint-config-recess-order": "^3.0.0",
+    "stylelint-config-standard": "^25.0.0",
+    "stylelint-order": "^5.0.0",
+    "ux-types": "^0.1.1"
+  },
+  "dependencies": {
+    "@aiot-toolkit/jsc": "^1.0.7",
+    "@babel/preset-react": "^7.27.1"
+  }
+}

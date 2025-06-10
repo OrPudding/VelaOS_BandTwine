@@ -1,0 +1,42 @@
+.page {
+    flex-direction: column;
+    padding: 24px;
+    background-color: #000000;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.title {
+    width: 90%;
+    margin-top: 10px;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.title-text {
+    font-size: 35px;
+    color: #fff;
+}
+
+.btn {
+    height: 80px;
+    width: auto;
+    margin-bottom: 12px;
+    border: 2px solid #666666;
+    border-radius: 30%;
+    background-color: #1a1a1a;
+    color: #FFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-text {
+    color: #FFF;
+    font-size: 40px;
+    padding: 0 8px;
+    width: 100%;
+    text-align: center;
+    /* 双保险居中 */
+    white-space: nowrap;
+}
