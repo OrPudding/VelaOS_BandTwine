@@ -1,473 +1,216 @@
 {
-  "projectName": "孤儿求生记",
-  "nodes": [
-    {
-      "id": "index1",
-      "text": "欢迎来到《孤儿求生记》！你欠下了每周£200的债务，必须在周日午夜前还清。今天是周一，时间{c1}。\n\n{0}",
-      "actions": [
-        {"type": "setTime", "value": "08:00"},
-        {"type": "set", "target": "a2", "value": 200}
-      ],
-      "links": [
-        {"target": "bedroom", "text": "开始求生"}
-      ]
-    },
-    {
-      "id": "bedroom",
-      "text": "你站在孤儿院狭小的卧室里。褪色的墙纸剥落，单薄的床垫是唯一的家具。窗外传来城市的喧嚣声。\n\n{0}{1}{2}{3}{4}{5}{6}",
-      "links": [
-        {"target": "wardrobe", "text": "查看衣柜"},
-        {"target": "bathroom", "text": "前往浴室"},
-        {"target": "sleep", "text": "上床睡觉", "condition": "a5<60"},
-        {"target": "kitchen", "text": "去厨房", "condition": "a7<80"},
-        {"target": "street", "text": "离开孤儿院"},
-        {"target": "hospital", "text": "前往医院", "condition": "b4"},
-        {"target": "index1", "text": "查看目标"}
-      ]
-    },
-    {
-      "id": "wardrobe",
-      "text": "破旧的木质衣柜吱呀作响。里面只有两套衣服：洗得发白的校服和沾着油渍的工作服。\n\n{0}{1}{2}",
-      "links": [
-        {
-          "target": "bedroom",
-          "text": "换上校服",
-          "actions": [
-            {"type": "set", "target": "b0", "value": true},
-            {"type": "set", "target": "b1", "value": false}
-          ]
-        },
-        {
-          "target": "bedroom",
-          "text": "换上工作服",
-          "actions": [
-            {"type": "set", "target": "b0", "value": false},
-            {"type": "set", "target": "b1", "value": true}
-          ]
-        },
-        {"target": "bedroom", "text": "返回卧室"}
-      ]
-    },
-    {
-      "id": "bathroom",
-      "text": "发霉的瓷砖和生锈的水龙头。冷水从水管滴落，镜子上布满水渍。\n\n{0}{1}{2}",
-      "links": [
-        {
-          "target": "bedroom",
-          "text": "洗澡（花费£1，清洁+40）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": -1},
-            {"type": "add", "target": "a6", "value": 40},
-            {"type": "set", "target": "b2", "value": true},
-            {"type": "advance", "value": 30, "unit": "minutes"}
-          ],
-          "condition": "a1>=1"
-        },
-        {
-          "target": "bedroom",
-          "text": "简单擦洗（清洁+20）",
-          "actions": [
-            {"type": "add", "target": "a6", "value": 20},
-            {"type": "advance", "value": 10, "unit": "minutes"}
-          ]
-        },
-        {"target": "bedroom", "text": "返回卧室"}
-      ]
-    },
-    {
-      "id": "sleep",
-      "text": "你蜷缩在薄毯下睡了8小时。体力恢复50，但饥饿感更强烈了。{0}",
-      "actions": [
-        {"type": "advance", "value": 8, "unit": "hours"},
-        {"type": "add", "target": "a5", "value": 50},
-        {"type": "add", "target": "a7", "value": -30},
-        {
-          "type": "if",
-          "condition": "a10==0",
-          "true": [{"type": "add", "target": "a9", "value": 10}],
-          "false": [{"type": "add", "target": "a9", "value": 5}]
-        },
-        {
-          "type": "if",
-          "condition": "a0==7",
-          "true": [
-            {"type": "set", "target": "a0", "value": 1},
-            {"type": "set", "target": "a2", "value": 200}
-          ],
-          "false": [{"type": "add", "target": "a0", "value": 1}]
-        }
-      ],
-      "links": [
-        {"target": "bedroom", "text": "醒来"}
-      ]
-    },
-    {
-      "id": "kitchen",
-      "text": "冰冷的厨房弥漫着剩菜的气味。架子上只有少量食材。\n\n{0}{1}{2}{3}",
-      "links": [
-        {
-          "target": "bedroom",
-          "text": "吃面包（£2，饥饿+30）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": -2},
-            {"type": "add", "target": "a7", "value": 30},
-            {"type": "advance", "value": 10, "unit": "minutes"}
-          ],
-          "condition": "a1>=2"
-        },
-        {
-          "target": "bedroom",
-          "text": "吃正餐（£5，饥饿+60）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": -5},
-            {"type": "add", "target": "a7", "value": 60},
-            {"type": "advance", "value": 30, "unit": "minutes"}
-          ],
-          "condition": "a1>=5"
-        },
-        {
-          "target": "bedroom",
-          "text": "喝凉水充饥（饥饿+10）",
-          "actions": [
-            {"type": "add", "target": "a7", "value": 10},
-            {"type": "advance", "value": 5, "unit": "minutes"}
-          ]
-        },
-        {"target": "bedroom", "text": "返回卧室"}
-      ]
-    },
-    {
-      "id": "street",
-      "text": "阴冷的街道上行人匆匆。霓虹灯在雾气中闪烁，远处传来警笛声。\n{0}\n\n选择目的地：\n{1}{2}{3}{4}{5}{6}",
-      "actions": [
-        {
-          "type": "randomSelect",
-          "options": [
-            {"weight": 0.85, "actions": []},
-            {"weight": 0.07, "actions": [
-              {"type": "add", "target": "a1", "value": "10 + floor(random*20)"},
-              {"type": "set", "target": "text", "value": "你在路边发现一个钱包！获得£{calc:10+floor(random*20)}！\n\n选择目的地：\n{1}{2}{3}{4}{5}{6}{7}"}
-            ]},
-            {"weight": 0.05, "actions": [
-              {"type": "add", "target": "a1", "value": "-10 - floor(random*10)"},
-              {"type": "add", "target": "a9", "value": "-5 - floor(random*5)"},
-              {"type": "set", "target": "text", "value": "暗巷中冲出劫匪！损失£{calc:10+floor(random*10)}，健康-{calc:5+floor(random*5)}\n\n选择目的地：\n{1}{2}{3}{4}{5}{6}{7}"}
-            ]},
-            {"weight": 0.03, "actions": [
-              {"type": "add", "target": "a9", "value": "-15"},
-              {"type": "set", "target": "text", "value": "刺骨的寒风让你瑟瑟发抖。健康-15\n\n选择目的地：\n{1}{2}{3}{4}{5}{6}{7}"}
-            ]}
-          ]
-        }
-      ],
-      "links": [
-        {"target": "school", "text": "前往学校", "condition": "b0"},
-        {"target": "work", "text": "寻找工作", "condition": "b1"},
-        {"target": "park", "text": "城市公园"},
-        {"target": "hospital", "text": "市立医院"},
-        {"target": "commercial", "text": "商业区"},
-        {"target": "blackmarket", "text": "后巷黑市", "condition": "b5"},
-        {"target": "bedroom", "text": "返回孤儿院"}
-      ]
-    },
-    {
-      "id": "school",
-      "text": "学校走廊空旷寂静。公告栏贴着奖学金通知，教室里传来讲课声。\n\n选择课程（消耗1小时）：\n{0}{1}{2}{3}{4}",
-      "links": [
-        {"target": "chinese_class", "text": "语文课（+5语文）"},
-        {"target": "math_class", "text": "数学课（+5数学）"},
-        {"target": "science_class", "text": "科学课（+5科学）"},
-        {"target": "labor_class", "text": "劳动课（+5劳动）"},
-        {"target": "street", "text": "离开学校"}
-      ]
-    },
-    {
-      "id": "chinese_class",
-      "text": "你上了1小时语文课。古文诗词在脑海中回响。语文技能+5\n\n{0}",
-      "actions": [
-        {"type": "add", "target": "a11", "value": 5},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -30},
-        {"type": "add", "target": "a7", "value": -25}
-      ],
-      "links": [
-        {"target": "school", "text": "返回走廊"}
-      ]
-    },
-    {
-      "id": "math_class",
-      "text": "复杂的公式占满黑板。1小时数学课让你头脑发胀。数学技能+5\n\n{0}",
-      "actions": [
-        {"type": "add", "target": "a12", "value": 5},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -30},
-        {"type": "add", "target": "a7", "value": -25}
-      ],
-      "links": [
-        {"target": "school", "text": "返回走廊"}
-      ]
-    },
-    {
-      "id": "science_class",
-      "text": "实验室的试管冒着气泡。1小时科学课拓展了你的视野。科学技能+5\n\n{0}",
-      "actions": [
-        {"type": "add", "target": "a13", "value": 5},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -30},
-        {"type": "add", "target": "a7", "value": -25}
-      ],
-      "links": [
-        {"target": "school", "text": "返回走廊"}
-      ]
-    },
-    {
-      "id": "labor_class",
-      "text": "你在 workshop 操作工具1小时。双手磨出水泡，劳动技能+5\n\n{0}",
-      "actions": [
-        {"type": "add", "target": "a14", "value": 5},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -30},
-        {"type": "add", "target": "a7", "value": -25}
-      ],
-      "links": [
-        {"target": "school", "text": "返回走廊"}
-      ]
-    },
-    {
-      "id": "work",
-      "text": "招工布告栏贴满泛黄的纸张。空气中有机油和汗水的气味。\n\n选择工作：\n{0}{1}{2}{3}{4}",
-      "links": [
-        {"target": "library_work", "text": "图书馆助理（需语文）"},
-        {"target": "construction_work", "text": "建筑工地（需劳动）"},
-        {"target": "lab_work", "text": "实验室助手（需科学）"},
-        {"target": "tutoring_work", "text": "家教（需数学）"},
-        {"target": "street", "text": "返回街道"}
-      ]
-    },
-    {
-      "id": "library_work",
-      "text": "你在安静的图书馆整理书籍1小时。基础£10 + 语文加成£{calc:floor(a11/10)}\n\n{0}{1}",
-      "actions": [
-        {"type": "add", "target": "a1", "value": "10 + floor(a11/10)"},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -25},
-        {"type": "add", "target": "a7", "value": -20},
-        {"type": "add", "target": "a9", "value": -5}
-      ],
-      "links": [
-        {"target": "work", "text": "继续工作", "condition": "a5>30"},
-        {"target": "street", "text": "离开"}
-      ]
-    },
-    {
-      "id": "construction_work",
-      "text": "烈日下搬运建材1小时。基础£15 + 劳动加成£{calc:floor(a14/8)}\n注意：健康损耗较大！\n\n{0}{1}",
-      "actions": [
-        {"type": "add", "target": "a1", "value": "15 + floor(a14/8)"},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -35},
-        {"type": "add", "target": "a7", "value": -30},
-        {"type": "add", "target": "a9", "value": -10}
-      ],
-      "links": [
-        {"target": "work", "text": "继续工作", "condition": "a5>40"},
-        {"target": "street", "text": "离开"}
-      ]
-    },
-    {
-      "id": "lab_work",
-      "text": "实验室的精密仪器嗡嗡作响。工作1小时：基础£20 + 科学加成£{calc:floor(a13*0.15)}\n\n{0}{1}",
-      "actions": [
-        {"type": "add", "target": "a1", "value": "20 + floor(a13*0.15)"},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -30},
-        {"type": "add", "target": "a7", "value": -25},
-        {"type": "add", "target": "a9", "value": -7}
-      ],
-      "links": [
-        {"target": "work", "text": "继续工作", "condition": "a5>35"},
-        {"target": "street", "text": "离开"}
-      ]
-    },
-    {
-      "id": "tutoring_work",
-      "text": "你耐心辅导学生1小时。基础£18 + 数学加成£{calc:floor(a12*0.2)}\n\n{0}{1}",
-      "actions": [
-        {"type": "add", "target": "a1", "value": "18 + floor(a12*0.2)"},
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a5", "value": -20},
-        {"type": "add", "target": "a7", "value": -15},
-        {"type": "add", "target": "a9", "value": -3}
-      ],
-      "links": [
-        {"target": "work", "text": "继续工作", "condition": "a5>25"},
-        {"target": "street", "text": "离开"}
-      ]
-    },
-    {
-      "id": "park",
-      "text": "枯黄的草坪上散落着长椅。喷泉干涸，几个老人坐在阳光下。\n\n{0}{1}",
-      "actions": [
-        {"type": "advance", "value": 1},
-        {"type": "add", "target": "a8", "value": -15},
-        {"type": "add", "target": "a5", "value": -5}
-      ],
-      "links": [
-        {"target": "street", "text": "返回街道"},
-        {"target": "unlock_blackmarket", "text": "探索后巷", "condition": "!b5"}
-      ]
-    },
-    {
-      "id": "hospital",
-      "text": "消毒水气味刺鼻。荧光灯照在光洁的地板上，护士推着轮床匆匆而过。\n\n{0}{1}{2}",
-      "links": [
-        {
-          "target": "street",
-          "text": "接受治疗（£30）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": -30},
-            {"type": "set", "target": "a9", "value": 80},
-            {"type": "set", "target": "a10", "value": 0}
-          ],
-          "condition": "a1>=30"
-        },
-        {
-          "target": "street",
-          "text": "简单包扎（£10，健康+30）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": -10},
-            {"type": "add", "target": "a9", "value": 30},
-            {"type": "set", "target": "a10", "value": 0}
-          ],
-          "condition": "a1>=10"
-        },
-        {"target": "street", "text": "离开医院"}
-      ]
-    },
-    {
-      "id": "commercial",
-      "text": "霓虹招牌闪烁，商店橱窗展示着各种商品。行人提着购物袋匆匆走过。\n\n{0}{1}{2}",
-      "links": [
-        {
-          "target": "street",
-          "text": "购买快餐（£8，饥饿+80）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": -8},
-            {"type": "add", "target": "a7", "value": 80}
-          ],
-          "condition": "a1>=8"
-        },
-        {
-          "target": "street",
-          "text": "购买能量饮料（£5，体力+40）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": -5},
-            {"type": "add", "target": "a5", "value": 40}
-          ],
-          "condition": "a1>=5"
-        },
-        {"target": "street", "text": "返回街道"}
-      ]
-    },
-    {
-      "id": "blackmarket",
-      "text": "阴暗的后巷堆满垃圾箱。几个可疑人影在角落交头接耳。\n\n{0}{1}{2}{3}",
-      "links": [
-        {
-          "target": "street",
-          "text": "走私货物（£50，高风险）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": 50},
-            {"type": "add", "target": "a9", "value": -30},
-            {"type": "add", "target": "a8", "value": 40}
-          ]
-        },
-        {
-          "target": "street",
-          "text": "打黑拳（£30，健康-20）",
-          "actions": [
-            {"type": "add", "target": "a1", "value": 30},
-            {"type": "add", "target": "a9", "value": -20},
-            {"type": "add", "target": "a5", "value": -40}
-          ]
-        },
-        {
-          "target": "street",
-          "text": "偷窃（70%成功）",
-          "actions": [
-            {"type": "randomSelect",
-             "options": [
-               {"weight": 0.7, "actions": [
-                 {"type": "add", "target": "a1", "value": "40 + floor(random*30)"}
-               ]},
-               {"weight": 0.3, "actions": [
-                 {"type": "add", "target": "a9", "value": -30},
-                 {"type": "add", "target": "a8", "value": 50}
-               ]}
-             ]}
-          ]
-        },
-        {"target": "street", "text": "离开黑市"}
-      ]
-    },
-    {
-      "id": "unlock_blackmarket",
-      "text": "公园深处有条隐蔽的小径，通向挂着三盏红灯的破门。\n\n{0}",
-      "actions": [
-        {"type": "set", "target": "b5", "value": true}
-      ],
-      "links": [
-        {"target": "park", "text": "记住这个地点"},
-        {"target": "park", "text": "忽略离开"}
-      ]
-    },
-    {
-      "id": "get_sick",
-      "text": "你突然感到头晕目眩，浑身发冷...健康值大幅降低！",
-      "actions": [
-        {"type": "set", "target": "a10", "value": 1},
-        {"type": "add", "target": "a9", "value": -20}
-      ],
-      "links": [
-        {"target": "bedroom", "text": "回卧室休息"},
-        {"target": "hospital", "text": "去医院"}
-      ]
-    },
-    {
-      "id": "game_over",
-      "text": "游戏结束！{0}\n\n{1}",
-      "links": [
-        {"target": "index1", "text": "重新开始"}
-      ]
-    }
-  ],
   "variables": {
-    "a": {
-      "a0": {"value": 1, "desc": "天数"},
-      "a1": {"value": 0, "desc": "英镑"},
-      "a2": {"value": 200, "desc": "本周债务"},
-      "a5": {"value": 100, "desc": "体力"},
-      "a6": {"value": 100, "desc": "清洁度"},
-      "a7": {"value": 100, "desc": "饥饿值"},
-      "a8": {"value": 0, "desc": "压力值"},
-      "a9": {"value": 100, "desc": "健康值"},
-      "a10": {"value": 0, "desc": "生病状态(0=健康,1=生病)"},
-      "a11": {"value": 0, "desc": "语文技能"},
-      "a12": {"value": 0, "desc": "数学技能"},
-      "a13": {"value": 0, "desc": "科学技能"},
-      "a14": {"value": 0, "desc": "劳动技能"}
+    "system": {
+      "debug": {"value": true},
+      "version": {"value": "0.2.0"}
     },
-    "b": {
-      "b0": {"value": true, "desc": "穿着校服"},
-      "b1": {"value": false, "desc": "穿着工作服"},
-      "b2": {"value": false, "desc": "已洗澡"},
-      "b3": {"value": false, "desc": "已进食"},
-      "b4": {"value": true, "desc": "医院解锁"},
-      "b5": {"value": false, "desc": "黑市解锁"}
+    "test": {
+      "counter": {"value": 0},
+      "flag": {"value": false},
+      "score": {"value": 100}
     },
-    "c": {
-      "c1": {"value": "08:00", "desc": "当前时间"}
+    "player": {
+      "name": {"value": "测试用户"},
+      "level": {"value": 1}
     }
   },
-  "currentNodeId": "index1"
+  "nodes": {
+    "index": {
+      "text": "===BandTwine测试===测试变量：{var.system.version.value}\n测试项目：\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}",
+      "links": [
+        {"text": "1. 基础功能测试", "target": "test_basic"},
+        {"text": "2. 变量运算测试", "target": "test_variables"},
+        {"text": "3. 条件逻辑测试", "target": "test_conditions"},
+        {"text": "4. 随机系统测试", "target": "test_random"},
+        {"text": "5. 图片系统测试", "target": "test_images"},
+        {"text": "6. 存档系统测试", "target": "test_save"},
+        {"text": "7. 表达式测试", "target": "test_expressions"},
+        {"text": "8. 压力测试", "target": "test_stress"}
+      ]
+    },
+    "test_basic": {
+      "text": "=== 基础功能测试 ===\n1. 文本换行测试\n2. 特殊符号：&lt;&gt;@#\n3. 变量显示：{var.test.counter.value}\n4. 长文本测试：这是一段用于测试文本显示能力的超长文本内容，重复多次以观察效果-这是一段用于测试文本显示能力的超长文本内容。\n{0}\n{1}",
+      "links": [
+        {"text": "返回测试中心", "target": "index"},
+        {"text": "进入子测试", "target": "test_basic_sub"}
+      ]
+    },
+    "test_basic_sub": {
+      "text": "=== 子页面测试 ===\n测试嵌套页面跳转功能\n{0}",
+      "links": [
+        {"text": "返回上级", "target": "test_basic"}
+      ]
+    },
+
+    "test_variables": {
+      "text": "=== 变量运算测试 ===\n当前计数器：{var.test.counter.value}\n当前状态：{var.test.flag.value}\n操作选项：\n{0}\n{1}\n{2}\n{3}",
+      "links": [
+        {"text": "计数器+1", "target": "test_variables", "actions": [
+          {"type": "add", "target": "var.test.counter.value", "value": 1}
+        ]},
+        {"text": "切换状态", "target": "test_variables", "actions": [
+          {"type": "toggle", "target": "var.test.flag.value"}
+        ]},
+        {"text": "重置数据", "target": "test_variables", "actions": [
+          {"type": "set", "target": "var.test.counter.value", "value": 0},
+          {"type": "set", "target": "var.test.flag.value", "value": false}
+        ]},
+        {"text": "返回测试中心", "target": "index"}
+      ]
+    },
+
+    "test_conditions": {
+      "text": "=== 条件逻辑测试 ===\n计数器：{var.test.counter.value}\n1. 基础条件：{cond.basic}\n2. 复杂条件：{cond.complex}\n3. 嵌套条件：{cond.nested}\n{0}{1}{2}{3}",
+      "links": [
+        {"text": "增加计数器", "target": "test_conditions", "actions": [
+          {"type": "add", "target": "var.test.counter.value", "value": 1}
+        ]},
+        {"text":"减少计数器", "target":"test_conditions", "actions": [
+          {"type": "add", "target": "var.test.counter.value", "value": -1}
+        ]},
+        {"text": "切换状态", "target": "test_conditions", "actions": [
+          {"type": "toggle", "target": "var.test.flag.value"}
+        ]},
+        {"text": "返回测试中心", "target": "index"}
+      ],
+      "conds": {
+        "basic": [
+          {"condition": "var.test.counter.value > 5", "text": "计数器>5"},
+          {"text": "计数器≤5"}
+        ],
+        "complex": [
+          {"condition": "var.test.counter.value > 10 && var.test.flag.value", "text": "计数器>10且状态为真"},
+          {"condition": "var.test.counter.value < 5 || !var.test.flag.value", "text": "计数器<5或状态为假"},
+          {"text": "其他情况"}
+        ],
+        "nested": [
+          {"condition": "var.test.counter.value > 15", "text": "计数器大于15"},
+          {"condition": "var.test.counter.value > 10", "text": "计数器大于10"},
+          {"condition": "var.test.counter.value > 5", "text": "计数器大于5"},
+          {"text": "计数器小于等于5"}
+        ]
+      }
+    },
+
+    "test_random": {
+      "text": "=== 随机系统测试 ===\n1. 基础随机：{random.basic}\n2. 权重随机：{random.weighted}\n3. 条件随机：{random.conditional}\n{0}\n{1}",
+      "links": [
+        {"text": "重新生成", "target": "test_random"},
+        {"text": "返回测试中心", "target": "index"}
+      ],
+      "randoms": {
+        "basic": [
+          {"text": "选项A"},
+          {"text": "选项B"},
+          {"text": "选项C"}
+        ],
+        "weighted": [
+          {"text": "普通(权重1)", "weight": 1},
+          {"text": "稀有(权重0.3)", "weight": 0.3},
+          {"text": "史诗(权重0.1)", "weight": 0.1}
+        ],
+        "conditional": [
+          {"text": "计数器>5时出现", "condition": "var.test.counter.value > 5"},
+          {"text": "默认选项"}
+        ]
+      }
+    },
+
+    "test_images": {
+      "text": "=== 图片系统测试 ===\n1. 行内图标：{img.icon} 文本环绕\n2. 横幅图片：{img.banner}\n3. 自定义大小：{img.custom}\n{0}\n{1}",
+      "links": [
+        {"text": "切换显示模式", "target": "test_images_alt"},
+        {"text": "返回测试中心", "target": "index"}
+      ],
+      "imgs": {
+        "icon": {"path": "icon.png", "display": "inline", "width": 40},
+        "banner": {"path": "banner.jpg", "display": "banner"},
+        "custom": {"path": "custom.png", "display": "custom", "width": 200}
+      }
+    },
+    "test_images_alt": {
+      "text": "=== 图片测试(备选) ===\n动态路径测试：{img.dynamic}\n{0}",
+      "links": [
+        {"text": "返回上级", "target": "test_images"}
+      ],
+      "imgs": {
+        "dynamic": {"path": "{var.player.name.value}.png", "display": "inline"}
+      }
+    },
+
+    "test_save": {
+      "text": "=== 存档系统测试 ===\n当前状态：\n- 计数器：{var.test.counter.value}\n- 状态：{var.test.flag.value}\n{0}\n{1}",
+      "links": [
+        {"text": "修改测试数据", "target": "test_save_modify"},
+        {"text": "返回测试中心", "target": "index"}
+      ]
+    },
+    "test_save_modify": {
+      "text": "=== 修改测试数据 ===\n{0}\n{1}\n{2}",
+      "links": [
+        {"text": "计数器+5", "target": "test_save_modify", "actions": [
+          {"type": "add", "target": "var.test.counter.value", "value": 5}
+        ]},
+        {"text": "切换状态", "target": "test_save_modify", "actions": [
+          {"type": "toggle", "target": "var.test.flag.value"}
+        ]},
+        {"text": "返回上级", "target": "test_save"}
+      ]
+    },
+
+    "test_expressions": {
+      "text": "=== 表达式测试 ===\n1. 数学运算10+20*3={var.calc1}\n2. 变量运算var.test.counter.value*2+5={var.calc2}\n3. 条件运算：{var.calc3}\n{0}",
+      "actions": [
+        {"type": "set", "target": "var.calc1", "value": "10 + 20 * 3"},
+        {"type": "set", "target": "var.calc2", "value": "var.test.counter.value * 2 + 5"},
+        {"type": "set", "target": "var.calc3", "value": "var.test.counter.value > 5 ? '大于5' : '小于等于5'"}
+      ],
+      "links": [
+        {"text": "返回测试中心", "target": "index"}
+      ]
+    },
+
+    "test_stress": {
+      "text": "=== 压力测试 ===\n1. 长文本：{var.long_text}\n2. 多变量：{var.var1} {var.var2} {var.var3}\n3. 复杂条件：{cond.complex}\n{0}\n{1}",
+      "actions": [
+        {"type": "set", "target": "var.long_text", "value": "这是一段非常长的测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本"},
+        {"type": "set", "target": "var.var1", "value": "值1"},
+        {"type": "set", "target": "var.var2", "value": "值2"},
+        {"type": "set", "target": "var.var3", "value": "值3"}
+      ],
+      "links": [
+        {"text": "进入深度测试", "target": "test_stress_deep"},
+        {"text": "返回测试中心", "target": "index"}
+      ],
+      "conds": {
+        "complex": [
+          {"condition": "var.test.counter.value > 10 && var.test.flag.value || var.player.level.value > 5", "text": "复合条件成立"},
+          {"text": "条件不成立"}
+        ]
+      }
+    },
+    "test_stress_deep": {
+      "text": "=== 深度压力测试 ===\n{0}\n{1}\n{2}",
+      "links": [
+        {"text": "生成随机数据", "target": "test_stress_deep", "actions": [
+          {"type": "set", "target": "var.test.counter.value", "value": "Math.floor(Math.random() * 20)"},
+          {"type": "set", "target": "var.test.flag.value", "value": "Math.random() > 0.5"}
+        ]},
+        {"text": "加载大量图片", "target": "test_stress_images"},
+        {"text": "返回上级", "target": "test_stress"}
+      ]
+    },
+    "test_stress_images": {
+      "text": "=== 图片压力测试 ===\n{img.img1}\n{img.img2}\n{img.img3}\n{img.img4}\n{0}",
+      "links": [
+        {"text": "返回上级", "target": "test_stress_deep"}
+      ],
+      "imgs": {
+        "img1": {"path": "stress1.jpg", "display": "banner"},
+        "img2": {"path": "stress2.jpg", "display": "banner"},
+        "img3": {"path": "stress3.jpg", "display": "banner"},
+        "img4": {"path": "stress4.jpg", "display": "banner"}
+      }
+    }
+  }
 }
