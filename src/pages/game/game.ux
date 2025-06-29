@@ -100,8 +100,20 @@
         <!-- 禁用链接 -->
         <text if="$item.type === 'disabled'" class="disabled-text">{{$item.content}}</text>
 
-        <!-- 错误提示 -->
-        <text if="$item.type === 'error'" class="error-text">{{$item.content}}</text>
+        <!-- 新增图片渲染 -->
+        <!-- 修改图片渲染部分 -->
+        <image if="$item.type === 'image'" src="{{isImageExists($item.path) ? $item.path : '/common/images/default.png'}}"
+          class="{{ 
+         $item.display === 'banner' ? 'banner-image' : 
+         $item.display === 'inline' ? 'inline-image' : 'custom-image'
+       }}" style="{{
+         $item.display === 'custom' && $item.width ? 
+         'width:' + $item.width + 'px' : ''
+       }}" />
+
+
+        <!-- 增强错误显示 -->
+        <text if="$item.type === 'error'" class="error-text">[ERR] {{$item.content}}</text>
       </block>
     </div>
   </scroll>
@@ -120,399 +132,555 @@ export default {
     showMenu: false,
     activeTab: 'status',
     saveSlots: [{ time: "" }, { time: "" }, { time: "" }],
-    currentNodeId: "index1",
+    currentNodeId: "index",
     segments: [],
     currentLinks: [],
     STORAGE_KEY: "game_state",
     
-    // 变量系统初始化
-    ...['a', 'b', 'c'].reduce((acc, category) => {
-      acc[category] = Object.entries(gameData.variables[category]).reduce((vars, [key, config]) => {
-        vars[key] = config.value;
-        return vars;
-      }, {});
-      return acc;
-    }, {})
+    // 变量系统
+    vars: {}
   },
 
-  // ================= 生命周期方法 =================
   onInit() {
+    this.initVariableSystem();
     this.loadNode(this.currentNodeId);
     this.loadSaveSlots();
+    
+    this.debugLog("游戏初始化完成");
   },
   
   onDestroy() {
     clearInterval(this.timer);
   },
 
-  // ================= 核心引擎方法 =================
+  // ================= 调试工具 =================
+  debugLog(message, data = null) {
+    if (this.debugMode) {
+      console.info(message, data);
+      
+      // 使用prompt显示重要日志
+      if (message.length < 50) {
+        prompt.showToast({
+          message: `DEBUG: ${message}`,
+          duration: 100
+        });
+      }
+    }
+  },
+
+  // ================= 变量系统 =================
+  initVariableSystem() {
+    this.vars = JSON.parse(JSON.stringify(gameData.variables || {}));
+    this.debugLog("变量系统初始化");
+  },
+  
+  getVariable(path) {
+    if (!path.startsWith('var.')) {
+      this.debugLog(`无效变量路径: ${path}`);
+      return undefined;
+    }
+    
+    const realPath = path.substring(4);
+    const parts = realPath.split('.');
+    let current = this.vars;
+    
+    for (const part of parts) {
+      if (current && current[part] !== undefined) {
+        current = current[part];
+      } else {
+        return undefined;
+      }
+    }
+    
+    // 返回实际值而不是对象
+    return current;
+  },
+  
+  setVariable(path, value) {
+    if (!path.startsWith('var.')) {
+      this.debugLog(`无效变量路径: ${path}`);
+      return;
+    }
+    
+    const realPath = path.substring(4);
+    const parts = realPath.split('.');
+    let current = this.vars;
+    
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      if (!current[part]) {
+        current[part] = {};
+      }
+      current = current[part];
+    }
+    
+    const lastKey = parts[parts.length - 1];
+    current[lastKey] = value;
+    
+    this.debugLog(`变量设置: ${path} = ${value}`);
+  },
+
+  // ================= 节点引擎 =================
   loadNode(nodeId) {
     try {
-      const node = gameData.nodes.find(n => n.id === nodeId);
-      if (!node) throw new Error(`节点 ${nodeId} 未找到`);
+      const node = gameData.nodes[nodeId];
+      if (!node) {
+        throw new Error(`节点 ${nodeId} 未找到`);
+      }
       
+      // 执行节点动作
       this.executeActions(node.actions || []);
+      
+      // 更新当前节点状态
       this.currentNodeId = nodeId;
       this.currentLinks = node.links || [];
+      
+      // 解析节点文本
       this.parseTextWithLinks(node.text);
-      this.saveGameState();
       
-      setTimeout(() => {
-        this.$element('scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 100);
+      this.debugLog(`加载节点: ${nodeId}`, {
+        links: this.currentLinks.length
+      });
       
-      if (this.debugMode) {
-        console.info(`加载节点: ${nodeId}，链接数: ${this.currentLinks?.length || 0}`);
-      }
     } catch (e) {
       console.error("节点加载错误:", e);
-      this.segments = [{ type: "text", content: `加载错误: ${e.message}` }];
+      this.segments = [{
+        type: "error", 
+        content: `节点加载错误: ${e.message}`
+      }];
+      
+      prompt.showToast({
+        message: `节点错误: ${e.message}`,
+        duration: 3000
+      });
     }
   },
   
   parseTextWithLinks(text) {
     this.segments = [];
-    let lastPosition = 0;
+    if (!text) return;
     
-    // 修改正则表达式以支持非单词字符（如运算符）
-    const regex = /\{([^{}]+)\}/g;
+    let lastPosition = 0;
+    const regex = /\{(\w+\.?[\w\.]*)\}/g;
     let match;
     
     while ((match = regex.exec(text)) !== null) {
-        if (match.index > lastPosition) {
-            this.segments.push({ type: "text", content: text.substring(lastPosition, match.index) });
-        }
-        
-        const content = match[1];
-        
-        // 1. 链接处理
-        if (/^\d+$/.test(content)) {
-            this.handleLinkContent(parseInt(content));
-        }
-        // 2. 计算表达式处理（合并两个calc分支）
-        else if (content.startsWith('calc:')) {
-            const expression = content.substring(5);
-            try {
-                // 解析表达式
-                const result = this.calculateExpression(expression);
-                this.segments.push({
-                    type: "text",
-                    content: result.toString()
-                });
-            } catch(e) {
-                console.error(`计算表达式出错: ${expression}`, e);
-                this.segments.push({
-                    type: "error",
-                    content: "[计算错误]"
-                });
-            }
-        }
-        // 3. 随机选择处理
-        else if (content.startsWith('random:')) {
-            const options = content.substring(7).split('|');
-            const selected = options[Math.floor(Math.random() * options.length)];
-            this.segments.push({ type: "text", content: selected });
-        }
-        // 4. 变量处理
-        else if (/^[a-z]\d+$/i.test(content)) {
-            this.handleVariableContent(content);
-        }
-        // 5. 未知类型处理
-        else {
-            this.segments.push({ type: "text", content: `{${content}}` });
-        }
-        
-        lastPosition = match.index + match[0].length;
+      if (match.index > lastPosition) {
+        this.segments.push({
+          type: "text", 
+          content: text.substring(lastPosition, match.index)
+        });
+      }
+      
+      const marker = match[1];
+      
+      // 处理链接标记（数字索引）
+      if (/^\d+$/.test(marker)) {
+        this.handleLinkMarker(parseInt(marker));
+      } 
+      else if (marker.startsWith('img')) {
+        this.handleImageMarker(marker);
+      }
+      else if (marker.startsWith('var.')) {
+        this.handleVariableMarker(marker);
+      }
+      else if (marker.startsWith('random')) {
+        this.handleRandomMarker(marker);
+      }
+      else if (marker.startsWith('cond')) {
+        this.handleConditionMarker(marker);
+      }
+      else if (marker.startsWith('js.')) {
+        this.handleScriptMarker(marker);
+      }
+      else {
+        this.segments.push({ 
+          type: "text", 
+          content: `{${marker}}` 
+        });
+      }
+      
+      lastPosition = match.index + match[0].length;
     }
     
     if (lastPosition < text.length) {
-        this.segments.push({ type: "text", content: text.substring(lastPosition) });
+      this.segments.push({ 
+        type: "text", 
+        content: text.substring(lastPosition) 
+      });
     }
-},
-
-// 新增的安全表达式计算方法
-calculateExpression(expr) {
-    // 安全替换函数 - 为每个 "random" 生成新值
-    let expression = expr;
-    
-    // 替换所有 random 为随机数
-    while (expression.includes('random')) {
-        expression = expression.replace('random', Math.random());
-    }
-    
-    // 替换所有变量
-    expression = expression.replace(/([ab])(\d+)/g, (match, category, key) => {
-        return this.getValue(category, match) || 0;
-    });
-    
-    // 替换数学函数
-    expression = expression
-        .replace(/floor\(/g, 'Math.floor(')
-        .replace(/ceil\(/g, 'Math.ceil(')
-        .replace(/round\(/g, 'Math.round(')
-        .replace(/abs\(/g, 'Math.abs(');
-    
-    // 使用 Function 构造函数安全计算
-    try {
-        return new Function(`return ${expression}`)();
-    } catch(e) {
-        console.error(`计算表达式失败: ${expression}`, e);
-        return 0;
-    }
-},
-
-// 处理变量内容
-handleVariableContent(varName) {
-    const category = varName.charAt(0);
-    const value = this.getValue(category, varName);
-    
-    if (category === 'c') {
-        // 特殊处理时间变量
-        this.segments.push({ type: "text", content: this.formatTime(value) });
-    } else if (category === 'b') {
-        // 布尔值转换为文字
-        this.segments.push({ type: "text", content: value ? "是" : "否" });
-    } else {
-        // 数值直接显示
-        this.segments.push({ type: "text", content: value.toString() });
-    }
-},
-
-// 时间格式化方法
-formatTime(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-},
+  },
   
-  handleLinkContent(linkIndex) {
+  // ================= 标记处理器 =================
+  handleLinkMarker(linkIndex) {
+    // 链接索引从0开始处理
     if (linkIndex >= 0 && linkIndex < this.currentLinks.length) {
       const link = this.currentLinks[linkIndex];
       
       if (this.checkCondition(link.condition)) {
-        this.segments.push({ type: "link", content: link.text, linkIndex });
+        this.segments.push({ 
+          type: "link", 
+          content: link.text, 
+          linkIndex 
+        });
       } else {
-        this.segments.push({ type: "disabled", content: link.text });
+        this.segments.push({ 
+          type: "disabled", 
+          content: link.text 
+        });
       }
     } else {
-      this.segments.push({ type: "error", content: `[无效链接${linkIndex}]` });
+      this.segments.push({ 
+        type: "error", 
+        content: `[无效链接${linkIndex}]` 
+      });
     }
   },
   
-  handleVariableContent(varName) {
-    const category = varName[0].toLowerCase();
-    const value = this.getValue(category, varName);
-    this.segments.push({ type: "var", content: value?.toString() || "N/A" });
-  },
-  
-  executeActions(actions = []) {
-    actions.forEach(action => {
-      try {
-        switch (action.type) {
-          case "set":
-            this.setValue(action.target[0], action.target, action.value);
-            break;
-          case "add":
-            const current = this.getValue(action.target[0], action.target) || 0;
-            this.setValue(action.target[0], action.target, current + action.value);
-            break;
-          case "toggle":
-            const currentBool = this.getValue(action.target[0], action.target) || false;
-            this.setValue(action.target[0], action.target, !currentBool);
-            break;
-          case "advance":
-            this.advanceTime(action.value, action.unit || 'hours');
-            break;
-          case "setTime":
-            this.setValue('c', 'c1', action.value);
-            break;
-          case "randomSelect":
-            this.executeRandomSelect(action);
-            break;
-          case "randomRange":
-            this.executeRandomRange(action);
-            break;
-          case "if":
-            this.executeConditionalAction(action);
-            break;
-        }
-      } catch (e) {
-        console.error(`操作执行失败: ${JSON.stringify(action)}`, e);
-      }
-    });
-  },
-  
-  executeRandomSelect(action) {
-    const totalWeight = action.options.reduce((sum, opt) => sum + (opt.weight || 1), 0);
-    let random = Math.random() * totalWeight;
-    
-    for (const option of action.options) {
-      random -= option.weight || 1;
-      if (random <= 0) {
-        option.actions && this.executeActions(option.actions);
-        break;
-      }
-    }
-  },
-  
-  executeRandomRange(action) {
-    const min = action.min;
-    const max = action.max;
-    const randomValue = Math.floor(Math.random() * (max - min + 1)) + min;
-    this.setValue(action.target[0], action.target, randomValue);
-  },
-  
-  executeConditionalAction(action) {
-    const conditionMet = this.checkCondition(action.condition);
-    const actionsToExecute = conditionMet ? action.true : action.false;
-    actionsToExecute && this.executeActions(actionsToExecute);
-  },
-  
-  advanceTime(amount, unit = 'hours') {
-    if (!this.c.c1) return;
-    
-    let [hours, minutes] = this.c.c1.split(':').map(Number);
-    
-    if (unit === 'minutes') minutes += amount;
-    else hours += amount;
-    
-    // 处理进位
-    if (minutes >= 60) {
-      hours += Math.floor(minutes / 60);
-      minutes %= 60;
-    }
-    
-    // 处理天数变化
-    if (hours >= 24) {
-      const days = Math.floor(hours / 24);
-      hours %= 24;
-      this.setValue('a', 'a0', (this.a.a0 || 1) + days);
-    }
-    
-    this.setValue('c', 'c1', 
-      `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
-    );
-  },
-  
-  checkCondition(condition) {
-  if (!condition) return true;
-
-  // 处理逻辑与 (&&) 运算符
-  if (condition.includes("&&")) {
-    const conditions = condition.split("&&");
-    return conditions.every(cond => this.checkCondition(cond.trim()));
+  handleImageMarker(markerId) {
+  const imgDef = gameData.nodes[this.currentNodeId]?.imgs?.[markerId];
+  if (!imgDef) {
+    this.segments.push({ type: "error", content: `[图片${markerId}未定义]` });
+    return;
   }
 
-  // 处理布尔值变量 (b类型)
-  if (/^b\d+$/.test(condition)) {
-    const value = this.getValue('b', condition);
-    return value === true || value === 'true';
+  // 解析动态路径
+  let path = imgDef.path || "";
+  path = path.replace(/\${(.*?)}/g, (_, expr) => {
+    try {
+      return this.parseExpression(expr) || '';
+    } catch(e) {
+      return '';
+    }
+  });
+  
+  // 添加默认资源前缀
+  if (!path.startsWith('/') && !path.startsWith('http')) {
+    path = '/common/images/' + path;
   }
-
-  // 处理否定布尔值
-  if (condition.startsWith('!')) {
-    const boolKey = condition.substring(1);
-    if (/^b\d+$/.test(boolKey)) {
-      const value = this.getValue('b', boolKey);
-      return value !== true && value !== 'true';
+  
+  // 添加默认扩展名
+  if (!path.includes('.')) {
+    path += '.png';
+  }
+  
+  // 计算自定义宽度
+  let width = '';
+  if (imgDef.display === 'custom' && imgDef.width) {
+    try {
+      width = typeof imgDef.width === 'string' 
+        ? this.parseExpression(imgDef.width) + 'px'
+        : imgDef.width + 'px';
+    } catch(e) {
+      width = '100px';
     }
   }
 
-  // 处理比较表达式
-  const match = condition.match(/([ab])(\d+)\s*(<=|>=|==|!=|<|>)\s*(-?\d*\.?\d+|\w+)/);
-  if (!match) return false;
+  this.segments.push({
+    type: "image",
+    path: path,
+    display: imgDef.display || "inline",
+    width: width
+  });
+},
   
-  const [, category, key, operator, value] = match;
-  const fullKey = `${category}${key}`;
-  
-  // 获取当前值并根据类型处理
-  if (category === 'b') {
-    // 布尔类型处理
-    const currentValue = this.getValue('b', fullKey);
-    const currentBool = typeof currentValue === 'string' 
-      ? currentValue.toLowerCase() === 'true'
-      : Boolean(currentValue);
-    
-    const targetBool = value.toLowerCase() === 'true';
-    
-    // 布尔比较 (只支持 == 和 !=)
-    switch (operator) {
-      case '==': return currentBool === targetBool;
-      case '!=': return currentBool !== targetBool;
-      default:
-        console.error(`Invalid operator for boolean: ${operator} in ${condition}`);
-        return false;
+  handleVariableMarker(path) {
+  // 检测是否为表达式 (含运算符)
+  if (/[+\-*/><=?:]/.test(path)) {
+    try {
+      const result = this.parseExpression(path);
+      this.segments.push({ type: "var", content: result });
+    } catch(e) {
+      this.segments.push({ type: "error", content: `表达式错误: ${path}` });
     }
-  } else {
-    // 数值类型处理
-    const currentValue = parseFloat(this.getValue('a', fullKey) || 0);
-    const numValue = parseFloat(value);
-    
-    if (isNaN(numValue)) {
-      console.error(`Invalid number in condition: ${value} in ${condition}`);
-      return false;
-    }
-    
-    // 数值比较
-    switch (operator) {
-      case '<':  return currentValue < numValue;
-      case '>':  return currentValue > numValue;
-      case '<=': return currentValue <= numValue;
-      case '>=': return currentValue >= numValue;
-      case '==': return currentValue === numValue;
-      case '!=': return currentValue !== numValue;
-      default:
-        console.error(`Unsupported operator: ${operator} in ${condition}`);
-        return false;
+  } 
+  // 普通变量
+  else {
+    const value = this.getVariable(path);
+    if (value !== undefined) {
+      this.segments.push({ type: "var", content: value.toString() });
+    } else {
+      this.segments.push({ type: "error", content: `[变量 ${path} 未定义]` });
     }
   }
 },
   
-  // ================= 变量操作方法 =================
-  setValue(category, key, value) {
-    if (typeof value === 'string' && value.includes('floor(')) {
-      value = this.calculateFormula(value);
+handleRandomMarker(markerId) {
+  const options = gameData.nodes[this.currentNodeId]?.randoms?.[markerId];
+  if (!options || options.length === 0) {
+    this.segments.push({ type: "error", content: `[随机组${markerId}未定义]` });
+    return;
+  }
+
+  // 计算有效选项
+  const validOptions = options.filter(opt => {
+    if (opt.condition) {
+      return this.checkCondition(opt.condition);
     }
-    
-    if (!this[category]) this[category] = {};
-    this[category][key] = value;
-  },
+    return true;
+  });
+
+  if (validOptions.length === 0) {
+    this.segments.push({ type: "text", content: "[无可用选项]" });
+    return;
+  }
+
+  // 计算动态权重
+  const weightedOptions = validOptions.map(opt => {
+    let weight = opt.weight || 1;
+    if (typeof weight === 'string') {
+      try {
+        weight = this.parseExpression(weight) || 1;
+      } catch(e) {
+        weight = 1;
+      }
+    }
+    return { ...opt, weight };
+  });
+
+  // 权重随机选择
+  const totalWeight = weightedOptions.reduce((sum, o) => sum + o.weight, 0);
+  if (totalWeight <= 0) {
+    this.segments.push({ type: "text", content: "[权重错误]" });
+    return;
+  }
   
-  getValue(category, key) {
-    return this[category]?.[key];
-  },
+  let randomVal = Math.random() * totalWeight;
+  for (const opt of weightedOptions) {
+    randomVal -= opt.weight;
+    if (randomVal <= 0) {
+      this.segments.push({ type: "text", content: opt.text });
+      return;
+    }
+  }
+},
   
-  calculateFormula(formula) {
-    const varRegex = /([abc]\d+)/g;
-    const replaced = formula.replace(varRegex, (match) => {
-      const cat = match[0];
-      return this.getValue(cat, match) || 0;
+  handleConditionMarker(marker) {
+  // 支持 cond.xxx 格式
+  const conditionId = marker.replace('cond.', '');
+  const conditions = gameData.nodes[this.currentNodeId]?.conds?.[conditionId];
+  
+  if (!conditions || !Array.isArray(conditions)) {
+    this.segments.push({ 
+      type: "error", 
+      content: `[条件组${marker}未定义]` 
     });
-    
-    try {
-      return new Function('"use strict"; return (' + replaced + ')').call({
-        floor: Math.floor
-      });
-    } catch (e) {
-      console.error(`公式计算错误: ${formula}`, e);
-      return 0;
-    }
-  },
+    return;
+  }
   
-  // ================= 存储系统方法 =================
+  let result = "[无匹配条件]";
+  for (const cond of conditions) {
+    if (!cond.condition || this.checkCondition(cond.condition)) {
+      result = cond.text;
+      break;
+    }
+  }
+  
+  this.segments.push({ 
+    type: "text", 
+    content: result 
+  });
+},
+
+// 新增脚本处理器
+handleScriptMarker(marker) {
+  const scriptId = marker.replace('js.', '');
+  const script = gameData.nodes[this.currentNodeId]?.scripts?.[scriptId];
+  
+  if (!script) {
+    this.segments.push({ type: "error", content: `JS未定义: ${scriptId}` });
+    return;
+  }
+
+  // 安全沙箱配置
+  const sandbox = {
+    // 安全API
+    set: (path, val) => this.setVariable(`var.${path}`, val),
+    get: (path) => this.getVariable(`var.${path}`),
+    rand: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
+    print: (msg) => this.debugLog(`[JS] ${msg}`),
+    
+    // 受限环境
+    Math: Math,
+    Date: Date,
+    JSON: JSON,
+    Number: Number,
+    String: String,
+    Boolean: Boolean,
+    
+    // 禁止危险API
+    eval: undefined,
+    Function: undefined,
+    setTimeout: undefined,
+    setInterval: undefined,
+    XMLHttpRequest: undefined,
+    fetch: undefined
+  };
+
+  try {
+    // 创建安全执行环境
+    const safeScript = `(function(env) {
+      with(env) { 
+        try { 
+          ${script} 
+        } catch(e) { 
+          print('执行错误: ' + e.message) 
+        }
+      }
+    })`;
+    
+    const fn = new Function('return ' + safeScript)();
+    fn(sandbox);
+  } catch(e) {
+    this.debugLog(`JS编译错误: ${scriptId}`, e);
+  }
+},
+  
+  // ================= 操作执行器 =================
+  executeActions(actions = []) {
+  actions.forEach(action => {
+    try {
+      switch (action.type) {
+        case "set":
+          this.setVariable(action.target, 
+            typeof action.value === 'string' 
+              ? this.parseExpression(action.value) 
+              : action.value
+          );
+          break;
+          
+        case "add":
+          const currentAdd = this.getVariable(action.target) || 0;
+          const addValue = typeof action.value === 'string' 
+            ? this.parseExpression(action.value) 
+            : action.value;
+          this.setVariable(action.target, currentAdd + addValue);
+          break;
+          
+        case "toggle":
+          const currentBool = this.getVariable(action.target) || false;
+          this.setVariable(action.target, !currentBool);
+          break;
+          
+        case "random":
+          const validChoices = action.choices.filter(c => 
+            !c.if || this.checkCondition(c.if)
+          );
+          
+          if (validChoices.length > 0) {
+            const totalWeight = validChoices.reduce((sum, c) => 
+              sum + (c.weight || 1), 0);
+            let randVal = Math.random() * totalWeight;
+            
+            for (const choice of validChoices) {
+              randVal -= choice.weight || 1;
+              if (randVal <= 0) {
+                this.executeActions(choice.actions || []);
+                break;
+              }
+            }
+          }
+          break;
+      }
+    } catch (e) {
+      this.debugLog(`操作执行失败: ${JSON.stringify(action)}`, e);
+    }
+  });
+},
+  
+  // ================= 条件检查 =================
+  checkCondition(condition) {
+  if (!condition) return true;
+  
+  // 处理括号分组
+  const groupRegex = /\((.*?)\)/g;
+  while (groupRegex.test(condition)) {
+    condition = condition.replace(groupRegex, (_, group) => 
+      this.checkCondition(group) ? 'true' : 'false'
+    );
+  }
+  
+  // 逻辑运算符处理
+  const andParts = condition.split('&&').map(s => s.trim());
+  if (andParts.length > 1) {
+    return andParts.every(part => this.checkCondition(part));
+  }
+
+  const orParts = condition.split('||').map(s => s.trim());
+  if (orParts.length > 1) {
+    return orParts.some(part => this.checkCondition(part));
+  }
+
+  // 单条件解析 (支持字符串/数值/布尔比较)
+  const match = condition.match(
+    /(var\.\w+(\.\w+)*)\s*(==|!=|>|<|>=|<=)\s*(['"](.*?)['"]|(\d+\.?\d*)|true|false)/
+  );
+
+  if (match) {
+    const [, leftPath, , operator, , strValue, numValue] = match;
+    let leftVal = this.getVariable(leftPath);
+    
+    // 确定右值
+    let rightVal;
+    if (strValue !== undefined) {
+      rightVal = strValue;
+    } else if (numValue !== undefined) {
+      rightVal = parseFloat(numValue);
+    } else if (match[0].includes('true')) {
+      rightVal = true;
+    } else if (match[0].includes('false')) {
+      rightVal = false;
+    } else {
+      return false;
+    }
+
+    // 自动类型转换
+    if (typeof leftVal === 'string' && !isNaN(rightVal)) {
+      leftVal = parseFloat(leftVal);
+    } else if (typeof rightVal === 'string' && !isNaN(leftVal)) {
+      rightVal = parseFloat(rightVal);
+    }
+
+    // 比较操作
+    switch(operator) {
+      case '==': return leftVal == rightVal;
+      case '!=': return leftVal != rightVal;
+      case '>': return leftVal > rightVal;
+      case '<': return leftVal < rightVal;
+      case '>=': return leftVal >= rightVal;
+      case '<=': return leftVal <= rightVal;
+    }
+  }
+  
+  // 布尔值直接判断
+  if (condition === 'true') return true;
+  if (condition === 'false') return false;
+  
+  // 纯变量存在判断
+  if (condition.startsWith('var.')) {
+    const val = this.getVariable(condition);
+    return val !== undefined && val !== false && val !== 0;
+  }
+  
+  return false;
+},
+  
+  // ================= 存档系统 =================
   saveGameState() {
     const state = {
-      a: {...this.a},
-      b: {...this.b},
-      c: {...this.c},
+      vars: JSON.parse(JSON.stringify(this.vars)),
       currentNodeId: this.currentNodeId
     };
     
     storage.set({
       key: this.STORAGE_KEY,
       value: JSON.stringify(state),
-      success: () => this.debugMode && console.info('状态已保存'),
-      fail: (data, code) => console.error(`保存失败: code=${code}`)
+      success: () => {
+        this.debugLog("游戏状态已保存");
+      },
+      fail: (data, code) => {
+        this.debugLog(`保存失败: code=${code}`);
+      }
     });
   },
   
@@ -536,10 +704,9 @@ formatTime(minutes) {
   
   saveToSlot(slotIndex) {
     const saveData = {
-      time: this.getFullDateTime(),
+      time: this.getCurrentTime(),
       state: {
-        a: {...this.a},
-        c: {...this.c},
+        vars: JSON.parse(JSON.stringify(this.vars)),
         currentNodeId: this.currentNodeId
       }
     };
@@ -548,8 +715,17 @@ formatTime(minutes) {
       key: `save_slot_${slotIndex}`,
       value: JSON.stringify(saveData),
       success: () => {
-        this.saveSlots[slotIndex] = {...saveData};
-        prompt.showToast({ message: `存档${slotIndex+1}成功` });
+        this.saveSlots[slotIndex] = saveData;
+        prompt.showToast({ 
+          message: `存档${slotIndex+1}成功`,
+          duration: 1000
+        });
+      },
+      fail: () => {
+        prompt.showToast({ 
+          message: "存档失败",
+          duration: 1000
+        });
       }
     });
   },
@@ -561,23 +737,35 @@ formatTime(minutes) {
         if (data) {
           try {
             const saveData = JSON.parse(data);
-            const validNodeId = gameData.nodes.some(n => n.id === saveData.state.currentNodeId) 
-                              ? saveData.state.currentNodeId 
-                              : this.currentNodeId;
             
-            this.currentNodeId = validNodeId;
-            this.loadNode(validNodeId);
-            prompt.showToast({ message: `加载存档${slotIndex+1}成功` });
+            // 恢复状态
+            this.vars = saveData.state.vars;
+            this.currentNodeId = saveData.state.currentNodeId;
+            
+            this.loadNode(this.currentNodeId);
+            prompt.showToast({ 
+              message: `加载存档${slotIndex+1}成功`,
+              duration: 1000
+            });
           } catch(e) {
-            prompt.showToast({ message: "存档损坏" });
+            prompt.showToast({ 
+              message: "存档损坏",
+              duration: 1500
+            });
           }
         } else {
-          prompt.showToast({ message: "无存档数据" }); 
+          prompt.showToast({ 
+            message: "无存档数据",
+            duration: 1000
+          }); 
         }
         this.showMenu = false;
       },
       fail: () => {
-        prompt.showToast({ message: "加载失败" });
+        prompt.showToast({ 
+          message: "加载失败",
+          duration: 1000
+        });
         this.showMenu = false;
       }
     });
@@ -588,32 +776,91 @@ formatTime(minutes) {
       key: `save_slot_${slotIndex}`,
       success: () => {
         this.saveSlots[slotIndex].time = "";
-        prompt.showToast({ message: `删除存档${slotIndex+1}成功` });
+        prompt.showToast({ 
+          message: `删除存档${slotIndex+1}成功`,
+          duration: 1000
+        });
       },
-      fail: (data, code) => console.error(`删除失败 code=${code}`)
+      fail: () => {
+        prompt.showToast({ 
+          message: "删除失败",
+          duration: 1000
+        });
+      }
     });
   },
-  
-  // ================= UI交互方法 =================
-  selectOption(linkIndex) {
-    if (linkIndex >= 0 && linkIndex < this.currentLinks.length) {
-      const link = this.currentLinks[linkIndex];
-      this.executeActions(link.actions || []);
-      setTimeout(() => this.loadNode(link.target), 150);
+
+  // ================= UI交互 =================
+selectOption(linkIndex) {
+  if (linkIndex >= 0 && linkIndex < this.currentLinks.length) {
+    const link = this.currentLinks[linkIndex];
+    
+    // 执行链接动作
+    this.executeActions(link.actions || []);
+    
+    // 确定目标节点
+    let targetNode = link.target;
+    
+    // 随机目标处理
+    if (link.random && link.random.length > 0) {
+      const validOptions = link.random.filter(opt => 
+        !opt.if || this.checkCondition(opt.if)
+      );
+      
+      if (validOptions.length > 0) {
+        const totalWeight = validOptions.reduce((sum, o) => sum + o.weight, 0);
+        let randVal = Math.random() * totalWeight;
+        
+        for (const opt of validOptions) {
+          randVal -= opt.weight;
+          if (randVal <= 0) {
+            targetNode = opt.target;
+            // 处理传入数据
+            if (opt.incom) this.processIncomingData(opt.incom);
+            break;
+          }
+        }
+      }
     }
-  },
+    
+    // 处理传入数据
+    if (link.incom) this.processIncomingData(link.incom);
+    
+    // 延迟加载新节点
+    this.timer = setTimeout(() => {
+      this.debugLog(`选择链接: ${linkIndex} -> ${targetNode}`);
+      this.loadNode(targetNode);
+    }, 150);
+  }
+},
   
+
+processIncomingData(data) {
+  Object.entries(data).forEach(([key, value]) => {
+    // 解析表达式值
+    if (typeof value === 'string' && /[+\-*/><=]/.test(value)) {
+      try {
+        const computed = this.parseExpression(value);
+        this.setVariable(`var.temp.${key}`, computed);
+      } catch(e) {
+        this.setVariable(`var.temp.${key}`, value);
+      }
+    } else {
+      this.setVariable(`var.temp.${key}`, value);
+    }
+  });
+},
+
   toggleMenu() {
     this.showMenu = !this.showMenu;
-    this.showMenu && (this.activeTab = 'status');
+    if (this.showMenu) {
+      this.activeTab = 'status';
+      this.loadSaveSlots();
+    }
   },
   
   switchTab(tabName) {
     this.activeTab = tabName;
-  },
-  
-  stopPropagation(e) {
-    e.stopPropagation();
   },
   
   backToHome() {
@@ -622,35 +869,44 @@ formatTime(minutes) {
   
   toggleDebugMode(e) {
     this.debugMode = e.checked;
-    prompt.showToast({ message: `调试模式 ${e.checked ? '开启' : '关闭'}` });
+    prompt.showToast({ 
+      message: `调试模式 ${e.checked ? '开启' : '关闭'}`,
+      duration: 1000
+    });
   },
   
   // ================= 工具方法 =================
-  getFullDateTime() {
+  // 新增工具函数：表达式解析
+  parseExpression(expr) {
+  // 支持变量、四则运算、三元表达式
+  const varPattern = /var\.\w+(\.\w+)*/g;
+  const processed = expr.replace(varPattern, match => 
+    JSON.stringify(this.getVariable(match))
+  );
+  
+  try {
+    // 安全沙箱实现
+    const safeEnv = {
+      Math: Math,
+      Date: Date,
+      parseInt: parseInt,
+      parseFloat: parseFloat
+    };
+    return new Function('env', `with(env){return ${processed}}`)(safeEnv);
+  } catch(e) {
+    this.debugLog(`表达式错误: ${expr}`, e);
+    return 0;
+  }
+},
+
+  getCurrentTime() {
     const now = new Date();
-    return `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   },
   
-  getVarDesc(category, key) {
-    return gameData.variables[category]?.[key]?.desc || key;
-  },
-  
-  getFormattedValue(category, key) {
-    const value = this[category]?.[key];
-    switch(key) {
-      case 'a1': return `£${value}`;
-      case 'a3': return `${value}°C`;
-      default: return value;
-    }
-  },
-  
-  getCurrentHour() {
-    return this.c.c1 ? parseInt(this.c.c1.split(':')[0]) : 0;
-  },
-  
-  isDaytime() {
-    const hour = this.getCurrentHour();
-    return hour >= 6 && hour < 18;
+  getCurrentDateTime() {
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   }
 }
 </script>
@@ -865,7 +1121,48 @@ formatTime(minutes) {
   text-decoration: line-through;
 }
 
+/* 新增图片样式 */
+image {
+  object-fit: contain;
+}
+
+/* 横幅图片样式 */
+.banner-image {
+  width: 100%;
+  max-height: 200px;
+  margin: 10px 0;
+}
+
+/* 行内图片样式 */
+.inline-image {
+  height: 40px;
+  vertical-align: middle;
+  margin: 0 5px;
+}
+
+/* 自定义图片样式 */
+.custom-image {
+  vertical-align: middle;
+  margin: 5px;
+}
+
+/* 增强错误显示 */
 .error-text {
   font-size: 35px;
   color: #ff4d4f;
+  background-color: #330000;
+  padding: 3px;
+  border-radius: 4px;
+}
+
+/* 添加默认图片样式 */
+.default-image {
+  display: block;
+  width: 100px;
+  height: 100px;
+  margin: 10px auto;
+  background-color: #333;
+  border: 1px dashed #666;
+  justify-content: center;
+  align-items: center;
 }
