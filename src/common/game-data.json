@@ -16,7 +16,7 @@
   },
   "nodes": {
     "index": {
-      "text": "===BandTwine测试===测试变量：{var.system.version.value}\n测试项目：\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}",
+      "text": "===BandTwine测试===测试变量：{var.system.version.value}测试项目：{0}{1}{2}{3}{4}{5}{6}{7}",
       "links": [
         {"text": "1. 基础功能测试", "target": "test_basic"},
         {"text": "2. 变量运算测试", "target": "test_variables"},
@@ -29,21 +29,21 @@
       ]
     },
     "test_basic": {
-      "text": "=== 基础功能测试 ===\n1. 文本换行测试\n2. 特殊符号：&lt;&gt;@#\n3. 变量显示：{var.test.counter.value}\n4. 长文本测试：这是一段用于测试文本显示能力的超长文本内容，重复多次以观察效果-这是一段用于测试文本显示能力的超长文本内容。\n{0}\n{1}",
+      "text": "=== 基础功能测试 ===1. 文本换行测试2. 特殊符号：&lt;&gt;@#3. 变量显示：{var.test.counter.value}4. 长文本测试：这是一段用于测试文本显示能力的超长文本内容，重复多次以观察效果-这是一段用于测试文本显示能力的超长文本内容。{0}{1}",
       "links": [
-        {"text": "返回测试中心", "target": "index"},
+        {"text": "返回主节点", "target": "index"},
         {"text": "进入子测试", "target": "test_basic_sub"}
       ]
     },
     "test_basic_sub": {
-      "text": "=== 子页面测试 ===\n测试嵌套页面跳转功能\n{0}",
+      "text": "=== 子页面测试 ===测试嵌套页面跳转功能{0}",
       "links": [
         {"text": "返回上级", "target": "test_basic"}
       ]
     },
 
     "test_variables": {
-      "text": "=== 变量运算测试 ===\n当前计数器：{var.test.counter.value}\n当前状态：{var.test.flag.value}\n操作选项：\n{0}\n{1}\n{2}\n{3}",
+      "text": "=== 变量运算测试 ===当前计数器：{var.test.counter.value}当前状态：{var.test.flag.value}操作选项：{0}{1}{2}{3}",
       "links": [
         {"text": "计数器+1", "target": "test_variables", "actions": [
           {"type": "add", "target": "var.test.counter.value", "value": 1}
@@ -55,12 +55,12 @@
           {"type": "set", "target": "var.test.counter.value", "value": 0},
           {"type": "set", "target": "var.test.flag.value", "value": false}
         ]},
-        {"text": "返回测试中心", "target": "index"}
+        {"text": "返回主节点", "target": "index"}
       ]
     },
 
     "test_conditions": {
-      "text": "=== 条件逻辑测试 ===\n计数器：{var.test.counter.value}\n1. 基础条件：{cond.basic}\n2. 复杂条件：{cond.complex}\n3. 嵌套条件：{cond.nested}\n{0}{1}{2}{3}",
+      "text": "=== 条件逻辑测试 ===计数器：{var.test.counter.value}1. 基础条件：{cond.basic}2. 复杂条件：{cond.complex}3. 嵌套条件：{cond.nested}{0}{1}{2}{3}",
       "links": [
         {"text": "增加计数器", "target": "test_conditions", "actions": [
           {"type": "add", "target": "var.test.counter.value", "value": 1}
@@ -71,7 +71,7 @@
         {"text": "切换状态", "target": "test_conditions", "actions": [
           {"type": "toggle", "target": "var.test.flag.value"}
         ]},
-        {"text": "返回测试中心", "target": "index"}
+        {"text": "返回主节点", "target": "index"}
       ],
       "conds": {
         "basic": [
@@ -93,10 +93,16 @@
     },
 
     "test_random": {
-      "text": "=== 随机系统测试 ===\n1. 基础随机：{random.basic}\n2. 权重随机：{random.weighted}\n3. 条件随机：{random.conditional}\n{0}\n{1}",
+      "text": "=== 随机系统测试 ===1. 基础随机：{random.basic}2. 权重随机：{random.weighted}3. 条件随机：{random.conditional}{0}{1}计数器：{var.test.counter.value}{2}{3}",
       "links": [
         {"text": "重新生成", "target": "test_random"},
-        {"text": "返回测试中心", "target": "index"}
+        {"text": "返回主节点", "target": "index"},
+        {"text": "增加计数器", "target": "test_random", "actions": [
+          {"type": "add", "target": "var.test.counter.value", "value": 1}
+        ]},
+        {"text": "减少计数器", "target": "test_random", "actions": [
+          {"type": "add", "target": "var.test.counter.value", "value": -1}
+        ]}
       ],
       "randoms": {
         "basic": [
@@ -105,31 +111,31 @@
           {"text": "选项C"}
         ],
         "weighted": [
-          {"text": "普通(权重1)", "weight": 1},
-          {"text": "稀有(权重0.3)", "weight": 0.3},
-          {"text": "史诗(权重0.1)", "weight": 0.1}
+          {"text": "选项1(60%概率)", "weight": 0.6},
+          {"text": "选项2(30%概率)", "weight": 0.3},
+          {"text": "选项3(10%概率)", "weight": 0.1}
         ],
         "conditional": [
-          {"text": "计数器>5时出现", "condition": "var.test.counter.value > 5"},
-          {"text": "默认选项"}
+          {"text": "计数器>5时才可能出现", "condition": "var.test.counter.value > 5"},
+          {"text": "一般情况"}
         ]
       }
     },
 
     "test_images": {
-      "text": "=== 图片系统测试 ===\n1. 行内图标：{img.icon} 文本环绕\n2. 横幅图片：{img.banner}\n3. 自定义大小：{img.custom}\n{0}\n{1}",
+      "text": "=== 图片系统测试 ===1. 行内图标：{img.icon} 文本环绕2. 横幅图片：{img.banner}3. 自定义大小：{img.custom}{0}{1}",
       "links": [
         {"text": "切换显示模式", "target": "test_images_alt"},
-        {"text": "返回测试中心", "target": "index"}
+        {"text": "返回主节点", "target": "index"}
       ],
       "imgs": {
         "icon": {"path": "icon.png", "display": "inline", "width": 40},
-        "banner": {"path": "banner.jpg", "display": "banner"},
+        "banner": {"path": "banner.png", "display": "banner"},
         "custom": {"path": "custom.png", "display": "custom", "width": 200}
       }
     },
     "test_images_alt": {
-      "text": "=== 图片测试(备选) ===\n动态路径测试：{img.dynamic}\n{0}",
+      "text": "=== 图片测试(备选) ===动态路径测试：{img.dynamic}{0}",
       "links": [
         {"text": "返回上级", "target": "test_images"}
       ],
@@ -139,14 +145,14 @@
     },
 
     "test_save": {
-      "text": "=== 存档系统测试 ===\n当前状态：\n- 计数器：{var.test.counter.value}\n- 状态：{var.test.flag.value}\n{0}\n{1}",
+      "text": "=== 存档系统测试 ===当前状态：- 计数器：{var.test.counter.value}- 状态：{var.test.flag.value}{0}{1}",
       "links": [
         {"text": "修改测试数据", "target": "test_save_modify"},
-        {"text": "返回测试中心", "target": "index"}
+        {"text": "返回主节点", "target": "index"}
       ]
     },
     "test_save_modify": {
-      "text": "=== 修改测试数据 ===\n{0}\n{1}\n{2}",
+      "text": "=== 修改测试数据 ==={0}{1}{2}",
       "links": [
         {"text": "计数器+5", "target": "test_save_modify", "actions": [
           {"type": "add", "target": "var.test.counter.value", "value": 5}
@@ -159,19 +165,19 @@
     },
 
     "test_expressions": {
-      "text": "=== 表达式测试 ===\n1. 数学运算10+20*3={var.calc1}\n2. 变量运算var.test.counter.value*2+5={var.calc2}\n3. 条件运算：{var.calc3}\n{0}",
+      "text": "=== 表达式测试 ===1. 数学运算10+20*3={var.calc1}2. 变量运算var.test.counter.value*2+5={var.calc2}3. 条件运算：{var.calc3}{0}",
       "actions": [
         {"type": "set", "target": "var.calc1", "value": "10 + 20 * 3"},
         {"type": "set", "target": "var.calc2", "value": "var.test.counter.value * 2 + 5"},
         {"type": "set", "target": "var.calc3", "value": "var.test.counter.value > 5 ? '大于5' : '小于等于5'"}
       ],
       "links": [
-        {"text": "返回测试中心", "target": "index"}
+        {"text": "返回主节点", "target": "index"}
       ]
     },
 
     "test_stress": {
-      "text": "=== 压力测试 ===\n1. 长文本：{var.long_text}\n2. 多变量：{var.var1} {var.var2} {var.var3}\n3. 复杂条件：{cond.complex}\n{0}\n{1}",
+      "text": "=== 压力测试 ===1. 长文本：{var.long_text}2. 多变量：{var.var1} {var.var2} {var.var3}3. 复杂条件：{cond.complex}{0}{1}",
       "actions": [
         {"type": "set", "target": "var.long_text", "value": "这是一段非常长的测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本"},
         {"type": "set", "target": "var.var1", "value": "值1"},
@@ -180,7 +186,7 @@
       ],
       "links": [
         {"text": "进入深度测试", "target": "test_stress_deep"},
-        {"text": "返回测试中心", "target": "index"}
+        {"text": "返回主节点", "target": "index"}
       ],
       "conds": {
         "complex": [
@@ -190,7 +196,7 @@
       }
     },
     "test_stress_deep": {
-      "text": "=== 深度压力测试 ===\n{0}\n{1}\n{2}",
+      "text": "=== 深度压力测试 ==={0}{1}{2}",
       "links": [
         {"text": "生成随机数据", "target": "test_stress_deep", "actions": [
           {"type": "set", "target": "var.test.counter.value", "value": "Math.floor(Math.random() * 20)"},
@@ -201,7 +207,7 @@
       ]
     },
     "test_stress_images": {
-      "text": "=== 图片压力测试 ===\n{img.img1}\n{img.img2}\n{img.img3}\n{img.img4}\n{0}",
+      "text": "=== 图片压力测试 ==={img.img1}{img.img2}{img.img3}{img.img4}{0}",
       "links": [
         {"text": "返回上级", "target": "test_stress_deep"}
       ],
