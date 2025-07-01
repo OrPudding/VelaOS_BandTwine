@@ -99,21 +99,14 @@
 
         <!-- 禁用链接 -->
         <text if="$item.type === 'disabled'" class="disabled-text">{{$item.content}}</text>
-
-        <!-- 图片组件 -->
-        <div class="image-container" for="{{(index, segment) in segments}}" if="{{segment.type === 'image'}}">
-          <image src="{{segment.path}}" class="{{segment.imgClass}}" data-index="{{index}}" onclick="handleImageTap"
-            onerror="handleImageError" />
-          <text class="image-fallback" if="{{segment.showFallback}}">
-            {{segment.fallbackText || '图片加载失败'}}
-          </text>
-        </div>
-
-        <!-- 错误文本组件 -->
-        <text for="{{(index, segment) in segments}}" if="{{segment.type === 'error'}}"
-          class="error-text {{segment.errorClass}}">
-          {{segment.content}}
-        </text>
+            <image 
+              src="{{$item.path}}" 
+              style="width:{{$item.width}}px"
+              data-index="{{$idx}}" 
+              onerror="handleImageError"
+            />
+            <text if="$item.type === 'error'" class="error-text">[ERR] {{$item.content}}</text>
+<text if="$item.type === 'error'" class="error-text">[ERR] {{$item.content}}</text>
       </block>
     </div>
   </scroll>
@@ -243,17 +236,13 @@ export default {
       });
       
     } catch (e) {
-      console.error("节点加载错误:", e);
-      this.segments = [{
-        type: "error", 
-        content: `节点加载错误: ${e.message}`
-      }];
-      
-      prompt.showToast({
-        message: `节点错误: ${e.message}`,
-        duration: 3000
-      });
-    }
+    console.error("节点加载错误:", e);
+    this.pushErrorSegment(`节点加载错误: ${e.message}`); // 修改点
+    prompt.showToast({
+      message: `节点错误: ${e.message}`,
+      duration: 3000
+    });
+  }
   },
   
   parseTextWithLinks(text) {
@@ -330,73 +319,102 @@ export default {
         });
       }
     } else {
-      this.segments.push({ 
-        type: "error", 
-        content: `[无效链接${linkIndex}]` 
-      });
-    }
+    this.pushErrorSegment(`无效链接${linkIndex}`); // 修改点
+  }
   },
   
   handleImageMarker(markerId) {
-  // 提取实际图片ID (去掉"img."前缀)
   const imgId = markerId.replace('img.', '');
   
-  try {
-    // 防御性检查1：节点是否定义图片组
-    if (!gameData.nodes[this.currentNodeId]?.imgs) {
-      this.pushErrorSegment(`节点未定义图片组`, 'warning');
-      return;
-    }
+  // 防御性检查
+  const currentNode = gameData.nodes[this.currentNodeId];
+  if (!currentNode) {
+    this.pushErrorSegment(`当前节点未定义: ${this.currentNodeId}`);
+    return;
+  }
+  
+  if (!currentNode.imgs || !currentNode.imgs[imgId]) {
+    this.pushErrorSegment(`图片配置错误: ${imgId}`);
+    return;
+  }
 
-    // 防御性检查2：特定图片是否存在定义
-    const imgDef = gameData.nodes[this.currentNodeId].imgs[imgId];
-    if (!imgDef) {
-      this.pushErrorSegment(`图片[${imgId}]未定义`, 'config');
-      return;
-    }
-
-    // 处理动态路径
-    let path = imgDef.path || '';
-    if (path.includes('{')) {
+  const imgDef = currentNode.imgs[imgId];
+  let path = imgDef.path || '';
+  
+  // 统一替换逻辑 - 只处理${expr}格式
+  if (path.includes('${')) {
+    try {
       path = path.replace(/\${(.*?)}/g, (_, expr) => {
         try {
-          const val = this.parseExpression(expr);
-          return val !== undefined ? val.toString() : '';
+          return this.parseExpression(expr)?.toString() || '';
         } catch(e) {
-          this.debugLog(`图片路径表达式错误: ${expr}`, e);
-          return '';
+          this.debugLog(`表达式执行失败: ${expr}`, e);
+          return 'ERROR';
         }
       });
+    } catch(e) {
+      this.pushErrorSegment(`图片路径表达式错误: ${imgId}`);
+      return;
     }
-
-    // 添加默认资源路径前缀
-    if (!path.startsWith('/') && !path.startsWith('http')) {
-      path = '/common/images/' + path;
+  }
+  
+  // 调试输出原始路径
+  this.debugLog(`原始图片路径: ${path}`, {imgId});
+  
+  // 增强路径标准化
+  let finalPath = path;
+  if (path) {
+    // 已包含基础路径的情况
+    const hasBasePath = path.includes('/common/images/');
+    
+    if (!hasBasePath && 
+        !path.startsWith('/') && 
+        !path.startsWith('http') && 
+        !path.startsWith('.')) {
+      finalPath = '/common/images/' + path;
     }
-
-    // 处理自定义宽度
-    let width = '';
-    if (imgDef.display === 'custom' && imgDef.width) {
-      try {
-        width = typeof imgDef.width === 'string' 
-          ? this.parseExpression(imgDef.width) 
-          : imgDef.width;
-        width = Math.max(10, Math.min(1000, width)) + 'px'; // 限制范围
-      } catch(e) {
-        width = '150px'; // 默认值
-      }
-    }
-
-    this.segments.push({
+  } else {
+    this.pushErrorSegment(`图片路径为空: ${imgId}`);
+    return;
+  }
+  
+  // 调试输出最终路径
+  this.debugLog(`最终图片路径: ${finalPath}`, {imgId});
+  
+  // 创建图片段
+  this.segments.push({
     type: "image",
-    path: path,
-    imgClass: `img-${imgDef.display || 'inline'}`,  // 改为imgClass
-    fallbackText: `图片[${imgId}]加载失败`,
-    displayMode: imgDef.display || 'inline'          // 添加displayMode属性
+    path: finalPath,
+    width: imgDef.width || 150 // 默认宽度
   });
+},
 
-  } catch (e) {
-    this.pushErrorSegment(`图片[${imgId}]处理失败: ${e.message}`);
+// 统一错误处理方法
+pushErrorSegment(message) {
+  this.segments.push({
+    type: "error",
+    content: message
+  });
+},
+
+// 图片加载错误处理
+handleImageError(e) {
+  const index = parseInt(e.target.dataset.index);
+  if (isNaN(index)) {
+    this.debugLog("图片错误索引无效");
+    return;
+  }
+  
+  const segment = this.segments[index];
+  if (segment?.type === "image") {
+    this.pushErrorSegment(`图片加载失败: ${segment.path}`);
+    this.$page.$forceUpdate();
+    
+    // 调试日志
+    this.debugLog("图片加载错误详情", {
+      path: segment.path,
+      index: index
+    });
   }
 },
   
@@ -407,7 +425,7 @@ export default {
       const result = this.parseExpression(path);
       this.segments.push({ type: "var", content: result });
     } catch(e) {
-      this.segments.push({ type: "error", content: `表达式错误: ${path}` });
+      this.pushErrorSegment(`表达式错误: ${path}`);
     }
   } 
   // 普通变量
@@ -416,7 +434,7 @@ export default {
     if (value !== undefined) {
       this.segments.push({ type: "var", content: value.toString() });
     } else {
-      this.segments.push({ type: "error", content: `[变量 ${path} 未定义]` });
+      this.pushErrorSegment(`变量 ${path} 未定义`); 
     }
   }
 },
@@ -428,7 +446,7 @@ handleRandomMarker(markerId) {
   try {
     // 防御性检查1：节点是否定义随机组
     if (!gameData.nodes[this.currentNodeId]?.randoms) {
-      this.pushErrorSegment(`节点未定义随机组`, 'warning');
+      this.pushErrorSegment(`节点未定义随机组`);
       return;
     }
 
@@ -512,7 +530,7 @@ handleRandomMarker(markerId) {
     });
 
   } catch (e) {
-    this.pushErrorSegment(`随机组[${randomId}]处理失败: ${e.message}`);
+    this.pushErrorSegment(`随机组处理失败: ${e.message}`);
   }
 },
   
@@ -522,10 +540,7 @@ handleRandomMarker(markerId) {
   const conditions = gameData.nodes[this.currentNodeId]?.conds?.[conditionId];
   
   if (!conditions || !Array.isArray(conditions)) {
-    this.segments.push({ 
-      type: "error", 
-      content: `[条件组${marker}未定义]` 
-    });
+    this.pushErrorSegment(`条件组${marker}未定义`); 
     return;
   }
   
@@ -549,7 +564,7 @@ handleScriptMarker(marker) {
   const script = gameData.nodes[this.currentNodeId]?.scripts?.[scriptId];
   
   if (!script) {
-    this.segments.push({ type: "error", content: `JS未定义: ${scriptId}` });
+    this.pushErrorSegment(`JS未定义: ${scriptId}`);
     return;
   }
 
@@ -904,10 +919,6 @@ handleImageTap(e) {
       });
     },
     
-    handleImageError(e) {
-      const index = e.target.dataset.index;
-      this.$set(`segments[${index}]`, 'showFallback', true);
-    },
   
 
 processIncomingData(data) {
@@ -951,29 +962,6 @@ processIncomingData(data) {
   },
   
   // ================= 工具方法 =================
-  // 新增工具函数：表达式解析
-  parseExpression(expr) {
-  // 支持变量、四则运算、三元表达式
-  const varPattern = /var\.\w+(\.\w+)*/g;
-  const processed = expr.replace(varPattern, match => 
-    JSON.stringify(this.getVariable(match))
-  );
-  
-  try {
-    // 安全沙箱实现
-    const safeEnv = {
-      Math: Math,
-      Date: Date,
-      parseInt: parseInt,
-      parseFloat: parseFloat
-    };
-    return new Function('env', `with(env){return ${processed}}`)(safeEnv);
-  } catch(e) {
-    this.debugLog(`表达式错误: ${expr}`, e);
-    return 0;
-  }
-},
-
   getCurrentTime() {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -991,32 +979,23 @@ processIncomingData(data) {
   });
 },
 parseExpression(expr) {
-  // 创建安全沙箱环境
-  const sandbox = {
-    Math: Math,
-    Number: Number,
-    parseInt: parseInt,
-    parseFloat: parseFloat,
-    var: (path) => this.getVariable(`var.${path}`) || 0
+  // 直接变量访问器
+  const getVar = (path) => {
+    const fullPath = `var.${path}`;
+    const val = this.getVariable(fullPath);
+    return val !== undefined ? val : 0;
   };
-  
+
   try {
-    // 替换变量引用
-    const safeExpr = expr.replace(/var\.([\w.]+)/g, (_, p) => {
-      return `var('${p}')`;
+    // 替换变量引用格式
+    const jsExpr = expr.replace(/var\.([\w.]+)/g, (_, p) => {
+      return `getVar('${p}')`;
     });
-    
-    // 安全执行
-    const fn = new Function('env', `with(env){ return ${safeExpr} }`);
-    const result = fn(sandbox);
-    
-    // 验证结果
-    return typeof result === 'number' || typeof result === 'string' 
-      ? result 
-      : String(result);
-      
+
+    // 直接执行表达式
+    return eval(jsExpr);
   } catch(e) {
-    this.debugLog(`表达式解析失败: ${expr}`, e);
+    console.error(`表达式错误: ${expr}`, e);
     return 0;
   }
 },
@@ -1206,10 +1185,11 @@ handleImageError(e, index) {
 
 .scene {
   width: 100%;
-  padding: 10px 15px;
+  padding: 10px;
   background-color: #1a1a1a;
   border-radius: 12px;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 
 /* 文本样式 */
@@ -1221,7 +1201,6 @@ handleImageError(e, index) {
 .var-text {
   font-size: 35px;
   color: #ffcc00;
-  font-weight: bold;
 }
 
 .link-text {
@@ -1236,64 +1215,8 @@ handleImageError(e, index) {
   text-decoration: line-through;
 }
 
-/* 错误文本基础样式 */
+/* 错误文本样式 */
 .error-text {
-  font-size: 30px;
-  padding: 3px 5px;
-  border-radius: 4px;
-  margin: 2px 0;
-}
-
-/* 错误类型样式 */
-.error-type-error {
-  background-color: #330000;
   color: #ff4d4f;
-  border-left: 3px solid #ff4d4f;
-}
-
-.error-type-warning {
-  background-color: #333300;
-  color: #ffff4d;
-  border-left: 3px solid #ffff4d;
-}
-
-.error-type-config {
-  background-color: #003333;
-  color: #4dffff;
-  border-left: 3px solid #4dffff;
-}
-
-/* 图片容器 */
-.image-container {
-  margin: 4px 0;
-  position: relative;
-  justify-content: center;
-}
-
-/* 图片回退样式 */
-.image-fallback {
-  position: absolute;
-  top: 0;
-  background-color: #333;
-  border: 1px dashed #666;
-  padding: 10px;
-  color: #999;
-  font-size: 24px;
-  text-align: center;
-  width: 100%;
-}
-
-/* 图片显示模式 */
-.img-inline {
-  height: 40px;
-  vertical-align: middle;
-}
-
-.img-banner {
-  width: 100%;
-  max-height: 120px;
-}
-
-.img-custom {
-  max-width: 100%;
+  font-size: 35px;
 }
