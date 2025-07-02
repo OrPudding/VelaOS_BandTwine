@@ -20,6 +20,9 @@
     },
     {
       "name": "system.file"
+    },
+    {
+      "name": "system.app"
     }
   ],
   "config": {

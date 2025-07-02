@@ -16,33 +16,33 @@
   },
   "nodes": {
     "index": {
-      "text": "引擎能力测试\n测试项目：{0}{1}{2}{3}{4}{5}{6}{7}",
+      "text": "引擎能力测试\n测试项目：\n{0}{1}{2}{3}{4}{5}\n{6}\n{7}",
       "links": [
-        {"text": "1. 基础功能测试", "target": "test_basic"},
-        {"text": "2. 变量运算测试", "target": "test_variables"},
-        {"text": "3. 条件逻辑测试", "target": "test_conditions"},
-        {"text": "4. 随机系统测试", "target": "test_random"},
-        {"text": "5. 图片系统测试", "target": "test_images"},
-        {"text": "6. 存档系统测试", "target": "test_save"},
-        {"text": "7. 表达式测试", "target": "test_expressions"},
-        {"text": "8. 压力测试", "target": "test_stress"}
+        {"text": "基础功能测试", "target": "test_basic"},
+        {"text": "变量运算测试", "target": "test_variables"},
+        {"text": "条件逻辑测试", "target": "test_conditions"},
+        {"text": "随机系统测试", "target": "test_random"},
+        {"text": "图片系统测试", "target": "test_images"},
+        {"text": "存档系统测试", "target": "test_save"},
+        {"text": "表达式测试", "target": "test_expressions"},
+        {"text": "压力测试", "target": "test_stress"}
       ]
     },
     "test_basic": {
-      "text": "基础功能测试\n1. 文本换行测试\n2. 特殊符号：&lt;&gt;@#\n3. 变量显示：{var.test.counter.value}\n4. 长文本测试：这是一段用于测试文本显示能力的超长文本内容，重复多次以观察效果-这是一段用于测试文本显示能力的超长文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容。{0}",
+      "text": "基础功能测试\n\n特殊符号：&lt;&gt;@#\n变量显示：{var.test.counter.value}\n\n长文本测试：这是一段用于测试文本显示能力的长文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容{0}",
       "links": [
         {"text": "返回主节点", "target": "index"}
       ]
     },
     "test_basic_sub": {
-      "text": "=== 子页面测试 ===测试嵌套页面跳转功能{0}",
+      "text": "子页面测试\n测试嵌套页面跳转功能{0}",
       "links": [
         {"text": "返回上级", "target": "test_basic"}
       ]
     },
 
     "test_variables": {
-      "text": "变量运算测试\n当前计数器：{var.test.counter.value}\n当前状态：{var.test.flag.value}操作选项：{0}{1}{2}{3}",
+      "text": "变量运算测试\n当前计数器：{var.test.counter.value}\n当前状态：{var.test.flag.value}\n操作选项：\n{0}\n{1}\n{2}\n{3}",
       "links": [
         {"text": "计数器+1", "target": "test_variables", "actions": [
           {"type": "add", "target": "var.test.counter.value", "value": 1}
@@ -59,7 +59,7 @@
     },
 
     "test_conditions": {
-      "text": "条件逻辑测试\n计数器：{var.test.counter.value}\n状态：{var.test.flag.value}\n1. 基础条件：{cond.basic}2. 复杂条件：{cond.complex}3. 嵌套条件：{cond.nested}{0}{1}{2}{3}",
+      "text": "条件逻辑测试\n计数器：{var.test.counter.value}\n状态：{var.test.flag.value}\n基础条件：\n{cond.basic}\n复杂条件：\n{cond.complex}\n嵌套条件：\n{cond.nested}{0}{1}{2}{3}",
       "links": [
         {"text": "增加计数器", "target": "test_conditions", "actions": [
           {"type": "add", "target": "var.test.counter.value", "value": 1}
@@ -75,24 +75,24 @@
       "conds": {
         "basic": [
           {"condition": "var.test.counter.value > 5", "text": "计数器>5"},
-          {"text": "计数器≤5"}
+          {"text": "此时计数器≤5"}
         ],
         "complex": [
-          {"condition": "var.test.counter.value > 10 && var.test.flag.value", "text": "计数器>10且状态为真"},
-          {"condition": "var.test.counter.value < 5 || !var.test.flag.value", "text": "计数器<5或状态为假"},
+          {"condition": "var.test.counter.value > 10 && var.test.flag.value", "text": "此时计数器>10且状态为真"},
+          {"condition": "var.test.counter.value < 5 || !var.test.flag.value", "text": "此时计数器<5或状态为假"},
           {"text": "其他情况"}
         ],
         "nested": [
-          {"condition": "var.test.counter.value > 15", "text": "计数器大于15"},
-          {"condition": "var.test.counter.value > 10", "text": "计数器大于10"},
-          {"condition": "var.test.counter.value > 5", "text": "计数器大于5"},
-          {"text": "计数器小于等于5"}
+          {"condition": "var.test.counter.value > 15", "text": "此时计数器大于15"},
+          {"condition": "var.test.counter.value > 10", "text": "此时计数器大于10"},
+          {"condition": "var.test.counter.value > 5", "text": "此时计数器大于5"},
+          {"text": "此时计数器小于等于5"}
         ]
       }
     },
 
     "test_random": {
-      "text": "随机测试\n1. 基础随机：{random.basic}2. 权重随机：{random.weighted}3. 条件随机：{random.conditional}{0}{1}计数器：{var.test.counter.value}{2}{3}",
+      "text": "随机测试\n基础随机：{random.basic}\n权重随机：{random.weighted}\n条件随机：\n{random.conditional}\n(增加计数器到5试试？)\n{0}{1}\n计数器：{var.test.counter.value}\n{2}{3}",
       "links": [
         {"text": "重新生成", "target": "test_random"},
         {"text": "返回主节点", "target": "index"},
@@ -110,9 +110,9 @@
           {"text": "选项C"}
         ],
         "weighted": [
-          {"text": "选项1(60%概率)", "weight": 0.6},
-          {"text": "选项2(30%概率)", "weight": 0.3},
-          {"text": "选项3(10%概率)", "weight": 0.1}
+          {"text": "选项1(60%概率出现)", "weight": 0.6},
+          {"text": "选项2(30%概率出现)", "weight": 0.3},
+          {"text": "选项3(10%概率出现)", "weight": 0.1}
         ],
         "conditional": [
           {"text": "计数器>5时才可能出现", "condition": "var.test.counter.value > 5"},
@@ -122,7 +122,7 @@
     },
 
     "test_images": {
-      "text": "图片测试\n这是一个宽度为120px的图片{img.120px}这是一个多层路径的图片{img.120px.alt}这是一个动态路径的图片{img.dynamic}{0}",
+      "text": "图片测试\n这是一个宽度为120px的图片{img.120px}这是一个多层路径的图片{img.120px.alt}这是一个动态路径的图片{img.dynamic}\n{0}",
       "links": [
         {"text": "返回主节点", "target": "index"}
       ],
@@ -134,14 +134,14 @@
     },
 
     "test_save": {
-      "text": "存档测试\n当前计数器：{var.test.counter.value}当前状态：{var.test.flag.value}{0}{1}",
+      "text": "存档测试\n当前计数器：{var.test.counter.value}\n当前状态：{var.test.flag.value}{0}{1}",
       "links": [
         {"text": "修改测试数据", "target": "test_save_modify"},
         {"text": "返回主节点", "target": "index"}
       ]
     },
     "test_save_modify": {
-      "text": "修改测试数据\n当前计数器：{var.test.counter.value}\n当前状态：{var.test.flag.value}{0}{1}{2}",
+      "text": "修改测试数据\n当前计数器：{var.test.counter.value}\n当前状态：{var.test.flag.value}\n{0}{1}\n{2}",
       "links": [
         {"text": "计数器+5", "target": "test_save_modify", "actions": [
           {"type": "add", "target": "var.test.counter.value", "value": 5}
@@ -154,7 +154,7 @@
     },
 
     "test_expressions": {
-      "text": "表达式测试\n数学运算10+20*3\n结果：{var.calc1}\n变量运算var.test.counter.value*2+5结果：{var.calc2}\n条件运算：\n结果：{var.calc3}\n{0}",
+      "text": "表达式测试\n数学运算\n10+20*3\n结果：{var.calc1}\n变量运算\nvar.test.counter.value*2+5\n结果：{var.calc2}\n条件运算：\n结果：{var.calc3}\n{0}",
       "actions": [
         {"type": "set", "target": "var.calc1", "value": "10 + 20 * 3"},
         {"type": "set", "target": "var.calc2", "value": "var.test.counter.value * 2 + 5"},
@@ -166,15 +166,12 @@
     },
 
     "test_stress": {
-      "text": "=== 压力测试 ===1. 长文本：{var.long_text}2. 多变量：{var.var1} {var.var2} {var.var3}3. 复杂条件：{cond.complex}{0}{1}",
-      "actions": [
-        {"type": "set", "target": "var.long_text", "value": "这是一段非常长的测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本"},
-        {"type": "set", "target": "var.var1", "value": "值1"},
-        {"type": "set", "target": "var.var2", "value": "值2"},
-        {"type": "set", "target": "var.var3", "value": "值3"}
-      ],
+      "text": "压力测试\n{0}\n{1}\n{2}\n{3}\n{4}",
       "links": [
-        {"text": "进入深度测试", "target": "test_stress_deep"},
+        {"text": "超长文本测试", "target": "test_stress_text"},
+        {"text": "超多链接测试", "target": "test_stress_link"},
+        {"text": "超多图片测试", "target": "test_stress_images"},
+        {"text": "超长表达式测试", "target": "test_stress_expression"},
         {"text": "返回主节点", "target": "index"}
       ],
       "conds": {
@@ -184,27 +181,57 @@
         ]
       }
     },
-    "test_stress_deep": {
-      "text": "=== 深度压力测试 ==={0}{1}{2}",
+
+    "test_stress_text": {
+      "text": "超长文本测试\n测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本\n{0}",
       "links": [
-        {"text": "生成随机数据", "target": "test_stress_deep", "actions": [
-          {"type": "set", "target": "var.test.counter.value", "value": "Math.floor(Math.random() * 20)"},
-          {"type": "set", "target": "var.test.flag.value", "value": "Math.random() > 0.5"}
-        ]},
-        {"text": "加载大量图片", "target": "test_stress_images"},
         {"text": "返回上级", "target": "test_stress"}
       ]
     },
-    "test_stress_images": {
-      "text": "=== 图片压力测试 ==={img.img1}{img.img2}{img.img3}{img.img4}{0}",
+
+    "test_stress_link": {
+      "text": "超多链接测试\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}",
       "links": [
-        {"text": "返回上级", "target": "test_stress_deep"}
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"},
+        {"text": "返回上级", "target": "test_stress"}
+      ]
+    },
+
+    "test_stress_expression": {
+      "text": "表达式压力测试\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{0}",
+      "links": [
+        {"text": "返回上级", "target": "test_stress"}
+      ],
+      "conds": {
+        "complex": [
+          {"condition": "var.test.counter.value > 10 && var.test.flag.value || var.player.level.value > 5", "text": "复合条件成立"},
+          {"text": "条件不成立"}
+        ]
+      }
+    },
+
+    "test_stress_images": {
+      "text": "超多图片测试\n{img.img1}\n{img.img2}\n{img.img3}\n{img.img4}\n{img.img5}\n{img.img6}\n{img.img7}\n{img.img8}\n{0}",
+      "links": [
+        {"text": "返回上级", "target": "test_stress"}
       ],
       "imgs": {
-        "img1": {"path": "stress1.jpg", "display": "banner"},
-        "img2": {"path": "stress2.jpg", "display": "banner"},
-        "img3": {"path": "stress3.jpg", "display": "banner"},
-        "img4": {"path": "stress4.jpg", "display": "banner"}
+        "img1": {"path": "stress.png", "width": 300},
+        "img2": {"path": "stress.png", "width": 300},
+        "img3": {"path": "stress.png", "width": 300},
+        "img4": {"path": "stress.png", "width": 300},
+        "img5": {"path": "stress.png", "width": 300},
+        "img6": {"path": "stress.png", "width": 300},
+        "img7": {"path": "stress.png", "width": 300},
+        "img8": {"path": "stress.png", "width": 300}
       }
     }
   }

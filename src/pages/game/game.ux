@@ -90,8 +90,8 @@
         <!-- 文本片段 -->
         <text if="$item.type === 'text'" class="normal-text">{{$item.content}}</text>
 
-        <!-- 变量显示 -->
-        <text if="$item.type === 'var'" class="var-text">{{$item.content}}</text>
+        <div if="$item.type === 'newline'" style="width:100%"></div>
+
 
         <!-- 可点击链接 -->
         <text if="$item.type === 'link'" class="link-text"
@@ -246,59 +246,75 @@ export default {
   },
   
   parseTextWithLinks(text) {
-    this.segments = [];
-    if (!text) return;
-    
-    let lastPosition = 0;
-    const regex = /\{(\w+\.?[\w\.]*)\}/g;
-    let match;
-    
-    while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastPosition) {
-        this.segments.push({
-          type: "text", 
-          content: text.substring(lastPosition, match.index)
-        });
+  this.segments = [];
+  if (!text) return;
+
+  
+  
+  // 第一步：处理所有标记（变量/随机/条件）
+  let processedText = text;
+  const markerRegex = /\{(var\.[^}]+|random\.[^}]+|cond\.[^}]+)\}/g;
+  processedText = processedText.replace(markerRegex, (_, path) => {
+    if (path.startsWith('var.')) {
+      return this.getVariableValue(path);
+    } else if (path.startsWith('random.')) {
+      return this.getRandomResult(path);
+    } else if (path.startsWith('cond.')) {
+      return this.getConditionResult(path);
+    }
+    return path;
+  });
+  
+  // 第二步：处理换行符和特殊标记
+  let lastPosition = 0;
+  
+  // 增强正则：同时匹配标记和换行符
+  const regex = /(\{\w+\.?[\w\.]*\}|\n)/g;
+  let match;
+  
+  while ((match = regex.exec(processedText)) !== null) {
+    // 处理匹配点之前的普通文本
+    if (match.index > lastPosition) {
+      const preText = processedText.substring(lastPosition, match.index);
+      if (preText) {
+        this.segments.push({ type: "text", content: preText });
       }
-      
-      const marker = match[1];
-      
-      // 处理链接标记（数字索引）
-      if (/^\d+$/.test(marker)) {
-        this.handleLinkMarker(parseInt(marker));
-      } 
-      else if (marker.startsWith('img')) {
-        this.handleImageMarker(marker);
-      }
-      else if (marker.startsWith('var.')) {
-        this.handleVariableMarker(marker);
-      }
-      else if (marker.startsWith('random')) {
-        this.handleRandomMarker(marker);
-      }
-      else if (marker.startsWith('cond')) {
-        this.handleConditionMarker(marker);
-      }
-      else if (marker.startsWith('js.')) {
-        this.handleScriptMarker(marker);
-      }
-      else {
-        this.segments.push({ 
-          type: "text", 
-          content: `{${marker}}` 
-        });
-      }
-      
-      lastPosition = match.index + match[0].length;
     }
     
-    if (lastPosition < text.length) {
-      this.segments.push({ 
-        type: "text", 
-        content: text.substring(lastPosition) 
-      });
+    // 处理匹配内容
+    const matched = match[1];
+    
+    if (matched === '\n') {
+      // 显式处理换行符
+      this.segments.push({ type: "newline" });
+    } 
+    else if (/^\d+$/.test(matched.replace(/\{|\}/g, ''))) {
+      // 数字链接标记
+      const linkId = parseInt(matched.replace(/\{|\}/g, ''));
+      this.handleLinkMarker(linkId);
     }
-  },
+    else if (matched.startsWith('{img')) {
+      this.handleImageMarker(matched.replace(/\{|\}/g, ''));
+    }
+    else if (matched.startsWith('{js.')) {
+      this.handleScriptMarker(matched.replace(/\{|\}/g, ''));
+    }
+    else {
+      // 其他未识别内容作为普通文本输出
+      this.segments.push({ type: "text", content: matched });
+    }
+    
+    lastPosition = match.index + matched.length;
+  }
+  
+  // 处理剩余文本
+  if (lastPosition < processedText.length) {
+    const remaining = processedText.substring(lastPosition);
+    if (remaining) {
+      this.segments.push({ type: "text", content: remaining });
+    }
+  }
+},
   
   // ================= 标记处理器 =================
   handleLinkMarker(linkIndex) {
@@ -418,49 +434,47 @@ handleImageError(e) {
   }
 },
   
-  handleVariableMarker(path) {
-  // 检测是否为表达式 (含运算符)
+// 获取变量内容
+getVariableValue(path) {
+  // 检测是否为表达式
   if (/[+\-*/><=?:]/.test(path)) {
     try {
-      const result = this.parseExpression(path);
-      this.segments.push({ type: "var", content: result });
+      return this.parseExpression(path).toString();
     } catch(e) {
-      this.pushErrorSegment(`表达式错误: ${path}`);
+      this.debugLog(`表达式错误: ${path}`, e);
+      return "[表达式错误]";
     }
   } 
+  
   // 普通变量
-  else {
-    const value = this.getVariable(path);
-    if (value !== undefined) {
-      this.segments.push({ type: "var", content: value.toString() });
-    } else {
-      this.pushErrorSegment(`变量 ${path} 未定义`); 
-    }
+  const value = this.getVariable(path);
+  if (value !== undefined) {
+    return value.toString();
   }
+  
+  this.debugLog(`变量未定义: ${path}`);
+  return "[未定义]";
 },
   
-handleRandomMarker(markerId) {
+getRandomResult(markerId) {
   // 提取实际随机组ID (去掉"random."前缀)
   const randomId = markerId.replace('random.', '');
   
   try {
     // 防御性检查1：节点是否定义随机组
     if (!gameData.nodes[this.currentNodeId]?.randoms) {
-      this.pushErrorSegment(`节点未定义随机组`);
-      return;
+      return `[ERROR]节点未定义随机组`;
     }
 
     // 防御性检查2：特定随机组是否存在
     const options = gameData.nodes[this.currentNodeId].randoms[randomId];
     if (!options || !Array.isArray(options)) {
-      this.pushErrorSegment(`随机组[${randomId}]未定义`, 'config');
-      return;
+      return `[ERROR]随机组[${randomId}]未定义`;
     }
 
     // 检查空数组
     if (options.length === 0) {
-      this.segments.push({ type: "text", content: "[无随机选项]" });
-      return;
+      return "[无随机选项]";
     }
 
     // 筛选有效选项（满足条件的）
@@ -478,8 +492,7 @@ handleRandomMarker(markerId) {
 
     // 处理无有效选项情况
     if (validOptions.length === 0) {
-      this.segments.push({ type: "text", content: "[无可用随机选项]" });
-      return;
+      return "[无可用随机选项]";
     }
 
     // 计算安全权重
@@ -508,9 +521,7 @@ handleRandomMarker(markerId) {
     
     // 处理全零权重情况
     if (totalWeight <= 0) {
-      const fallbackText = weightedOptions[0]?.text || "[权重配置错误]";
-      this.segments.push({ type: "text", content: fallbackText });
-      return;
+      return weightedOptions[0]?.text || "[权重配置错误]";
     }
 
     // 执行随机选择
@@ -518,44 +529,35 @@ handleRandomMarker(markerId) {
     for (const opt of weightedOptions) {
       randomVal -= opt.weight;
       if (randomVal <= 0) {
-        this.segments.push({ type: "text", content: opt.text });
-        return;
+        return opt.text; // 直接返回文本结果
       }
     }
     
     // 保底逻辑
-    this.segments.push({ 
-      type: "text", 
-      content: weightedOptions[weightedOptions.length - 1].text 
-    });
+    return weightedOptions[weightedOptions.length - 1].text;
 
   } catch (e) {
-    this.pushErrorSegment(`随机组处理失败: ${e.message}`);
+    return `[ERROR]随机组处理失败: ${e.message}`;
   }
 },
   
-  handleConditionMarker(marker) {
+// 改造后的条件组处理方法（返回字符串）
+getConditionResult(marker) {
   // 支持 cond.xxx 格式
   const conditionId = marker.replace('cond.', '');
   const conditions = gameData.nodes[this.currentNodeId]?.conds?.[conditionId];
   
   if (!conditions || !Array.isArray(conditions)) {
-    this.pushErrorSegment(`条件组${marker}未定义`); 
-    return;
+    return `[ERROR]条件组${marker}未定义`;
   }
   
-  let result = "[无匹配条件]";
   for (const cond of conditions) {
     if (!cond.condition || this.checkCondition(cond.condition)) {
-      result = cond.text;
-      break;
+      return cond.text; // 直接返回匹配文本
     }
   }
   
-  this.segments.push({ 
-    type: "text", 
-    content: result 
-  });
+  return "[无匹配条件]";
 },
 
 // 新增脚本处理器
@@ -1195,18 +1197,21 @@ handleImageError(e, index) {
 /* 文本样式 */
 .normal-text {
   font-size: 35px;
-  color: #ffffff;
+  color: #fff;
+  border: 1px solid #fff
 }
 
 .var-text {
   font-size: 35px;
   color: #ffcc00;
+  border: 1px solid #ffcc00
 }
 
 .link-text {
   font-size: 35px;
   color: #4a90e2;
   text-decoration: underline;
+  border: 1px solid #4a90e2
 }
 
 .disabled-text {
