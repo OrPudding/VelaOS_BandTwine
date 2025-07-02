@@ -1,75 +1,92 @@
 <template>
-  <div class="page">
-    <image
-    src="/common/logo.png"
-    style="height: 140px; width: 140px; object-fit: contain"
-  ></image>
-    <div class="col" style="margin-top: 18px; padding: 0 8px 90px 8px; align-items: center">
-      <text class="line">BandTwine</text>
-      <div class="info" for={{basicInfo}}>
-      <text class="item-label">{{ $item.label }}</text>
-      <text class="line">{{ $item.value }}</text>
+  <div class="container">
+    <!-- 顶部时间显示 -->
+    <div class="header">
+      <!-- 返回按钮 - 左上角 -->
+      <image 
+        src="/common/back.png" 
+        class="back-btn"
+        @click="backToHome"
+      ></image>
+      
+      <!-- 时间显示 -->
+      <text class="time-text">{{ currentTime }}</text>
+      
+      <!-- 标题 -->
+      <text class="title-text">关于</text>
     </div>
-      <text class="line font-gray" style="text-align: center">参与开发的人员</text>
-      <text class="line" style="text-align: center">@OrPudding</text>
-      //禁止删除此段版权声明
-      <div class="lisence">
-      <text class="small line">本游戏基于BandTwine</text>
-      <text class="small line">文字游戏引擎开发</text>
-      <text class="small line">程序部分遵循GPLv3协议</text>
-      <text class="small line">Copyright © 2025 OrPudding</text>
-      <text class="small line">禁止删除此段声明</text>
+    
+    <!-- 应用信息区域 -->
+    <div class="app-info">
+      
+      <!-- 应用名称和版本 -->
+      <div class="app-details">
+        <text class="app-name">{{ appInfo.name }}</text>
+        <text class="app-version">{{ appInfo.version }}</text>
+      </div>
+           <!-- 应用图标 -->
+           <image 
+           src="/common/logo.png" 
+           class="app-icon"
+         ></image>
     </div>
-      <text class="line font-gray" style="text-align: center; margin-top: 24px">
-        更多资源请访问
-      </text>
-      <text class="line" style="text-align: center">bandbbs.cn</text>
+    
+    <!-- 开发者区域 -->
+    <text class="section-title">参与开发的人员</text>
+    <div class="developers">
+      <text class="developer">@OrPudding</text>
+      <text class="developer">@无源流沙</text>
     </div>
-    <input class="btn" type="button" value="返回" @click="backToHome" />
+        
+    <!-- 网站信息 -->
+    <text class="website-info">更多资源请访问</text>
+    <text class="website-url">bandbbs.cn</text>
+
+    <!-- 版权信息 -->
+    <div class="copyright">
+      <text class="copyright-line">本游戏基于BandTwine</text>
+      <text class="copyright-line">文字游戏引擎开发</text>
+      <text class="copyright-line">程序部分遵循GPLv3协议</text>
+      <text class="copyright-line">Copyright © 2025 OrPudding</text>
+      <text class="copyright-line">禁止删除此段声明</text>
+    </div>
   </div>
 </template>
 
 <script>
 import router from "@system.router"
 import app from "@system.app"
+import prompt from "@system.prompt"
 
 export default {
   private: {
-    basicInfo: [
-      {label: "包名", value: ""},
-      {label: "版本名称", value: ""},
-      {label: "版本号", value: ""}
-    ]
+    currentTime: "09:28",
+    appInfo: {
+      name: "程序名",
+      version: "1.0"
+    }
   },
 
   onInit() {
-    this.loadAppInfo()
-  },
-
-  loadAppInfo() {
+    // 获取应用信息
     try {
       const info = app.getInfo()
-
-      // 更新基本信息
-      this.basicInfo = this.basicInfo.map((item) => {
-        if (item.label === "应用名称") return {...item, value: info.name}
-        if (item.label === "包名") return {...item, value: info.packageName}
-        if (item.label === "版本名称") return {...item, value: info.versionName}
-        if (item.label === "版本号") return {...item, value: info.versionCode.toString()}
-        return item
-      })
-
-      // 更新来源信息
-      this.sourceInfo = this.sourceInfo.map((item) => {
-        if (item.label === "来源应用") return {...item, value: info.source.packageName || "N/A"}
-        if (item.label === "来源类型")
-          return {...item, value: this.formatSourceType(info.source.type)}
-        return item
-      })
+      this.appInfo.name = info.name || "程序名"
+      this.appInfo.version = (info.versionName || "1.0")
     } catch (e) {
-      console.error("获取应用信息失败:", e)
-      prompt.showToast({message: "加载应用信息失败"})
+      prompt.showToast({ message: "应用信息加载失败" })
     }
+    
+    // 更新时间
+    this.updateTime()
+    setInterval(() => this.updateTime(), 60000)
+  },
+  
+  updateTime() {
+    const now = new Date()
+    this.currentTime = 
+      now.getHours().toString().padStart(2, '0') + ':' + 
+      now.getMinutes().toString().padStart(2, '0')
   },
 
   backToHome() {
@@ -84,48 +101,141 @@ export default {
 </script>
 
 <style>
-@import url(../../common/comm.css);
-
-/* 列表容器 - 宽度充满 */
-.info-list {
+.container {
   width: 100%;
   height: 100%;
-  background-color: transparent;
-}
-
-.info .lisence{
-  margin-top: 24px;
+  background-color: #000000;
   flex-direction: column;
   align-items: center;
-  justify-self: center;
+  padding: 16px;
 }
 
-.item-label {
-  color: #aaaaaa;
-  font-size: 28px;
-  font-weight: 400;
-}
-.col {
+/* 顶部区域 */
+.header {
   width: 100%;
   flex-direction: column;
-  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 10px;
+  position: relative;
 }
-.line {
+
+.back-btn {
+  width: 72px;
+  height: 72px;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.time-text {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+}
+
+.title-text {
+  font-size: 32px;
   color: #ffffff;
-  font-size: 35px;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 500;
 }
-.small{
-  font-size: 25px;
-}
-.font-gray{
-    color: #9E9E9E;
+
+/* 应用信息区域 */
+.app-info {
+width: 324px;
+height: 194px;
+border-radius: 36px;
+background-color: #262626;
+border: 3px solid #333333;
 }
 
 .app-icon {
-  width: 140px;
-  height: 140px;
+  width: 72px;
+  height: 72px;
+  position: absolute;
+  right: 16px;
+  top: 112px;
+}
+
+.app-details {
+  position: absolute;
+  left: 24px;
+  top: 18px;
+  flex-direction: column;
+}
+
+.app-name {
+  font-size: 36px;
+  color: #ffffff;
+}
+
+.app-version {
+  font-size: 36px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 开发者区域 */
+.section-title {
+  width: 100%;
+  text-align: left;
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 10px;
+}
+
+.developers {
+  width: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  margin-bottom: 10px;
+}
+
+.developer {
+  font-size: 32px;
+  color: #ffffff;
+  font-weight: 500;
+  margin-right: 20px;
+}
+
+/* 版权信息 */
+.copyright {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.copyright-line {
+  font-size: 25px;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* 网站信息 */
+.website-info {
+  width: 100%;
+  text-align: center;
+  font-size: 25px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+}
+
+.website-url {
+  width: 100%;
+  text-align: center;
+  font-size: 32px;
+  color: #ffffff;
+  margin-bottom: 20px;
+}
+
+/* 返回按钮 */
+.btn {
+  width: 120px;
+  height: 60px;
+  font-size: 28px;
+  background-color: transparent;
+  border: none;
+  color: #ffffff;
 }
 </style>

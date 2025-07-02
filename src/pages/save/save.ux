@@ -1,29 +1,63 @@
 <template>
-  <div class="page">
-    <!-- 存档区域 -->
-    <div class="save-column">
-      <div class="save-btn" for="{{saveList}}" onclick="handleSaveSelect($idx)" tid="save-btn">
+  <div class="container">
+    <!-- 顶部区域 - 与首页一致 -->
+    <div class="header">
+      <image 
+      src="/common/back.png" 
+      class="back-btn"
+      @click="backToHome"
+    ></image>
+      <text class="time-text">{{ hours }}:{{ minutes }}</text>
+      <text class="title-text">{{ title }}</text>
+    </div>
+    
+    <div class="game-container">
+      <div 
+        class="game-btn" 
+        for="{{ saveList }}" 
+        onclick="handleSaveSelect($idx)" 
+        tid="save-btn"
+      >
         <text class="btn-text">{{ $item.name }}</text>
       </div>
     </div>
-    <input class="btn" value="返回" @click="backToHome" />
   </div>
 </template>
 
 <script>
 import router from "@system.router"
+import prompt from "@system.prompt"
+
 export default {
   private: {
-    title: "DoL of Vela",
-    time: "00:00",
+    title: "加载存档",
+    hours: '00',
+    minutes: '00',
     timer: null,
     saveList: [
       {id: 1, name: "存档 01"},
       {id: 2, name: "存档 02"},
       {id: 3, name: "存档 03"},
-      {id: 4, name: "存档 04"}
+      {id: 4, name: "存档 04"},
+      {id: 5, name: "存档 05"}
     ]
   },
+
+  onInit() {
+    this.updateTime();
+    this.timer = setInterval(() => this.updateTime(), 1000);
+  },
+  
+  onDestroy() {
+    if (this.timer) clearInterval(this.timer);
+  },
+  
+  updateTime() {
+    const now = new Date();
+    this.hours = now.getHours().toString().padStart(2, '0');
+    this.minutes = now.getMinutes().toString().padStart(2, '0');
+  },
+  
   backToHome() {
     router.push({
       uri: "pages/index",
@@ -31,33 +65,99 @@ export default {
         ___PARAM_LAUNCH_FLAG___: "clearTask"
       }
     })
+  },
+  
+  handleSaveSelect(index) {
+    const save = this.saveList[index];
+    prompt.showToast({ message: `已选择 ${save.name}` });
+    // 这里添加实际的存档加载逻辑
   }
 }
 </script>
 
 <style>
-@import "../../common/comm.css";
-
-/* 存档列样式 */
-.save-column {
+.container {
   width: 100%;
-  display: flex;
-  flex-wrap: wrap;
+  height: 100%;
+  background-color: #000000;
   flex-direction: column;
-  flex-direction: row;
-  align-content: flex-start;
+  align-items: center;
+  padding: 16px;
 }
 
-/* 存档按钮统一样式 */
-.save-btn {
-  height: 100px;
-  width: 50%;
-  margin-bottom: 12px;
-  border: 2px solid #666666;
-  border-radius: 30%;
-  background-color: #1a1a1a;
+/* 顶部区域 */
+.header {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.back-btn {
+  width: 72px;
+  height: 72px;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.title-text {
+  font-size: 32px;
+  color: #ffffff;
+}
+
+.time-text {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 存档标题 */
+.section-title {
+  width: 100%;
+  text-align: center;
+  font-size: 30px;
+  color: #ffffff;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+/* 存档按钮容器 */
+.game-container {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 存档按钮样式 */
+.game-btn {
+  width: 300px;
+  height: 91px;
+  opacity: 1;
+  border-radius: 36px;
+  background-color: #262626;
+  border: 3px solid #333333;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* 按钮文字样式 */
+.btn-text {
+  font-size: 36px;
+  color: #ffffff;
+}
+
+/* 返回按钮 */
+.btn {
+  width: 324px;
+  height: 91px;
+  font-size: 36px;
+  background: #262626;
+  border: 3px solid #333333;
+  border-radius: 36px;
+  color: #ffffff;
+  margin-top: 30px;
 }
 </style>

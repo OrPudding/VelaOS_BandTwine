@@ -1,37 +1,52 @@
 <template>
-  <div class="page">
-    <div class="title">
-      <text class="title-text">{{title}}</text>
-      <text class="title-text">{{ hours }}:{{ minutes }}</text>
+  <div class="container">
+    <!-- 顶部区域 - 完全照抄关于页 -->
+    <div class="header">
+      <text class="time-text">{{ hours }}:{{ minutes }}</text>
+      <text class="title-text">{{ title }}</text>
     </div>
-    <image src="/common/title.png" style="width:300px"></image>
-    <text class="text">游戏介绍</text>
-    <div class="main-layout" style="flex-direction:column">
-      <!-- 游戏与存档区域 -->
-      <div class="content-row" style="flex-direction: column; flex-wrap:wrap">
-        <!-- 游戏操作 -->
-        <div class="game-column">
-          <!-- 游戏操作按钮（精确控制循环范围） -->
-          <div class="game-btn" for="{{gameList}}" onclick="handleGameSelect($item)" tid="game-btn">
-            <text class="btn-text">{{$item.name}}</text>
-          </div>
-        </div>
+    
+    <!-- 游戏标题图片 -->
+    <image 
+      src="/common/title.png" 
+      style="width:300px; margin-top:20px;"
+    ></image>
+    
+    <!-- 游戏介绍 -->
+    <text class="section-title">游戏介绍</text>
+    
+    <!-- 游戏按钮区域 -->
+    <div class="game-container">
+      <div 
+        class="game-btn" 
+        for="{{ gameList }}" 
+        onclick="handleGameSelect($item)" 
+        tid="game-btn"
+      >
+        <text class="btn-text">{{ $item.name }}</text>
       </div>
     </div>
-    <input class="btn" value="关于" @click="routeToAbout" />
+    
+    <!-- 关于按钮 -->
+    <input 
+      class="btn" 
+      type="button" 
+      value="关于" 
+      @click="routeToAbout" 
+    />
   </div>
-</div></div></template>
+</template>
 
 <script>
 import router from "@system.router"
+import prompt from "@system.prompt"
 
 export default {
-  // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
   private: {
     title: "游戏名",
     hours: '00',
     minutes: '00',
-    timer: null ,
+    timer: null,
     gameList: [
       { id: 1, name: '开始游戏', uri: "pages/start" },
       { id: 2, name: '继续游戏', uri: "pages/save" }
@@ -40,11 +55,11 @@ export default {
 
   onInit() {
     this.updateTime();
-    this.timer = setInterval(() => this.updateTime(), 1000); // 每秒更新
+    this.timer = setInterval(() => this.updateTime(), 1000);
   },
   
   onDestroy() {
-    clearInterval(this.timer);
+    if (this.timer) clearInterval(this.timer);
   },
   
   updateTime() {
@@ -53,62 +68,97 @@ export default {
     this.minutes = now.getMinutes().toString().padStart(2, '0');
   },
 
-    handleGameSelect(item) {
-  
-  // 直接使用 item 中的 uri 跳转
-  if (item.uri) {
-    router.push({
-      uri: item.uri
-    })
-  } else {
-    prompt.showToast({ message: '页面未配置' })
-  }
-},
+  handleGameSelect(item) {
+    if (item.uri) {
+      router.push({ uri: item.uri });
+    } else {
+      prompt.showToast({ message: '页面未配置' });
+    }
+  },
 
   routeToAbout() {
-    router.push({
-      uri: "pages/about"
-    })
+    router.push({ uri: "pages/about" });
   }
 }
 </script>
 
 <style>
-@import '../../common/comm.css';
-
-.text {
-  font-size: 30px;
-  color: #FFF;
-}
-
-/* 水平布局容器 */
-.content-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+.container {
   width: 100%;
-  margin: 24px 0;
-}
-
-/* 游戏列样式 */
-.game-column {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
+  height: 100%;
+  background-color: #000000;
   flex-direction: column;
+  align-items: center;
 }
 
-/* 游戏按钮统一样式 */
-.game-btn {
-  height: 100px;
+/* 顶部区域 */
+.header {
   width: 100%;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+  margin-bottom: 10px;
+}
+
+.title-text {
+  font-size: 32px;
+  color: #ffffff;
+}
+
+.time-text {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 游戏介绍标题 */
+.section-title {
+  width: 100%;
+  text-align: left;
+  font-size: 30px;
+  color: #ffffff;
+  margin-top: 24px;
   margin-bottom: 16px;
-  border: 2px solid #4A90E2;
-  border-radius: 30%;
-  background-color: rgba(74, 144, 226, 0.2);
+}
+
+/* 游戏按钮容器 */
+.game-container {
+  width: 100%;
+  flex-direction: column;
+  align-items: center; /* 使按钮居中 */
+}
+
+
+/* 游戏按钮样式 */
+.game-btn {
+  width: 324px;
+  height: 91px;
+  opacity: 1;
+  border-radius: 36px;
+  background-color: #262626;
+  border: 3px solid #333333;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 16px;
 }
-</style>
 
+/* 按钮文字样式 */
+.btn-text {
+  font-size: 36px;
+  color: #ffffff;
+}
+
+
+/* 关于按钮 *//* 关于按钮样式更新 */
+.btn {
+  width: 324px; /* 与其他按钮同宽 */
+  height: 91px;
+  font-size: 36px;
+  background: #262626;
+  border: 3px solid #333333;
+  border-radius: 36px;
+  color: #ffffff;
+  margin-top: 30px;
+}
+
+</style>

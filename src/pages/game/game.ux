@@ -1,116 +1,83 @@
 <template>
-  <scroll class="page" id="scroll" scroll-y="true">
-    <!-- 顶部时间显示 -->
-    <div class="header">
-      <text class="title-text">{{ c.c1 || '08:00' }}</text>
-      <input class="btn" value="≡" onclick="toggleMenu" />
-    </div>
+  <!-- 主容器 -->
+  <div class="main-container">
 
-    <!-- 菜单系统 -->
-    <div if="{{showMenu}}" class="menu-overlay" onclick="toggleMenu">
-      <div class="menu-content" onclick="stopPropagation">
-        <!-- 标签页导航 -->
-        <div class="tabs">
-          <div class="tab {{activeTab === 'status' ? 'active-tab' : ''}}" onclick="switchTab('status')">
-            <text>状态</text>
-          </div>
-          <div class="tab {{activeTab === 'save' ? 'active-tab' : ''}}" onclick="switchTab('save')">
-            <text>存档</text>
-          </div>
-          <div class="tab {{activeTab === 'settings' ? 'active-tab' : ''}}" onclick="switchTab('settings')">
-            <text>设置</text>
-          </div>
-        </div>
+    <!-- 独立侧边栏菜单 -->
+    <div if="{{showMenu}}" class="sidebar-menu">
+      <div class="menu-header">
+        <text class="menu-title">菜单</text>
+        <text class="menu-close" onclick="toggleMenu">×</text>
+      </div>
+      
+      <!-- 标签页导航 -->
+      <div class="menu-tabs">
+        <text class="menu-tab {{activeTab === 'status' ? 'active-tab' : ''}}" onclick="switchTab('status')">状态</text>
+        <text class="menu-tab {{activeTab === 'save' ? 'active-tab' : ''}}" onclick="switchTab('save')">存档</text>
+        <text class="menu-tab {{activeTab === 'settings' ? 'active-tab' : ''}}" onclick="switchTab('settings')">设置</text>
+      </div>
 
+      <!-- 标签页内容容器 -->
+      <div class="tab-content-container">
         <!-- 状态标签页 -->
-        <div if="{{activeTab === 'status'}}" class="tab-content">
-          <div class="status-grid">
-            <!-- A类变量（数值/字符串）-->
-            <div class="category-section">
-              <text class="category-title">普通变量</text>
-              <div class="status-item" for="{{Object.keys(a)}}">
-                <text class="status-label">{{getVarDesc('a', $item)}}:</text>
-                <text class="status-value">{{getFormattedValue('a', $item)}}</text>
-              </div>
-            </div>
-
-            <!-- B类变量（布尔值）-->
-            <div class="category-section" if="{{Object.keys(b).length > 0}}">
-              <text class="category-title">布尔变量</text>
-              <div class="status-item" for="{{Object.keys(b)}}">
-                <text class="status-label">{{getVarDesc('b', $item)}}:</text>
-                <text class="status-value">{{b[$item]}}</text>
-              </div>
-            </div>
-
-            <!-- C类变量（特殊值）-->
-            <div class="category-section">
-              <text class="category-title">时间变量</text>
-              <div class="status-item" for="{{Object.keys(c)}}">
-                <text class="status-label">{{getVarDesc('c', $item)}}:</text>
-                <text class="status-value">{{c[$item]}}</text>
-              </div>
-            </div>
+        <scroll if="{{activeTab === 'status'}}" class="menu-scroll" scroll-y="true">
+          <div class="status-section" for="{{showVars}}">
+            <text class="status-label">{{$item.desc}}:</text>
+            <text class="status-value">{{$item.value}}</text>
           </div>
-        </div>
+        </scroll>
 
         <!-- 存档标签页 -->
-
-        <div if="{{activeTab === 'save'}}" class="tab-content">
-          <div class="save-grid">
+        <scroll if="{{activeTab === 'save'}}" class="menu-scroll" scroll-y="true">
+          <div class="save-section">
             <div class="save-item" for="{{item in saveSlots}}">
               <div class="save-header">
                 <text class="save-title">存档{{$idx + 1}}</text>
                 <text class="save-time">{{item.time || '暂无存档'}}</text>
               </div>
-              <div class="save-buttons">
+              <div class="save-actions">
                 <text class="save-btn" onclick="saveToSlot($idx)">保存</text>
                 <text class="load-btn" onclick="loadFromSlot($idx)">加载</text>
                 <text class="delete-btn" onclick="deleteSaveSlot($idx)">删除</text>
               </div>
             </div>
           </div>
-        </div>
+        </scroll>
 
         <!-- 设置标签页 -->
-        <div if="{{activeTab === 'settings'}}" class="tab-content">
+        <div if="{{activeTab === 'settings'}}" class="settings-section">
           <div class="setting-item">
-            <text class="menu-font">调试模式</text>
-            <switch checked="{{debugMode}}" onchange="toggleDebugMode" style="color:#4a90e2;" />
+            <text style="font-size: 24px;color:#fff;">调试模式</text>
+            <switch checked="{{debugMode}}" style="height: 30px;" onchange="toggleDebugMode" />
           </div>
-          <div class="menu-btn" onclick="backToHome">
-            <text class="menu-font">返回主菜单</text>
+          <div class="menu-action" onclick="backToHome">
+            <text style="font-size: 24px;border-radius: 5px;background-color: #e74c3c;color:#fff;">返回主菜单</text>
           </div>
         </div>
       </div>
     </div>
-    <!-- 内容区域 -->
-    <div class="scene">
-      <block for="{{segments}}">
-        <!-- 文本片段 -->
-        <text if="$item.type === 'text'" class="normal-text">{{$item.content}}</text>
-
-        <div if="$item.type === 'newline'" style="width:100%"></div>
-
-
-        <!-- 可点击链接 -->
-        <text if="$item.type === 'link'" class="link-text"
-          onclick="selectOption($item.linkIndex)">{{$item.content}}</text>
-
-        <!-- 禁用链接 -->
-        <text if="$item.type === 'disabled'" class="disabled-text">{{$item.content}}</text>
-            <image 
-              src="{{$item.path}}" 
-              style="width:{{$item.width}}px"
-              data-index="{{$idx}}" 
-              onerror="handleImageError"
-            />
-            <text if="$item.type === 'error'" class="error-text">[ERR] {{$item.content}}</text>
-<text if="$item.type === 'error'" class="error-text">[ERR] {{$item.content}}</text>
-      </block>
-    </div>
-  </scroll>
+        <!-- 内容滚动区域 -->
+        <scroll class="content-scroll" scroll-y="true">
+          <!-- 顶部时间显示 -->
+          <div class="header">
+            <text class="title-text">{{ getFormattedTime() }}</text>
+            <input class="menu-toggle" value="≡" onclick="toggleMenu" />
+          </div>
+    
+          <!-- 内容区域 -->
+          <div class="scene">
+            <block for="{{segments}}">
+              <text if="$item.type === 'text'" class="normal-text">{{$item.content}}</text>
+              <div if="$item.type === 'newline'" style="width:100%"></div>
+              <text if="$item.type === 'link'" class="link-text" onclick="selectOption($item.linkIndex)">{{$item.content}}</text>
+              <text if="$item.type === 'disabled'" class="disabled-text">{{$item.content}}</text>
+              <image if="$item.type === 'image'" src="{{$item.path}}" style="width:{{$item.width}}px" data-index="{{$idx}}" onerror="handleImageError" />
+              <text if="$item.type === 'error'" class="error-text">[ERR] {{$item.content}}</text>
+            </block>
+          </div>
+        </scroll>
+  </div>
 </template>
+
 
 <script>
 import router from "@system.router"
@@ -120,15 +87,16 @@ import gameData from '../../common/game-data.json'
 
 export default {
   private: {
-    debugMode: true,
+    debugMode: false,
     timer: null,
     showMenu: false,
     activeTab: 'status',
-    saveSlots: [{ time: "" }, { time: "" }, { time: "" }],
+    saveSlots: [{ time: "" }, { time: "" }, { time: "" },{ time: "" },{ time: "" }],
     currentNodeId: "index",
     segments: [],
     currentLinks: [],
     STORAGE_KEY: "game_state",
+    showVars: [],
     
     // 变量系统
     vars: {}
@@ -136,6 +104,7 @@ export default {
 
   onInit() {
     this.initVariableSystem();
+    this.updateShowVars();
     this.loadNode(this.currentNodeId);
     this.loadSaveSlots();
     
@@ -782,7 +751,7 @@ handleScriptMarker(marker) {
   
   saveToSlot(slotIndex) {
     const saveData = {
-      time: this.getCurrentTime(),
+      time: this.getCurrentDateTime(),
       state: {
         vars: JSON.parse(JSON.stringify(this.vars)),
         currentNodeId: this.currentNodeId
@@ -1003,186 +972,102 @@ parseExpression(expr) {
 },
 handleImageError(e, index) {
   this.$set(`segments[${index}]`, 'showFallback', true);
-}
+},
+// 获取格式化时间
+getFormattedTime() {
+  const timeVar = this.getVariable('var.world.time.value');
+  if (typeof timeVar === 'number') {
+    const hours = Math.floor(timeVar / 60);
+    const minutes = timeVar % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
+  return timeVar || '08:00';
+},
+
+// 获取需要显示的变量列表
+get filteredVars() {
+  const result = [];
+  const traverse = (obj, path = '') => {
+    for (const key in obj) {
+      const fullPath = path ? `${path}.${key}` : key;
+      if (typeof obj[key] === 'object') {
+        traverse(obj[key], fullPath);
+      } else if (fullPath.includes('.show_')) {
+        const descPath = `var.${fullPath.replace('.show_', '.desc_')}`;
+        result.push({
+          name: fullPath,
+          value: obj[key],
+          desc: this.getVariable(descPath) || fullPath.split('.').pop()
+        });
+      }
+    }
+  };
+  traverse(this.vars);
+  return result;
+},
+updateShowVars() {
+    const showVars = [];
+    
+    // 遍历所有show内的变量
+    if (this.vars && this.vars.show) {
+      for (const key in this.vars.show) {
+        const item = this.vars.show[key];
+        if (item && item.desc !== undefined && item.value !== undefined) {
+          showVars.push({
+            key: key,
+            desc: item.desc,
+            value: item.value
+          });
+        }
+      }
+    }
+    
+    this.showVars = showVars;
+  },
+
 }
 </script>
 
 <style>
-@import url(../../common/comm.css);
+/* 主容器 */
+.main-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
 
+.content-scroll {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: #000;
+  flex-direction: column;
+}
+
+/* 顶部栏样式 */
 .header {
   width: 100%;
-  justify-content: space-between;
   margin-bottom: 20px;
-}
-
-/* 菜单容器 - 小尺寸 */
-.menu-overlay {
-  width: 100%;
-  height: auto;
-  justify-content: center;
+  padding: 0 10px 0 10px;
+  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
-  color: #fff
-}
-
-.menu-content {
-  width: 100%;
   background-color: #1a1a1a;
-  flex-direction: column;
-}
-
-.menu-font {
-  font-size: 30px;
-}
-
-/* 标签页样式 */
-.tabs {
-  flex-direction: row;
-  justify-content: space-around;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #333;
-}
-
-.tab {
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-  background-color: #222222;
-  font-size: 25px;
-  color: #4a90e2;
-}
-
-.active-tab {
-  background-color: #2a2a2a;
-}
-
-.tab-content {
-  flex-direction: column;
-}
-
-/* 状态网格 */
-.status-grid {
-  flex-direction: column;
-}
-
-/* 调整状态项布局 */
-.status-item {
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.status-label {
-  font-size: 28px;
-  color: #cccccc;
-}
-
-.status-value {
-  font-size: 28px;
-  color: #ffffff;
-  font-weight: bold;
-}
-
-.category-section {
-  flex-direction: column;
-}
-
-.category-title {
-  font-size: 32px;
-  color: #4a90e2;
-  margin: 15px 0 10px 0;
-  border-bottom: 1px solid #333;
-  padding-bottom: 5px;
-}
-
-/* 存档网格 */
-.save-grid {
-  flex-direction: column;
-  margin-bottom: 8px;
-}
-
-.save-item {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid #333;
-}
-
-/* 按钮样式 */
-.menu-btn {
-  height: 40px;
-  background-color: #e74c3c;
   border-radius: 8px;
-  justify-content: center;
-  align-items: center;
-  margin-top: 15px;
 }
 
-/* 设置项 */
-.setting-item {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #333;
+.title-text {
+  font-size: 28px;
+  color: #fff;
 }
 
-
-.save-title {
-  color: #ffffff;
+.menu-toggle {
+  width: 45px;
+  height: 45px;
   font-size: 30px;
-}
-
-.save-time {
-  color: #999999;
-  font-size: 25px;
-}
-
-/* 新增按钮样式 */
-.save-buttons {
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-.save-btn {
-  color: #4a90e2;
-  padding: 5px 10px;
-  border: 1px solid #4a90e2;
-}
-
-.load-btn {
-  color: #2ecc71;
-  padding: 5px 10px;
-  border: 1px solid #2ecc71;
-}
-
-.delete-btn {
-  color: #e74c3c;
-  padding: 5px 10px;
-  border: 1px solid #e74c3c;
-}
-
-/* 原保存/加载网格调整 */
-.save-grid {
-  flex-direction: column;
-  gap: 15px;
-}
-
-.save-item {
-  flex-direction: column;
-  padding: 10px;
-  border-bottom: 1px solid #333;
-}
-
-.btn {
-  height: 60px;
-  width: 120px;
-  font-size: 50px;
-  background-color: transparent;
-  border: none;
+  color: #fff;
+  background-color: #262626;
+  border: 3px solid #333333;
 }
 
 .scene {
@@ -1196,32 +1081,187 @@ handleImageError(e, index) {
 
 /* 文本样式 */
 .normal-text {
-  font-size: 35px;
+  font-size: 26px;
   color: #fff;
-  border: 1px solid #fff
-}
-
-.var-text {
-  font-size: 35px;
-  color: #ffcc00;
-  border: 1px solid #ffcc00
 }
 
 .link-text {
-  font-size: 35px;
+  font-size: 26px;
   color: #4a90e2;
   text-decoration: underline;
-  border: 1px solid #4a90e2
 }
 
 .disabled-text {
-  font-size: 35px;
-  color: #777777;
+  font-size: 26px;
+  color: #777;
   text-decoration: line-through;
 }
 
-/* 错误文本样式 */
 .error-text {
+  font-size: 26px;
   color: #ff4d4f;
-  font-size: 35px;
 }
+
+/* 侧边栏菜单样式 */
+.sidebar-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 480px;
+  flex-direction: column;
+  background-color: #222;
+  z-index: 1000;
+  box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+}
+
+.menu-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #2a2a2a;
+}
+
+.menu-title {
+  font-size: 24px;
+  color: #fff;
+}
+
+.menu-close {
+  width: 45px;
+  height: 45px;
+  color: #fff;
+  background-color: #262626;
+  border: 3px solid #333333;
+  border-radius: 50%;
+  padding: 0 10px;
+}
+
+.menu-tabs {
+  flex-direction: row;
+  height: 50px;
+  width: 100%;
+  background-color: #2a2a2a;
+}
+
+.menu-tab {
+  flex: 1;
+  height: 50px;
+  text-align: center;
+  line-height: 50px;
+  font-size: 24px;
+  color: #fff;
+  background-color: #2a2a2a;
+}
+
+.active-tab {
+  background-color: #333;
+  color: #4a90e2;
+}
+
+/* 标签页内容容器 */
+.tab-content-container {
+  flex: 1;
+  flex-direction: column;
+}
+
+.menu-scroll {
+  flex: 1;
+  padding: 10px;
+  flex-direction: column;
+}
+
+/* 状态页样式 */
+.status-section {
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.status-label {
+  font-size: 24px;
+  color: #ccc;
+}
+
+.status-value {
+  font-size: 24px;
+  color: #fff;
+}
+
+/* 存档页样式 */
+.save-section {
+  flex-direction: column;
+  padding: 5px;
+}
+
+.save-item {
+  flex-direction: column;
+  padding: 12px;
+  margin-bottom: 10px;
+  background-color: #252525;
+  border-radius: 6px;
+}
+
+.save-header {
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.save-title {
+  font-size: 24px;
+  color: #fff;
+}
+
+.save-time {
+  font-size: 15px;
+  color: #999;
+}
+
+.save-actions {
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.save-btn, .load-btn, .delete-btn {
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-size: 22px;
+  color: #fff;
+}
+
+.save-btn {
+  background-color: #4a90e2;
+}
+
+.load-btn {
+  background-color: #2ecc71;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+}
+
+/* 设置页样式 */
+.settings-section {
+  flex: 1;
+  flex-direction: column;
+  padding: 15px;
+}
+
+.setting-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.menu-action {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #e74c3c;
+  border-radius: 6px;
+  text-align: center;
+}
+</style>
