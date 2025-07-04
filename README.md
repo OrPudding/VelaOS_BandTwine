@@ -18,8 +18,8 @@
 文件结构
 
 节点文件(game-data.json)包含以下主要部分：
-json
 
+```
 {
   "variables": {
     // 游戏变量定义
@@ -29,123 +29,119 @@ json
   }
 }
 
+```
 1. 变量系统 (variables)
 
-定义游戏中使用的变量，包括状态变量、标志位等。
-json
+定义游戏中使用的变量，包括一般变量、布尔变量等。
 
-"variables": {
-  "show": {
-    "health": {
-      "desc": "健康值",
-      "value": 100
-    },
-    "money": {
-      "desc": "金钱",
-      "value": 50
+    "variables": {
+      "show": {
+        "health": {
+          "desc": "健康值",
+          "value": 100
+        },
+        "money": {
+          "desc": "金钱",
+          "value": 50
+        }
+      },
+      "inventory": {
+        "sword": false,
+        "potion": 3
+      },
+      "flags": {
+        "met_merchant": false,
+        "completed_quest": true
+      }
     }
-  },
-  "inventory": {
-    "sword": false,
-    "potion": 3
-  },
-  "flags": {
-    "met_merchant": false,
-    "completed_quest": true
-  }
-}
 
-变量类型：
+变量组：
 
-    状态变量：在show对象中，包含desc(描述)和value(值)
+    显示给玩家的变量(玩家可以随时打开侧栏查看的)：必须在show对象中，包含desc(描述)和value(值)
+    引用的时候遵循一般变量进行引用就好，比如{var.show.health.value}当然desc也可以
 
-    物品变量：在inventory中，记录物品状态
-
-    标志变量：在flags中，记录游戏进度标记
+    其它变量(你可以自由命名，并可选地在特定节点中通过引用的方式显示给玩家)
 
 2. 节点定义 (nodes)
 
 每个节点代表游戏中的一个场景或决策点，使用唯一ID作为键名。
 基本节点结构
-json
 
-"start": {
-  "text": "你醒来发现自己在一个陌生的森林中。{0}\n{1}",
-  "links": [
-    // 选项链接
-  ],
-  "imgs": {
-    // 图片资源
-  },
-  "randoms": {
-    // 随机组
-  },
-  "conds": {
-    // 条件组
-  },
-  "scripts": {
-    // 脚本
-  },
-  "actions": [
-    // 节点进入时执行的动作
-  ]
-}
+    "start": {
+      "text": "你醒来发现自己在一个陌生的森林中。{0}\n{1}",
+      "links": [
+        // 选项链接
+      ],
+      "imgs": {
+        // 图片资源
+      },
+      "randoms": {
+        // 随机组
+      },
+      "conds": {
+        // 条件组
+      },
+      "scripts": {
+        // 脚本
+      },
+      "actions": [
+        // 节点进入时执行的动作
+      ]
+    }
 
 2.1 文本内容 (text)
 
 节点的主体文本内容，支持特殊标记：
-json
 
-"text": "你的健康值: {var.show.health.value}\n金钱: {var.show.money.value}\n{0}\n{1}"
+    "text": "你的健康值: {var.show.health.value}\n金钱: {var.show.money.value}\n{0}\n{1}"
 
 支持的标记：
 
-    {var.path}：插入变量值（如{var.show.health.value}）
+        {var.path}：插入变量值（如{var.show.health.value}）
 
-    {random.id}：插入随机组结果
+        {random.id}：插入随机组结果
 
-    {cond.id}：插入条件组结果
+        {cond.id}：插入条件组结果
 
-    {img.id}：插入图片
+        {img.id}：插入图片
 
-    {js.id}：执行脚本
+        {js.id}：执行脚本
 
-    {数字}：插入链接选项（如{0}表示第一个链接）
+        {数字}：插入链接选项（如{0}表示第一个链接）
 
 2.2 链接选项 (links)
 
 定义玩家可选择的选项：
-json
 
-"links": [
-  {
-    "text": "探索森林",
-    "target": "forest_explore",
-    "condition": "var.show.health.value > 30",
-    "actions": [
+    "links": [
       {
-        "type": "add",
-        "target": "var.show.health.value",
-        "value": -10
-      }
-    ]
-  },
-  {
-    "text": "前往村庄",
-    "target": "village",
-    "random": [
-      {
-        "target": "village_safe",
-        "weight": 8,
-        "if": "var.inventory.sword == true"
+        "text": "探索森林",
+        "target": "forest_explore",
+        "condition": "var.show.health.value > 30",
+        "actions": [
+          {
+            "type": "add",
+            "target": "var.show.health.value",
+            "value": -10
+          }
+        ]
       },
       {
-        "target": "village_attack",
-        "weight": 2
+        "text": "前往村庄",
+        "target": "village",
+        "random": [
+          {
+            "target": "village_safe",
+            "weight": 8,
+            "if": "var.inventory.sword == true"
+          },
+          {
+            "target": "village_attack",
+            "weight": 2
+          }
+        ]
       }
     ]
-  }
-]
 
 链接属性：
 
@@ -162,18 +158,17 @@ json
 2.3 图片资源 (imgs)
 
 定义节点中使用的图片：
-json
 
-"imgs": {
-  "forest": {
-    "path": "forest_scene.png",
-    "width": 300
-  },
-  "npc": {
-    "path": "characters/${var.character.gender}_${var.character.class}.png",
-    "width": 150
-  }
-}
+    "imgs": {
+      "forest": {
+        "path": "forest_scene.png",
+        "width": 300
+      },
+      "npc": {
+        "path": "characters/${var.character.gender}_${var.character.class}.png",
+        "width": 150
+      }
+    }
 
 图片属性：
 
@@ -184,55 +179,52 @@ json
 2.4 随机组 (randoms)
 
 定义文本中使用的随机内容：
-json
 
-"randoms": {
-  "encounter": [
-    {
-      "text": "一只野兔从草丛中窜出",
-      "weight": 5
-    },
-    {
-      "text": "你发现了一个宝箱！",
-      "weight": 2,
-      "condition": "var.flags.has_key == true"
-    },
-    {
-      "text": "一群狼包围了你！",
-      "weight": 3
+    "randoms": {
+      "encounter": [
+        {
+          "text": "一只野兔从草丛中窜出",
+          "weight": 5
+        },
+        {
+          "text": "你发现了一个宝箱！",
+          "weight": 2,
+          "condition": "var.flags.has_key == true"
+        },
+        {
+          "text": "一群狼包围了你！",
+          "weight": 3
+        }
+      ]
     }
-  ]
-}
 
 2.5 条件组 (conds)
 
 根据条件显示不同文本：
-json
 
-"conds": {
-  "health_status": [
-    {
-      "text": "你感觉精力充沛",
-      "condition": "var.show.health.value > 70"
-    },
-    {
-      "text": "你感觉有些疲惫",
-      "condition": "var.show.health.value > 30"
-    },
-    {
-      "text": "你濒临死亡，需要治疗"
+    "conds": {
+      "health_status": [
+        {
+          "text": "你感觉精力充沛",
+          "condition": "var.show.health.value > 70"
+        },
+        {
+          "text": "你感觉有些疲惫",
+          "condition": "var.show.health.value > 30"
+        },
+        {
+          "text": "你濒临死亡，需要治疗"
+        }
+      ]
     }
-  ]
-}
 
 2.6 脚本 (scripts)
 
 在节点中执行JavaScript代码：
-json
 
-"scripts": {
-  "calculate_damage": "set('var.show.health.value', get('var.show.health.value') - (10 * get('var.enemy.strength'));"
-}
+    "scripts": {
+      "calculate_damage": "set('var.show.health.value', get('var.show.health.value') - (10 * get('var.enemy.strength'));"
+    }
 
 脚本API：
 
@@ -247,19 +239,18 @@ json
 2.7 节点动作 (actions)
 
 节点加载时自动执行的动作：
-json
 
-"actions": [
-  {
-    "type": "add",
-    "target": "var.show.money.value",
-    "value": 50
-  },
-  {
-    "type": "toggle",
-    "target": "var.flags.met_king"
-  }
-]
+    "actions": [
+      {
+        "type": "add",
+        "target": "var.show.money.value",
+        "value": 50
+      },
+      {
+        "type": "toggle",
+        "target": "var.flags.met_king"
+      }
+    ]
 
 动作类型：
 
@@ -275,16 +266,15 @@ json
 
 游戏中使用类似JavaScript的条件表达式：
 基本语法：
-js
 
-// 变量比较
-"var.show.health.value > 50"
+    // 变量比较
+    "var.show.health.value > 50"
 
-// 逻辑运算
-"var.inventory.sword == true && var.show.money.value >= 100"
-
-// 组合条件
-"(var.flags.met_ally || var.inventory.letter == true) && var.show.health.value > 10"
+    // 逻辑运算
+    "var.inventory.sword == true && var.show.money.value >= 100"
+    
+    // 组合条件
+    "(var.flags.met_ally || var.inventory.letter == true) && var.show.health.value > 10"
 
 支持的操作符：
 
@@ -295,8 +285,8 @@ js
     分组：()
 
 4. 完整示例
-json
 
+```
 {
   "variables": {
     "show": {
@@ -418,9 +408,10 @@ json
   }
 }
 
+```
 5. 最佳实践
 
-    模块化设计：将大型游戏拆分为多个JSON文件，按章节或区域组织
+    模块化设计：将大型游戏拆分为多个JSON文件，按章节或区域组织(在下一个版本中实现)
 
     命名规范：使用一致的节点ID命名规则（如forest_intro, village_market）
 
@@ -442,7 +433,7 @@ json
 
     版本控制：使用Git等工具管理节点文件变更
 
-结论
+结语
 
 通过本教程，你应该已经掌握了游戏节点文件的基本结构和编写方法。节点文件作为游戏内容的核心载体，通过合理的结构设计和丰富的交互元素，可以构建出引人入胜的互动叙事体验。
 
