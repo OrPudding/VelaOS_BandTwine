@@ -31,13 +31,16 @@
           <div class="save-section">
             <div class="save-item" for="{{item in saveSlots}}">
               <div class="save-header">
+                <div style="flex-direction: row;justify-content: space-between;">
                 <text class="save-title">存档{{$idx + 1}}</text>
-                <text class="save-time">{{item.time || '暂无存档'}}</text>
+                <text class="delete-btn" onclick="deleteSaveSlot($idx)">删除</text>
               </div>
+                <text class="save-time">{{item.time || '暂无存档'}}</text>
+            </div>
+
               <div class="save-actions">
                 <text class="save-btn" onclick="saveToSlot($idx)">保存</text>
                 <text class="load-btn" onclick="loadFromSlot($idx)">加载</text>
-                <text class="delete-btn" onclick="deleteSaveSlot($idx)">删除</text>
               </div>
             </div>
           </div>
@@ -56,11 +59,11 @@
       </div>
     </div>
         <!-- 内容滚动区域 -->
-        <scroll class="content-scroll" scroll-y="true">
+        <scroll id="scrollId" class="content-scroll" scroll-y="true">
           <!-- 顶部时间显示 -->
           <div class="header">
-            <text class="title-text">{{ getFormattedTime() }}</text>
             <input class="menu-toggle" value="≡" onclick="toggleMenu" />
+            <text class="title-text">{{ getFormattedTime() }}</text>
           </div>
     
           <!-- 内容区域 -->
@@ -92,7 +95,7 @@ export default {
     showMenu: false,
     activeTab: 'status',
     saveSlots: [{ time: "" }, { time: "" }, { time: "" },{ time: "" },{ time: "" }],
-    currentNodeId: "index",
+    currentNodeId: "start",
     segments: [],
     currentLinks: [],
     STORAGE_KEY: "game_state",
@@ -107,12 +110,19 @@ export default {
     this.updateShowVars();
     this.loadNode(this.currentNodeId);
     this.loadSaveSlots();
-    
     this.debugLog("游戏初始化完成");
   },
   
   onDestroy() {
     clearInterval(this.timer);
+  },
+
+  scrollTo() {
+    this.$element('scrollId').scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
   },
 
   // ================= 调试工具 =================
@@ -190,19 +200,20 @@ export default {
         throw new Error(`节点 ${nodeId} 未找到`);
       }
       
-      // 执行节点动作
-      this.executeActions(node.actions || []);
-      
+      this.updateShowVars();
       // 更新当前节点状态
       this.currentNodeId = nodeId;
       this.currentLinks = node.links || [];
       
       // 解析节点文本
       this.parseTextWithLinks(node.text);
-      
+
+      // 执行节点动作
+      this.executeActions(node.actions || []);
       this.debugLog(`加载节点: ${nodeId}`, {
         links: this.currentLinks.length
       });
+
       
     } catch (e) {
     console.error("节点加载错误:", e);
@@ -212,6 +223,7 @@ export default {
       duration: 3000
     });
   }
+  this.scrollTo();
   },
   
   parseTextWithLinks(text) {
@@ -1031,40 +1043,44 @@ updateShowVars() {
 <style>
 /* 主容器 */
 .main-container {
-  width: 100%;
-  height: 100%;
+  width: 466px;
+  height: 466px;
   position: relative;
 }
 
 .content-scroll {
-  width: 100%;
-  height: 100%;
-  padding: 16px;
+  width: 466px;
+  height: 466px;
+  padding: 16px 28px 120px 28px;
   background-color: #000;
   flex-direction: column;
+  align-items: center;
 }
 
 /* 顶部栏样式 */
 .header {
-  width: 100%;
+  width: 230px;
   margin-bottom: 20px;
-  padding: 0 10px 0 10px;
+  padding: 10px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  background-color: #1a1a1a;
-  border-radius: 8px;
 }
 
 .title-text {
-  font-size: 28px;
+  height: 60px;
+  font-size: 35px;
+  border-radius: 30px;
+  padding: 0 10px;
   color: #fff;
+  background-color: #262626;
+  border: 3px solid #333333;
 }
 
 .menu-toggle {
-  width: 45px;
-  height: 45px;
-  font-size: 30px;
+  width: 60px;
+  height: 60px;
+  font-size: 40px;
   color: #fff;
   background-color: #262626;
   border: 3px solid #333333;
@@ -1073,84 +1089,85 @@ updateShowVars() {
 .scene {
   width: 100%;
   padding: 10px;
-  background-color: #1a1a1a;
   border-radius: 12px;
+  background-color: #1a1a1a;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
 /* 文本样式 */
 .normal-text {
-  font-size: 26px;
+  font-size: 30px;
   color: #fff;
 }
 
 .link-text {
-  font-size: 26px;
+  font-size: 30px;
   color: #4a90e2;
   text-decoration: underline;
 }
 
 .disabled-text {
-  font-size: 26px;
+  font-size: 30px;
   color: #777;
   text-decoration: line-through;
 }
 
 .error-text {
-  font-size: 26px;
+  font-size: 30px;
   color: #ff4d4f;
 }
 
 /* 侧边栏菜单样式 */
 .sidebar-menu {
-  position: fixed;
   top: 0;
   right: 0;
-  width: 280px;
-  height: 480px;
+  width: 300px;
+  height: 466px;
+  align-items: flex-end;
   flex-direction: column;
   background-color: #222;
-  z-index: 1000;
-  box-shadow: -5px 0 15px rgba(0,0,0,0.5);
 }
 
 .menu-header {
+  width: 300px;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 10px 20px;
   background-color: #2a2a2a;
 }
 
 .menu-title {
-  font-size: 24px;
+  font-size: 30px;
+  padding-right: 15px;
   color: #fff;
 }
 
 .menu-close {
-  width: 45px;
-  height: 45px;
+  width: 60px;
+  height: 60px;
   color: #fff;
   background-color: #262626;
   border: 3px solid #333333;
+  text-align: center;
+  font-size: 45px;
   border-radius: 50%;
   padding: 0 10px;
 }
 
 .menu-tabs {
   flex-direction: row;
-  height: 50px;
-  width: 100%;
+  height: 60px;
+  width: 260px;
   background-color: #2a2a2a;
 }
 
 .menu-tab {
   flex: 1;
-  height: 50px;
+  height: 60px;
   text-align: center;
-  line-height: 50px;
-  font-size: 24px;
+  font-size: 30px;
   color: #fff;
   background-color: #2a2a2a;
 }
@@ -1170,6 +1187,7 @@ updateShowVars() {
   flex: 1;
   padding: 10px;
   flex-direction: column;
+  padding-bottom: 60px;
 }
 
 /* 状态页样式 */
@@ -1198,24 +1216,26 @@ updateShowVars() {
 .save-item {
   flex-direction: column;
   padding: 12px;
+  width: 240px;
   margin-bottom: 10px;
   background-color: #252525;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .save-header {
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
+  padding: 0 10px;
   margin-bottom: 8px;
 }
 
 .save-title {
-  font-size: 24px;
+  font-size: 28px;
   color: #fff;
 }
 
 .save-time {
-  font-size: 15px;
+  font-size: 22px;
   color: #999;
 }
 
@@ -1224,19 +1244,20 @@ updateShowVars() {
   justify-content: space-around;
 }
 
-.save-btn, .load-btn, .delete-btn {
+.save-btn, .load-btn .delete-btn{
   padding: 8px 15px;
   border-radius: 4px;
-  font-size: 22px;
+  font-size: 24px;
   color: #fff;
 }
 
 .save-btn {
-  background-color: #4a90e2;
+  background-color: #2ecc71;
+  margin-right: 20px;
 }
 
 .load-btn {
-  background-color: #2ecc71;
+  background-color: #3498db;
 }
 
 .delete-btn {

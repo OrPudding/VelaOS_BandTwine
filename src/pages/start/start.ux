@@ -1,75 +1,74 @@
 <template>
   <div class="container">
-    <!-- 顶部区域 - 与首页一致 -->
+    <!-- 统一顶部区域样式 -->
     <div class="header">
+      <image 
+        src="/common/back.png" 
+        class="back-btn"
+        @click="backToHome"
+      ></image>
       <text class="time-text">{{ hours }}:{{ minutes }}</text>
       <text class="title-text">{{ title }}</text>
     </div>
-    
+
     <!-- 按钮区域 -->
     <div class="button-container">
-      <input 
-        class="game-btn" 
-        type="button" 
-        value="开始" 
-        @click="quickStart" 
-      />
-      
-      <input 
-        class="game-btn" 
-        type="button" 
-        value="返回" 
-        @click="backToHome" 
-      />
+      <div class="game-btn" @click="quickStart">
+        <text class="btn-text">开始</text>
+      </div>
+
+      <div class="game-btn" @click="backToHome">
+        <text class="btn-text">返回</text>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import router from "@system.router"
-import prompt from "@system.prompt"
+import router from "@system.router";
+import prompt from "@system.prompt";
 
 export default {
-  private: {
-    title: "游戏开始",
-    hours: '00',
-    minutes: '00',
-    timer: null
-  },
-  
-  onInit() {
-    this.updateTime();
-    this.timer = setInterval(() => this.updateTime(), 1000);
-  },
-  
-  onDestroy() {
-    if (this.timer) clearInterval(this.timer);
-  },
-  
-  updateTime() {
-    const now = new Date();
-    this.hours = now.getHours().toString().padStart(2, '0');
-    this.minutes = now.getMinutes().toString().padStart(2, '0');
-  },
+	private: {
+		title: "游戏开始",
+		hours: "00",
+		minutes: "00",
+		timer: null,
+	},
 
-  backToHome() {
-    router.push({
-      uri: "pages/index",
-      params: {
-        ___PARAM_LAUNCH_FLAG___: "clearTask"
-      }
-    })
-  },
+	onInit() {
+		this.updateTime();
+		this.timer = setInterval(() => this.updateTime(), 1000);
+	},
 
-  quickStart() {
-    router.push({
-      uri: "pages/game",
-      params: {
-        ___PARAM_LAUNCH_FLAG___: "clearTask"
-      }
-    })
-  }
-}
+	onDestroy() {
+		if (this.timer) clearInterval(this.timer);
+	},
+
+	updateTime() {
+		const now = new Date();
+		this.hours = now.getHours().toString().padStart(2, "0");
+		this.minutes = now.getMinutes().toString().padStart(2, "0");
+	},
+
+	backToHome() {
+		router.push({
+			uri: "pages/index",
+			params: {
+				___PARAM_LAUNCH_FLAG___: "clearTask",
+			},
+		});
+	},
+
+	quickStart() {
+		router.push({
+			uri: "pages/game",
+			params: {
+				___PARAM_LAUNCH_FLAG___: "clearTask",
+			},
+		});
+	},
+};
 </script>
 
 <style>
@@ -79,15 +78,26 @@ export default {
   background-color: #000000;
   flex-direction: column;
   align-items: center;
+  /* 统一根容器内边距 */
+  padding: 40px 16px;
 }
 
-/* 顶部区域 */
+/* 统一顶部区域样式 */
 .header {
   width: 100%;
   flex-direction: column;
   align-items: center;
-  margin: 10px;
   margin-bottom: 30px;
+  position: relative;
+}
+
+.back-btn {
+  width: 72px;
+  height: 72px;
+  position: absolute;
+  /* 统一返回按钮位置 */
+  left: 72px;
+  top: 0;
 }
 
 .title-text {
@@ -98,6 +108,7 @@ export default {
 .time-text {
   font-size: 24px;
   color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
 }
 
 /* 按钮容器 */
@@ -105,7 +116,6 @@ export default {
   width: 100%;
   flex-direction: column;
   align-items: center;
-  margin-top: 50px;
 }
 
 /* 统一按钮样式 */
@@ -118,5 +128,14 @@ export default {
   border-radius: 36px;
   color: #ffffff;
   margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 按钮文字样式 */
+.btn-text {
+  font-size: 36px;
+  color: #ffffff;
 }
 </style>

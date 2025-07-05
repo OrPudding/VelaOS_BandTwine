@@ -1,34 +1,26 @@
 <template>
   <div class="container">
-    <!-- 顶部时间显示 -->
+    <!-- 统一顶部区域样式 -->
     <div class="header">
-      <!-- 返回按钮 - 左上角 -->
       <image 
         src="/common/back.png" 
         class="back-btn"
         @click="backToHome"
       ></image>
-      
-      <!-- 时间显示 -->
       <text class="time-text">{{ currentTime }}</text>
-      
-      <!-- 标题 -->
       <text class="title-text">关于</text>
     </div>
     
     <!-- 应用信息区域 -->
     <div class="app-info">
-      
-      <!-- 应用名称和版本 -->
+      <image 
+        src="/common/logo.png" 
+        class="app-icon"
+      ></image>
       <div class="app-details">
         <text class="app-name">{{ appInfo.name }}</text>
         <text class="app-version">{{ appInfo.version }}</text>
       </div>
-           <!-- 应用图标 -->
-           <image 
-           src="/common/logo.png" 
-           class="app-icon"
-         ></image>
     </div>
     
     <!-- 开发者区域 -->
@@ -46,7 +38,7 @@
     <div class="copyright">
       <text class="copyright-line">本游戏基于BandTwine</text>
       <text class="copyright-line">文字游戏引擎开发</text>
-      <text class="copyright-line">程序部分遵循GPLv3协议</text>
+      <text class="copyright-line">程序部分遵循AGPLv3协议</text>
       <text class="copyright-line">Copyright © 2025 OrPudding</text>
       <text class="copyright-line">禁止删除此段声明</text>
     </div>
@@ -107,15 +99,16 @@ export default {
   background-color: #000000;
   flex-direction: column;
   align-items: center;
-  padding: 16px;
+  /* 统一根容器内边距 */
+  padding: 40px 16px;
 }
 
-/* 顶部区域 */
+/* 统一顶部区域样式 */
 .header {
   width: 100%;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   position: relative;
 }
 
@@ -123,7 +116,8 @@ export default {
   width: 72px;
   height: 72px;
   position: absolute;
-  left: 0;
+  /* 统一返回按钮位置 */
+  left: 72px;
   top: 0;
 }
 
@@ -136,106 +130,88 @@ export default {
 .title-text {
   font-size: 32px;
   color: #ffffff;
-  font-weight: 500;
 }
 
-/* 应用信息区域 */
+/* 应用信息区域 - 使用卡片样式 */
 .app-info {
-width: 324px;
-height: 194px;
-border-radius: 36px;
-background-color: #262626;
-border: 3px solid #333333;
+  width: 324px;
+  height: 194px;
+  border-radius: 36px;
+  background-color: #262626;
+  border: 3px solid #333333;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 20px;
+  margin-top: 20px;
+  margin-bottom: 30px;
 }
 
 .app-icon {
-  width: 72px;
-  height: 72px;
-  position: absolute;
-  right: 16px;
-  top: 112px;
+  width: 80px;
+  height: 80px;
 }
 
 .app-details {
-  position: absolute;
-  left: 24px;
-  top: 18px;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .app-name {
   font-size: 36px;
   color: #ffffff;
+  margin-bottom: 10px;
 }
 
 .app-version {
-  font-size: 36px;
+  font-size: 30px;
   color: rgba(255, 255, 255, 0.6);
+}
+
+/* 统一区域标题样式 */
+.section-title {
+  width: 100%;
+  text-align: center;
+  font-size: 32px;
+  color: #ffffff;
+  margin-bottom: 16px;
 }
 
 /* 开发者区域 */
-.section-title {
-  width: 100%;
-  text-align: left;
-  font-size: 32px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 10px;
-}
-
 .developers {
   width: 100%;
   flex-direction: column;
-  justify-content: flex-start;
-
-  margin-bottom: 10px;
+  align-items: center;
 }
 
 .developer {
   font-size: 32px;
   color: #ffffff;
-  font-weight: 500;
-  margin-right: 20px;
-}
-
-/* 版权信息 */
-.copyright {
-  width: 100%;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.copyright-line {
-  font-size: 25px;
-  color: #ffffff;
-  text-align: center;
   margin-bottom: 8px;
 }
 
 /* 网站信息 */
 .website-info {
-  width: 100%;
-  text-align: center;
-  font-size: 25px;
+  font-size: 28px;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .website-url {
-  width: 100%;
-  text-align: center;
   font-size: 32px;
   color: #ffffff;
-  margin-bottom: 20px;
 }
 
-/* 返回按钮 */
-.btn {
-  width: 120px;
-  height: 60px;
-  font-size: 28px;
-  background-color: transparent;
-  border: none;
-  color: #ffffff;
+/* 版权信息 */
+.copyright {
+  flex-direction: column;
+  align-items: center;
+}
+
+.copyright-line {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 6px;
+  text-align: center;
 }
 </style>

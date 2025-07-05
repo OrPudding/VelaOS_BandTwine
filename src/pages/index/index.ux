@@ -1,7 +1,12 @@
 <template>
   <div class="container">
-    <!-- 顶部区域 - 完全照抄关于页 -->
+    <!-- 统一顶部区域样式 -->
     <div class="header">
+      <image 
+        class="back-btn"
+        src="/common/back.png" 
+        onclick="exitApp"
+      />
       <text class="time-text">{{ hours }}:{{ minutes }}</text>
       <text class="title-text">{{ title }}</text>
     </div>
@@ -9,7 +14,7 @@
     <!-- 游戏标题图片 -->
     <image 
       src="/common/title.png" 
-      style="width:300px; margin-top:20px;"
+      class="game-title-img"
     ></image>
     
     <!-- 游戏介绍 -->
@@ -40,6 +45,7 @@
 <script>
 import router from "@system.router"
 import prompt from "@system.prompt"
+import app from "@system.app"
 
 export default {
   private: {
@@ -78,26 +84,43 @@ export default {
 
   routeToAbout() {
     router.push({ uri: "pages/about" });
+  },
+  
+  exitApp() {
+    app.terminate();
   }
 }
 </script>
 
 <style>
 .container {
-  width: 100%;
-  height: 100%;
+  width: 466px;
+  height: 466px;
   background-color: #000000;
   flex-direction: column;
   align-items: center;
+  /* 统一内边距与存档页一致 */
+  padding: 40px 16px 60px 16px;
 }
 
-/* 顶部区域 */
+/* 统一顶部区域样式 */
 .header {
-  width: 100%;
+  width: 434px;
   flex-direction: column;
   align-items: center;
-  margin: 10px;
+  position: relative;
+  /* 移除多余边距 */
+  margin: 0;
   margin-bottom: 10px;
+}
+
+.back-btn {
+  width: 72px;
+  height: 72px;
+  position: absolute;
+  /* 统一返回按钮位置 */
+  left: 72px;
+  top: 0;
 }
 
 .title-text {
@@ -110,25 +133,31 @@ export default {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* 游戏标题图片 */
+.game-title-img {
+  width: 300px;
+  margin-top: 20px;
+}
+
 /* 游戏介绍标题 */
 .section-title {
-  width: 100%;
+  width: 320px;
+  /* 统一文本对齐方式 */
   text-align: left;
   font-size: 30px;
   color: #ffffff;
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin: 24px 0;
+  text-align: left;
 }
 
 /* 游戏按钮容器 */
 .game-container {
   width: 100%;
   flex-direction: column;
-  align-items: center; /* 使按钮居中 */
+  align-items: center;
 }
 
-
-/* 游戏按钮样式 */
+/* 统一游戏按钮样式 */
 .game-btn {
   width: 324px;
   height: 91px;
@@ -148,10 +177,9 @@ export default {
   color: #ffffff;
 }
 
-
-/* 关于按钮 *//* 关于按钮样式更新 */
+/* 统一关于按钮样式 */
 .btn {
-  width: 324px; /* 与其他按钮同宽 */
+  width: 324px;
   height: 91px;
   font-size: 36px;
   background: #262626;
@@ -160,5 +188,4 @@ export default {
   color: #ffffff;
   margin-top: 30px;
 }
-
 </style>

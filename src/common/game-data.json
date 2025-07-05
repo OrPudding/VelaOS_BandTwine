@@ -1,237 +1,990 @@
 {
   "variables": {
-    "system": {
-      "debug": {"value": true},
-      "version": {"value": "0.2.0"}
-    },
     "show": {
-      "counter": {"value": 0, "desc": "计数器"},
-      "flag": {"value": false, "desc": "状态"},
-      "score": {"value": 100, "desc": "分数"}
+      "health": {
+        "desc": "健康值",
+        "value": 100
+      },
+      "money": {
+        "desc": "金币",
+        "value": 10
+      },
+      "time": {
+        "desc": "时间",
+        "value": 99999
+      }
     },
-    "player": {
-      "name": {"value": "测试用户"},
-      "level": {"value": 1}
+    "inventory": {
+      "herbs": 0,
+      "mushrooms": 0,
+      "ores": 0,
+      "torch": false,
+      "sword": false,
+      "map": false,
+      "fishing_gear": false,
+      "fish": 0
+    },
+    "flags": {
+      "met_merchant": false,
+      "met_blacksmith": false,
+      "found_diary": false,
+      "solved_statue": false,
+      "spring_drinks": 0
     }
   },
   "nodes": {
-    "index": {
-      "text": "引擎能力测试\n测试项目：\n{0}{1}{2}{3}{4}{5}\n{6}\n{7}",
-      "links": [
-        {"text": "基础功能测试", "target": "test_basic"},
-        {"text": "变量运算测试", "target": "test_variables"},
-        {"text": "条件逻辑测试", "target": "test_conditions"},
-        {"text": "随机系统测试", "target": "test_random"},
-        {"text": "图片系统测试", "target": "test_images"},
-        {"text": "存档系统测试", "target": "test_save"},
-        {"text": "表达式测试", "target": "test_expressions"},
-        {"text": "压力测试", "target": "test_stress"}
-      ]
-    },
-    "test_basic": {
-      "text": "基础功能测试\n\n特殊符号：&lt;&gt;@#\n变量显示：{var.show.counter.value}\n\n长文本测试：这是一段用于测试文本显示能力的长文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容{0}",
-      "links": [
-        {"text": "返回主节点", "target": "index"}
-      ]
-    },
-    "test_basic_sub": {
-      "text": "子页面测试\n测试嵌套页面跳转功能{0}",
-      "links": [
-        {"text": "返回上级", "target": "test_basic"}
-      ]
-    },
-
-    "test_variables": {
-      "text": "变量运算测试\n当前计数器：{var.show.counter.value}\n当前状态：{var.show.flag.value}\n操作选项：\n{0}\n{1}\n{2}\n{3}",
-      "links": [
-        {"text": "计数器+1", "target": "test_variables", "actions": [
-          {"type": "add", "target": "var.show.counter.value", "value": 1}
-        ]},
-        {"text": "切换状态", "target": "test_variables", "actions": [
-          {"type": "toggle", "target": "var.show.flag.value"}
-        ]},
-        {"text": "重置数据", "target": "test_variables", "actions": [
-          {"type": "set", "target": "var.show.counter.value", "value": 0},
-          {"type": "set", "target": "var.show.flag.value", "value": false}
-        ]},
-        {"text": "返回主节点", "target": "index"}
-      ]
-    },
-
-    "test_conditions": {
-      "text": "条件逻辑测试\n计数器：{var.show.counter.value}\n状态：{var.show.flag.value}\n基础条件：\n{cond.basic}\n复杂条件：\n{cond.complex}\n嵌套条件：\n{cond.nested}{0}{1}{2}{3}",
-      "links": [
-        {"text": "增加计数器", "target": "test_conditions", "actions": [
-          {"type": "add", "target": "var.show.counter.value", "value": 1}
-        ]},
-        {"text":"减少计数器", "target":"test_conditions", "actions": [
-          {"type": "add", "target": "var.show.counter.value", "value": -1}
-        ]},
-        {"text": "切换状态", "target": "test_conditions", "actions": [
-          {"type": "toggle", "target": "var.show.flag.value"}
-        ]},
-        {"text": "返回主节点", "target": "index"}
-      ],
-      "conds": {
-        "basic": [
-          {"condition": "var.show.counter.value > 5", "text": "计数器>5"},
-          {"text": "此时计数器≤5"}
-        ],
-        "complex": [
-          {"condition": "var.show.counter.value > 10 && var.show.flag.value", "text": "此时计数器>10且状态为真"},
-          {"condition": "var.show.counter.value < 5 || !var.show.flag.value", "text": "此时计数器<5或状态为假"},
-          {"text": "其他情况"}
-        ],
-        "nested": [
-          {"condition": "var.show.counter.value > 15", "text": "此时计数器大于15"},
-          {"condition": "var.show.counter.value > 10", "text": "此时计数器大于10"},
-          {"condition": "var.show.counter.value > 5", "text": "此时计数器大于5"},
-          {"text": "此时计数器小于等于5"}
-        ]
-      }
-    },
-
-    "test_random": {
-      "text": "随机测试\n基础随机：{random.basic}\n权重随机：{random.weighted}\n条件随机：\n{random.conditional}\n(增加计数器到5试试？)\n{0}{1}\n计数器：{var.show.counter.value}\n{2}{3}",
-      "links": [
-        {"text": "重新生成", "target": "test_random"},
-        {"text": "返回主节点", "target": "index"},
-        {"text": "增加计数器", "target": "test_random", "actions": [
-          {"type": "add", "target": "var.show.counter.value", "value": 1}
-        ]},
-        {"text": "减少计数器", "target": "test_random", "actions": [
-          {"type": "add", "target": "var.show.counter.value", "value": -1}
-        ]}
-      ],
-      "randoms": {
-        "basic": [
-          {"text": "选项A"},
-          {"text": "选项B"},
-          {"text": "选项C"}
-        ],
-        "weighted": [
-          {"text": "选项1(60%概率出现)", "weight": 0.6},
-          {"text": "选项2(30%概率出现)", "weight": 0.3},
-          {"text": "选项3(10%概率出现)", "weight": 0.1}
-        ],
-        "conditional": [
-          {"text": "计数器>5时才可能出现", "condition": "var.show.counter.value > 5"},
-          {"text": "一般情况"}
-        ]
-      }
-    },
-
-    "test_images": {
-      "text": "图片测试\n这是一个宽度为120px的图片{img.120px}这是一个多层路径的图片{img.120px.alt}这是一个动态路径的图片{img.dynamic}\n{0}",
-      "links": [
-        {"text": "返回主节点", "target": "index"}
-      ],
+    "start": {
+      "text": "你在神秘森林中醒来，晨雾缭绕。健康值: {var.show.health.value} | 金币: {var.show.money.value} | 时间: {var.show.time.value}分钟{img.forest}\n{0}\n{1}\n{2}",
       "imgs": {
-        "120px": {"path": "120px.png", "width": 120},
-        "120px.alt": {"path": "test/120px.png", "width": 120},
-        "dynamic": {"path": "${var.player.level.value + '.png'}", "width": 120}
-      }
-    },
-
-    "test_save": {
-      "text": "存档测试\n当前计数器：{var.show.counter.value}\n当前状态：{var.show.flag.value}{0}{1}",
+        "forest": {
+          "path": "/common/images/forest.png",
+          "width": 300
+        }
+      },
       "links": [
-        {"text": "修改测试数据", "target": "test_save_modify"},
-        {"text": "返回主节点", "target": "index"}
-      ]
-    },
-    "test_save_modify": {
-      "text": "修改测试数据\n当前计数器：{var.show.counter.value}\n当前状态：{var.show.flag.value}\n{0}{1}\n{2}",
-      "links": [
-        {"text": "计数器+5", "target": "test_save_modify", "actions": [
-          {"type": "add", "target": "var.show.counter.value", "value": 5}
-        ]},
-        {"text": "切换状态", "target": "test_save_modify", "actions": [
-          {"type": "toggle", "target": "var.show.flag.value"}
-        ]},
-        {"text": "返回上级", "target": "test_save"}
-      ]
-    },
-
-    "test_expressions": {
-      "text": "表达式测试\n数学运算\n10+20*3\n结果：{var.calc1}\n变量运算\nvar.show.counter.value*2+5\n结果：{var.calc2}\n条件运算：\n结果：{var.calc3}\n{0}",
+        {
+          "text": "向左探索（消耗20分钟）",
+          "target": "forest_left1",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -20
+            }
+          ]
+        },
+        {
+          "text": "向右探索（消耗20分钟）",
+          "target": "forest_right1",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -20
+            }
+          ]
+        },
+        {
+          "text": "前往村庄（消耗15分钟）",
+          "target": "village",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -15
+            }
+          ]
+        }
+      ],
       "actions": [
-        {"type": "set", "target": "var.calc1", "value": "10 + 20 * 3"},
-        {"type": "set", "target": "var.calc2", "value": "var.show.counter.value * 2 + 5"},
-        {"type": "set", "target": "var.calc3", "value": "var.show.counter.value > 5 ? '大于5' : '小于等于5'"}
-      ],
-      "links": [
-        {"text": "返回主节点", "target": "index"}
+        {
+          "type": "set",
+          "target": "var.show.health.value",
+          "value": 100
+        }
       ]
     },
-
-    "test_stress": {
-      "text": "压力测试\n{0}\n{1}\n{2}\n{3}\n{4}",
-      "links": [
-        {"text": "长文本压力测试", "target": "test_stress_text"},
-        {"text": "多链接压力测试", "target": "test_stress_link"},
-        {"text": "多图片压力测试", "target": "test_stress_images"},
-        {"text": "表达式压力测试", "target": "test_stress_expression"},
-        {"text": "返回主节点", "target": "index"}
-      ],
-      "conds": {
-        "complex": [
-          {"condition": "var.show.counter.value > 10 && var.show.flag.value || var.player.level.value > 5", "text": "复合条件成立"},
-          {"text": "条件不成立"}
+    "forest_left1": {
+      "text": "你踏入藤蔓覆盖的小径，光线斑驳。{img.forest_path}\n{random.forest_left1_events}\n{0}\n{1}\n{2}",
+      "randoms": {
+        "forest_left1_events": [
+          {
+            "text": "发现月光草！已采集2份。{img.moon_herb}",
+            "actions": [
+              {
+                "type": "add",
+                "target": "var.inventory.herbs",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "text": "树根间发现发光矿石！已采集1份。{img.shiny_ore}",
+            "actions": [
+              {
+                "type": "add",
+                "target": "var.inventory.ores",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "text": "野兔从草丛窜过，惊起一群飞鸟。",
+            "weight": 3
+          }
         ]
-      }
-    },
-
-    "test_stress_text": {
-      "text": "长文本压力测试\n测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本\n{0}",
+      },
+      "imgs": {
+        "forest_path": {
+          "path": "/common/images/forest_path.png",
+          "width": 280
+        },
+        "moon_herb": {
+          "path": "/common/images/moon_herb.png",
+          "width": 120
+        },
+        "shiny_ore": {
+          "path": "/common/images/shiny_ore.png",
+          "width": 100
+        }
+      },
       "links": [
-        {"text": "返回上级", "target": "test_stress"}
+        {
+          "text": "继续深入（消耗25分钟）",
+          "target": "forest_left2",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -25
+            }
+          ]
+        },
+        {
+          "text": "探索西侧（消耗30分钟）",
+          "target": "forest_west",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -30
+            }
+          ]
+        },
+        {
+          "text": "返回起点",
+          "target": "start"
+        }
       ]
     },
-
-    "test_stress_link": {
-      "text": "多链接压力测试\n{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}",
+    "forest_left2": {
+      "text": "开阔地中央矗立着神秘石雕。{img.stone_statue}\n当前物品: 草药:{var.inventory.herbs} 蘑菇:{var.inventory.mushrooms} 矿石:{var.inventory.ores}\n{0}\n{1}\n{2}",
+      "imgs": {
+        "stone_statue": {
+          "path": "/common/images/stone_statue.png",
+          "width": 200
+        }
+      },
       "links": [
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"},
-        {"text": "返回上级", "target": "test_stress"}
+        {
+          "text": "检查石雕（消耗15分钟）",
+          "target": "stone_statue_puzzle",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -15
+            }
+          ]
+        },
+        {
+          "text": "绕过石雕继续",
+          "target": "forest_left3"
+        },
+        {
+          "text": "返回前一个区域",
+          "target": "forest_left1"
+        }
       ]
     },
-
-    "test_stress_expression": {
-      "text": "表达式压力测试\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{cond.complex}\n{0}",
+    "stone_statue_puzzle": {
+      "text": "石雕表面有三行可旋转的符号。{img.statue_symbols}\n{0}\n{1}\n{2}",
+      "imgs": {
+        "statue_symbols": {
+          "path": "/common/images/statue_symbols.png",
+          "width": 250
+        }
+      },
       "links": [
-        {"text": "返回上级", "target": "test_stress"}
-      ],
-      "conds": {
-        "complex": [
-          {"condition": "var.show.counter.value > 10 && var.show.flag.value || var.player.level.value > 5", "text": "复合条件成立"},
-          {"text": "条件不成立"}
-        ]
-      }
+        {
+          "text": "按太阳-月亮-星星排列",
+          "target": "puzzle_solved",
+          "condition": "var.flags.solved_statue != true",
+          "actions": [
+            {
+              "type": "set",
+              "target": "var.flags.solved_statue",
+              "value": true
+            },
+            {
+              "type": "set",
+              "target": "var.inventory.map",
+              "value": true
+            }
+          ]
+        },
+        {
+          "text": "按星星-太阳-月亮排列",
+          "target": "stone_statue_puzzle_failed"
+        },
+        {
+          "text": "放弃解谜返回",
+          "target": "forest_left2"
+        }
+      ]
     },
-
-    "test_stress_images": {
-      "text": "多图片压力测试\n{img.img1}\n{img.img2}\n{img.img3}\n{img.img4}\n{img.img5}\n{img.img6}\n{img.img7}\n{img.img8}\n{0}",
+    "stone_statue_puzzle_failed": {
+      "text": "你尝试了太阳-月亮-星星的排列组合，但没有成功。{img.statue_symbols}\n{0}\n{1}",
+      "imgs": {
+        "statue_symbols": {
+          "path": "/common/images/statue_symbols.png",
+          "width": 250
+        }
+      },
       "links": [
-        {"text": "返回上级", "target": "test_stress"}
+        {
+          "text": "重新尝试",
+          "target": "stone_statue_puzzle"
+        },
+        {
+          "text": "放弃返回",
+          "target": "forest_left2"
+        }
+      ]
+    },
+    "puzzle_solved": {
+      "text": "石雕基座打开，里面是森林地图！{img.forest_map}\n当前物品: 地图:{var.inventory.map?'已获得':'无'}\n{0}\n{1}",
+      "imgs": {
+        "forest_map": {
+          "path": "/common/images/forest_map.png",
+          "width": 220
+        }
+      },
+      "links": [
+        {
+          "text": "继续前进",
+          "target": "forest_left3"
+        },
+        {
+          "text": "返回石雕区域",
+          "target": "forest_left2"
+        }
+      ]
+    },
+    "forest_left3": {
+      "text": "道路分岔：左边是沼泽，右边是山坡。{img.forest_fork}\n健康值: {var.show.health.value} | 时间: {var.show.time.value}分钟\n{0}\n{1}\n{2}",
+      "imgs": {
+        "forest_fork": {
+          "path": "/common/images/forest_fork.png",
+          "width": 280
+        }
+      },
+      "links": [
+        {
+          "text": "探索沼泽（需火把）",
+          "target": "swamp_area",
+          "condition": "var.inventory.torch == true",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -30
+            }
+          ]
+        },
+        {
+          "text": "爬上山坡（消耗40分钟，-15健康）",
+          "target": "hill_area",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -40
+            },
+            {
+              "type": "add",
+              "target": "var.show.health.value",
+              "value": -15
+            }
+          ]
+        },
+        {
+          "text": "返回石雕区域",
+          "target": "forest_left2"
+        }
+      ]
+    },
+    "swamp_area": {
+      "text": "沼泽中弥漫着毒雾，火把驱散雾气。{img.swamp}\n当前蘑菇: {var.inventory.mushrooms}\n{0}\n{1}\n{2}",
+      "imgs": {
+        "swamp": {
+          "path": "/common/images/swamp.png",
+          "width": 300
+        }
+      },
+      "links": [
+        {
+          "text": "采集蘑菇",
+          "target": "swamp_collection"
+        },
+        {
+          "text": "深入沼泽",
+          "target": "swamp_deep"
+        },
+        {
+          "text": "返回岔路口",
+          "target": "forest_left3"
+        }
+      ]
+    },
+    "swamp_collection": {
+      "text": "你采集了3个发光蘑菇！{img.glowing_mushroom}\n当前蘑菇: {var.inventory.mushrooms}\n{0}\n{1}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.inventory.mushrooms",
+          "value": 3
+        },
+        {
+          "type": "add",
+          "target": "var.show.time.value",
+          "value": -20
+        }
       ],
       "imgs": {
-        "img1": {"path": "stress.png", "width": 300},
-        "img2": {"path": "stress.png", "width": 300},
-        "img3": {"path": "stress.png", "width": 300},
-        "img4": {"path": "stress.png", "width": 300},
-        "img5": {"path": "stress.png", "width": 300},
-        "img6": {"path": "stress.png", "width": 300},
-        "img7": {"path": "stress.png", "width": 300},
-        "img8": {"path": "stress.png", "width": 300}
+        "glowing_mushroom": {
+          "path": "/common/images/glowing_mushroom.png",
+          "width": 100
+        }
+      },
+      "links": [
+        {
+          "text": "继续采集",
+          "target": "swamp_collection"
+        },
+        {
+          "text": "返回沼泽入口",
+          "target": "swamp_area"
+        }
+      ]
+    },
+    "hill_area": {
+      "text": "山坡视野开阔，可见远处村庄。{img.hill_view}\n当前矿石: {var.inventory.ores}\n{0}\n{1}\n{2}",
+      "imgs": {
+        "hill_view": {
+          "path": "/common/images/hill_view.png",
+          "width": 320
+        }
+      },
+      "links": [
+        {
+          "text": "开采矿石",
+          "target": "hill_mining"
+        },
+        {
+          "text": "探索山顶",
+          "target": "hill_top"
+        },
+        {
+          "text": "返回岔路口",
+          "target": "forest_left3"
+        }
+      ]
+    },
+    "hill_mining": {
+      "text": "发现丰富矿脉！开采获得2个矿石。{img.ore_vein}\n当前矿石: {var.inventory.ores}\n{0}\n{1}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.inventory.ores",
+          "value": 2
+        },
+        {
+          "type": "add",
+          "target": "var.show.time.value",
+          "value": -30
+        },
+        {
+          "type": "add",
+          "target": "var.show.health.value",
+          "value": -5
+        }
+      ],
+      "imgs": {
+        "ore_vein": {
+          "path": "/common/images/ore_vein.png",
+          "width": 280
+        }
+      },
+      "links": [
+        {
+          "text": "继续开采",
+          "target": "hill_mining"
+        },
+        {
+          "text": "返回山坡",
+          "target": "hill_area"
+        }
+      ]
+    },
+    "hill_top": {
+      "text": "你爬上了山顶，山顶上光秃秃的，视野开阔。{img.hill_top}\n{0}",
+      "imgs": {
+        "hill_top": {
+          "path": "/common/images/hill_top.png",
+          "width": 320
+        }
+      },
+      "links": [
+        {
+          "text": "返回山坡",
+          "target": "hill_area"
+        }
+      ]
+    },
+    "forest_west": {
+      "text": "西侧湖畔白桦成荫，湖面波光粼粼。{img.forest_west}\n渔具: {var.inventory.fishing_gear?'有':'无'} | 鱼获: {var.inventory.fish}条\n{0}\n{1}",
+      "imgs": {
+        "forest_west": {
+          "path": "/common/images/forest_west.png",
+          "width": 320
+        }
+      },
+      "links": [
+        {
+          "text": "湖边钓鱼（需要渔具）",
+          "target": "forest_west",
+          "condition": "var.inventory.fishing_gear == true",
+          "actions": [
+            {
+              "type": "random",
+              "chances": [
+                {
+                  "weight": 10,
+                  "actions": [
+                    {
+                      "type": "add",
+                      "target": "var.inventory.fish",
+                      "value": 1
+                    },
+                    {
+                      "type": "add",
+                      "target": "var.show.time.value",
+                      "value": -30
+                    }
+                  ],
+                  "text": "钓到一条大鱼！当前鱼获: {var.inventory.fish}条"
+                },
+                {
+                  "weight": 90,
+                  "actions": [
+                    {
+                      "type": "add",
+                      "target": "var.show.time.value",
+                      "value": -30
+                    }
+                  ],
+                  "text": "鱼饵被吃掉了但一无所获"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "前往林间泉水",
+          "target": "forest_west1"
+        },
+        {
+          "text": "返回主林区",
+          "target": "start"
+        }
+      ]
+    },
+    "forest_west1": {
+      "text": "清澈泉水从岩缝涌出，水面飘着淡淡雾气。{img.spring}\n已饮用次数: {var.flags.spring_drinks}/3\n{0}\n{1}",
+      "imgs": {
+        "spring": {
+          "path": "/common/images/spring.png",
+          "width": 280
+        }
+      },
+      "links": [
+        {
+          "text": "饮用泉水（+20健康值）",
+          "target": "forest_west1",
+          "condition": "var.flags.spring_drinks < 3",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.health.value",
+              "value": 20
+            },
+            {
+              "type": "add",
+              "target": "var.flags.spring_drinks",
+              "value": 1
+            },
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -15
+            }
+          ]
+        },
+        {
+          "text": "{var.flags.spring_drinks >=3?'（泉水已干涸）':'返回泉水边'}",
+          "target": "forest_west1",
+          "condition": "var.flags.spring_drinks >=3",
+          "disabled": true
+        },
+        {
+          "text": "返回湖畔",
+          "target": "forest_west"
+        }
+      ]
+    },
+    "forest_right1": {
+      "text": "松树林中弥漫清新松香。{img.pine_forest}\n{random.forest_right1_events}\n{0}\n{1}\n{2}",
+      "randoms": {
+        "forest_right1_events": [
+          {
+            "text": "发现发光蘑菇！已采集1份。{img.glowing_mushroom}",
+            "actions": [
+              {
+                "type": "add",
+                "target": "var.inventory.mushrooms",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "text": "食用野生木耳，恢复5点健康值。",
+            "actions": [
+              {
+                "type": "add",
+                "target": "var.show.health.value",
+                "value": 5
+              }
+            ]
+          },
+          {
+            "text": "发现矿石！已采集1份。",
+            "actions": [
+              {
+                "type": "add",
+                "target": "var.inventory.ores",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "imgs": {
+        "pine_forest": {
+          "path": "/common/images/pine_forest.png",
+          "width": 290
+        },
+        "glowing_mushroom": {
+          "path": "/common/images/glowing_mushroom.png",
+          "width": 100
+        }
+      },
+      "links": [
+        {
+          "text": "继续前进（消耗25分钟）",
+          "target": "forest_right2",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -25
+            }
+          ]
+        },
+        {
+          "text": "探索东侧（消耗30分钟）",
+          "target": "forest_east",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -30
+            }
+          ]
+        },
+        {
+          "text": "返回起点",
+          "target": "start"
+        }
+      ]
+    },
+    "forest_right2": {
+      "text": "摇摇欲坠的木桥横跨深涧。{img.wood_bridge}\n健康值: {var.show.health.value} | 时间: {var.show.time.value}分钟\n{0}\n{1}\n{2}",
+      "imgs": {
+        "wood_bridge": {
+          "path": "/common/images/wood_bridge.png",
+          "width": 280
+        }
+      },
+      "links": [
+        {
+          "text": "小心过桥（消耗20分钟）",
+          "target": "forest_right3",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -20
+            }
+          ]
+        },
+        {
+          "text": "寻找其他路径（消耗40分钟，-10健康）",
+          "target": "cliff_path",
+          "actions": [
+            {
+              "type": "add",
+              "target": "var.show.time.value",
+              "value": -40
+            },
+            {
+              "type": "add",
+              "target": "var.show.health.value",
+              "value": -10
+            }
+          ]
+        },
+        {
+          "text": "返回松树林",
+          "target": "forest_right1"
+        }
+      ]
+    },
+    "forest_right3": {
+      "text": "奇异花朵盛开的草地。{img.flower_field}\n当前草药: {var.inventory.herbs}\n{0}\n{1}\n{2}",
+      "imgs": {
+        "flower_field": {
+          "path": "/common/images/flower_field.png",
+          "width": 300
+        }
+      },
+      "links": [
+        {
+          "text": "采集草药",
+          "target": "flower_collection"
+        },
+        {
+          "text": "深入森林",
+          "target": "deep_forest"
+        },
+        {
+          "text": "返回木桥",
+          "target": "forest_right2"
+        }
+      ]
+    },
+    "flower_collection": {
+      "text": "发现稀有月光花！采集获得3份草药。{img.moon_flower}\n当前草药: {var.inventory.herbs}\n{0}\n{1}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.inventory.herbs",
+          "value": 3
+        },
+        {
+          "type": "add",
+          "target": "var.show.time.value",
+          "value": -15
+        }
+      ],
+      "imgs": {
+        "moon_flower": {
+          "path": "/common/images/moon_flower.png",
+          "width": 150
+        }
+      },
+      "links": [
+        {
+          "text": "继续采集",
+          "target": "flower_collection"
+        },
+        {
+          "text": "返回草地",
+          "target": "forest_right3"
+        }
+      ]
+    },
+    "village": {
+      "text": "宁静的村庄广场。{img.village}\n金币: {var.show.money.value} | 时间: {var.show.time.value}分钟\n{0}\n{1}\n{2}\n{3}",
+      "imgs": {
+        "village": {
+          "path": "/common/images/village.png",
+          "width": 300
+        }
+      },
+      "links": [
+        {
+          "text": "前往商店",
+          "target": "village_shop"
+        },
+        {
+          "text": "前往旅馆",
+          "target": "village_inn"
+        },
+        {
+          "text": "前往铁匠铺",
+          "target": "blacksmith"
+        },
+        {
+          "text": "离开村庄",
+          "target": "start"
+        }
+      ]
+    },
+    "village_shop": {
+      "text": "商店老板{cond.shopkeeper_greeting}\n草药: {var.inventory.herbs} | 蘑菇: {var.inventory.mushrooms}\n{0}\n{1}\n{2}",
+      "conds": {
+        "shopkeeper_greeting": [
+          {
+            "text": "'欢迎光临！'",
+            "condition": "var.flags.met_merchant == false"
+          },
+          {
+            "text": "'又见面了！'"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "set",
+          "target": "var.flags.met_merchant",
+          "value": true
+        }
+      ],
+      "links": [
+        {
+          "text": "出售所有草药（5金币/份）",
+          "target": "village_shop_sell_herbs"
+        },
+        {
+          "text": "出售所有蘑菇（3金币/份）",
+          "target": "village_shop_sell_mushrooms"
+        },
+        {
+          "text": "返回村庄",
+          "target": "village"
+        }
+      ]
+    },
+    "village_shop_sell_herbs": {
+      "text": "出售成功！获得{var.inventory.herbs * 5}金币。\n当前金币: {var.show.money.value}\n{0}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.show.money.value",
+          "value": "var.inventory.herbs * 5"
+        },
+        {
+          "type": "set",
+          "target": "var.inventory.herbs",
+          "value": 0
+        }
+      ],
+      "links": [
+        {
+          "text": "继续交易",
+          "target": "village_shop"
+        },
+        {
+          "text": "返回村庄",
+          "target": "village"
+        }
+      ]
+    },
+    "village_inn": {
+      "text": "旅馆老板：'休息恢复体力，10金币/小时'\n健康值: {var.show.health.value} | 金币: {var.show.money.value}\n{0}\n{1}",
+      "links": [
+        {
+          "text": "休息1小时（恢复50健康）",
+          "target": "village_inn_rest",
+          "condition": "var.show.money.value >= 10"
+        },
+        {
+          "text": "返回村庄",
+          "target": "village"
+        }
+      ]
+    },
+    "village_inn_rest": {
+      "text": "你好好地睡了一觉！恢复50健康值。\n当前健康: {var.show.health.value} | 金币: {var.show.money.value}\n{0}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.show.health.value",
+          "value": 50
+        },
+        {
+          "type": "add",
+          "target": "var.show.time.value",
+          "value": -60
+        },
+        {
+          "type": "add",
+          "target": "var.show.money.value",
+          "value": -10
+        }
+      ],
+      "links": [
+        {
+          "text": "继续休息",
+          "target": "village_inn"
+        },
+        {
+          "text": "返回村庄",
+          "target": "village"
+        }
+      ]
+    },
+    "blacksmith": {
+      "text": "铁匠铺炉火熊熊。{img.blacksmith}\n{cond.blacksmith_greeting}\n矿石: {var.inventory.ores} | 金币: {var.show.money.value}\n{0}\n{1}\n{2}\n{3}",
+      "conds": {
+        "blacksmith_greeting": [
+          {
+            "text": "'是生面孔啊，我是铁匠'",
+            "condition": "var.flags.met_blacksmith == false"
+          },
+          {
+            "text": "'有什么事吗'"
+          }
+        ]
+      },
+      "imgs": {
+        "blacksmith": {
+          "path": "/common/images/blacksmith.png",
+          "width": 280
+        }
+      },
+      "actions": [
+        {
+          "type": "set",
+          "target": "var.flags.met_blacksmith",
+          "value": true
+        }
+      ],
+      "links": [
+        {
+          "text": "出售所有矿石（8金币/份）",
+          "target": "blacksmith_sell_ores"
+        },
+        {
+          "text": "打工赚钱（1小时/7金币）",
+          "target": "blacksmith_work"
+        },
+        {
+          "text": "购买火把（5金币）",
+          "target": "blacksmith_buy_torch"
+        },
+        {
+          "text": "返回村庄",
+          "target": "village"
+        }
+      ]
+    },
+    "blacksmith_sell_ores": {
+      "text": "出售成功！获得{var.inventory.ores * 8}金币。\n当前金币: {var.show.money.value}\n{0}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.show.money.value",
+          "value": "var.inventory.ores * 8"
+        },
+        {
+          "type": "set",
+          "target": "var.inventory.ores",
+          "value": 0
+        }
+      ],
+      "links": [
+        {
+          "text": "收下金币",
+          "target": "blacksmith"
+        },
+        {
+          "text": "返回村庄",
+          "target": "village"
+        }
+      ]
+    },
+    "blacksmith_work": {
+      "text": "打铁工作（消耗1小时体力）\n健康值: {var.show.health.value} | 金币: {var.show.money.value}\n{0}\n{1}",
+      "links": [
+        {
+          "text": "工作1小时（获得7金币，-10健康）",
+          "target": "blacksmith_work_complete",
+          "condition": "var.show.health.value > 10"
+        },
+        {
+          "text": "收下报酬",
+          "target": "blacksmith"
+        }
+      ]
+    },
+    "blacksmith_work_complete": {
+      "text": "工作完成！获得7金币。\n当前金币: {var.show.money.value} | 健康值: {var.show.health.value}\n{0}\n{1}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.show.money.value",
+          "value": 7
+        },
+        {
+          "type": "add",
+          "target": "var.show.time.value",
+          "value": -60
+        },
+        {
+          "type": "add",
+          "target": "var.show.health.value",
+          "value": -10
+        }
+      ],
+      "links": [
+        {
+          "text": "继续工作",
+          "target": "blacksmith_work_complete"
+        },
+        {
+          "text": "返回铁匠铺",
+          "target": "blacksmith"
+        }
+      ]
+    },
+    "blacksmith_buy_torch": {
+      "text": "购买成功！你现在有一个耐用的火把了。\n当前金币: {var.show.money.value}\n{0}",
+      "actions": [
+        {
+          "type": "add",
+          "target": "var.show.money.value",
+          "value": -5
+        },
+        {
+          "type": "toggle",
+          "target": "var.inventory.torch"
+        }
+      ],
+      "links": [
+        {
+          "text": "收下火把",
+          "target": "blacksmith"
+        }
+      ]
+    },
+    "good_ending": {
+      "text": "恭喜！你成功逃离森林！\n最终金币: {var.show.money.value} | 剩余时间: {var.show.time.value}分钟\n{img.ending_good}",
+      "imgs": {
+        "ending_good": {
+          "path": "/common/images/ending_good.png",
+          "width": 350
+        }
+      }
+    },
+    "bad_ending": {
+      "text": "很遗憾，你未能逃离森林...\n{img.ending_bad}",
+      "imgs": {
+        "ending_bad": {
+          "path": "/common/images/ending_bad.png",
+          "width": 350
+        }
       }
     }
   }

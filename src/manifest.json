@@ -1,8 +1,8 @@
 {
-  "package": "moe.orpu.bandtwine",
+  "package": "circle_moe.orpu.bandtwine",
   "name": "BandTwine",
-  "versionName": "v0.1.0-alpha",
-  "versionCode": 1,
+  "versionName": "v0.2.0-beta",
+  "versionCode": 2,
   "minPlatformVersion": 1000,
   "icon": "/common/logo.png",
   "deviceTypeList": [
@@ -27,7 +27,7 @@
   ],
   "config": {
     "logLevel": "log",
-    "designWidth": 336
+    "designWidth": 466
   },
   "router": {
     "entry": "pages/index",
