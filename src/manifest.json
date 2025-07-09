@@ -1,10 +1,10 @@
 {
-  "package": "moe.orpu.bandtwine",
+  "package": "band_moe.orpu.bandtwine",
   "name": "BandTwine",
-  "versionName": "v0.1.0-alpha",
-  "versionCode": 1,
+  "versionName": "v0.3.0-beta",
+  "versionCode": 2,
   "minPlatformVersion": 1000,
-  "icon": "/common/logo.png",
+  "icon": "/common/icon.png",
   "deviceTypeList": [
     "watch"
   ],
@@ -23,11 +23,14 @@
     },
     {
       "name": "system.app"
+    },
+    {
+      "name": "system.vibrator"
     }
   ],
   "config": {
     "logLevel": "log",
-    "designWidth": 336
+    "designWidth": 212
   },
   "router": {
     "entry": "pages/index",
