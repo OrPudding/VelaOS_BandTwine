@@ -1,8 +1,4 @@
-以下是为你的项目（VelaOS_BandTwine）量身定制的完整 README 示例，重点介绍如何编写和扩展 `game-data.json`，并帮助开发者快速上手与正确配置节点和变量。
-
----
-
-# VelaOS_BandTwine
+## BandTwine
 
 一个类似 Twine 的基于节点的文字游戏引擎，适配小米 VelaOS。  
 本项目核心通过 `game-data.json` 配置游戏流程和逻辑，无需代码即可实现丰富交互。
