@@ -1,479 +1,221 @@
- ## 许可
+以下是为你的项目（VelaOS_BandTwine）量身定制的完整 README 示例，重点介绍如何编写和扩展 `game-data.json`，并帮助开发者快速上手与正确配置节点和变量。
 
-本项目的游戏引擎部分遵循GNU Affero通用公共许可证（AGPLv3）开源。这意味着：
+---
 
-- 您可以自由地使用、修改和分发本软件，包括商业用途。
+# VelaOS_BandTwine
 
-- 但是，如果您修改了游戏引擎部分，并且以任何形式发布（包括通过网络提供服务），则必须将修改后的完整源代码公开，并遵循AGPLv3协议。
+一个类似 Twine 的基于节点的文字游戏引擎，适配小米 VelaOS。  
+本项目核心通过 `game-data.json` 配置游戏流程和逻辑，无需代码即可实现丰富交互。
 
+## 目录
 
-特别地，文件 `src/common/game-data-json` 及文件夹 `src/common/images` 下的资源文件 遵循MIT协议分发。这意味着您可以单独使用该文件而不需要公开其衍生作品。
+- [项目简介](#项目简介)
+- [快速开始](#快速开始)
+- [game-data.json 结构说明](#game-datajson-结构说明)
+  - [变量（variables）](#变量variables)
+  - [节点（nodes）](#节点nodes)
+  - [动作（actions）](#动作actions)
+  - [脚本（scripts）](#脚本scripts)
+- [自定义与扩展](#自定义与扩展)
+- [常见问题](#常见问题)
+- [致谢](#致谢)
 
-有关详细信息，请参阅 [LICENSE](LICENSE) 文件。
+---
 
-## 游戏引擎节点文件编写教程
-# 概述
+## 项目简介
 
-本教程将指导你如何为基于文本的互动小说游戏引擎编写节点文件。节点文件使用JSON格式，定义了游戏的变量系统、场景节点、链接选项、随机事件等内容。通过本教程，你将学会如何构建完整的游戏叙事结构。
-文件结构
+BandTwine 让你像写故事一样设计互动小说/文字冒险游戏，支持条件跳转、变量操作、时间推进、监听器、图片、存档、表达式等丰富功能。
 
-节点文件(game-data.json)包含以下主要部分：
+---
 
-```
+## 快速开始
+
+1. 克隆本仓库并安装依赖。
+2. 编辑 `src/common/game-data.json`，编写你的游戏内容。
+3. 在支持的设备或模拟器上运行。
+
+---
+
+## game-data.json 结构说明
+
+### 文件总览
+
+```json
 {
-  "variables": {
-    // 游戏变量定义
+  "variables": { ... },
+  "nodes": { ... }
+}
+```
+
+### 变量（variables）
+
+用于保存全局状态、玩家数据、系统信息等。支持嵌套结构。
+
+**示例：**
+
+```json
+"variables": {
+  "world": {
+    "time": 480,
+    "day": 1,
+    "formattedTime": "08:00",
+    "timePeriod": "早晨"
   },
-  "nodes": {
-    // 游戏节点定义
+  "player": {
+    "name": { "value": "玩家" },
+    "level": { "value": 1 }
+  },
+  "show": {
+    "counter": { "value": 0, "desc": "计数器" },
+    "flag": { "value": false, "desc": "状态标志" },
+    "score": { "value": 100, "desc": "分数" }
   }
 }
-
 ```
-1. 变量系统 (variables)
 
-定义游戏中使用的变量，包括一般变量、布尔变量等。
+- 可通过 `{var.变量路径}` 方式在文本和条件中引用，如 `{var.show.counter.value}`。
+- 支持数字、字符串、布尔类型。
+- show组的变量将会显示在侧边状态标签页，必须有value和desc，请开发者自行规划
 
-    "variables": {
-      "show": {
-        "health": {
-          "desc": "健康值",
-          "value": 100
-        },
-        "money": {
-          "desc": "金钱",
-          "value": 50
-        }
-      },
-      "inventory": {
-        "sword": false,
-        "potion": 3
-      },
-      "flags": {
-        "met_merchant": false,
-        "completed_quest": true
-      }
-    }
+---
 
-变量组：
+### 节点（nodes）
 
-    显示给玩家的变量(玩家可以随时打开侧栏查看的)：必须在show对象中，包含desc(描述)和value(值)
-    引用的时候遵循一般变量进行引用就好，比如{var.show.health.value}当然desc也可以
+每个节点代表一个“场景”或“步骤”，包含显示文本、跳转链接、可选动作等。
 
-    其它变量(你可以自由命名，并可选地在特定节点中通过引用的方式显示给玩家)
+**基本结构：**
 
-2. 节点定义 (nodes)
-
-每个节点代表游戏中的一个场景或决策点，使用唯一ID作为键名。
-基本节点结构
-
-    "start": {
-      "text": "你醒来发现自己在一个陌生的森林中。{0}\n{1}",
-      "links": [
-        // 选项链接
-      ],
-      "imgs": {
-        // 图片资源
-      },
-      "randoms": {
-        // 随机组
-      },
-      "conds": {
-        // 条件组
-      },
-      "scripts": {
-        // 脚本（暂未完善）
-      },
-      "actions": [
-        // 节点进入时执行的动作
-      ]
-    }
-
-2.1 文本内容 (text)
-
-节点的主体文本内容，支持特殊标记：
-
-    "text": "你的健康值: {var.show.health.value}\n金钱: {var.show.money.value}\n{0}\n{1}"
-
-支持的标记：
-
-        {var.path}：插入变量值（如{var.show.health.value}）
-
-        {random.id}：插入随机组结果
-
-        {cond.id}：插入条件组结果
-
-        {img.id}：插入图片
-
-        {js.id}：执行脚本（暂未完善）
-
-        {数字}：插入链接选项（如{0}表示第一个链接）
-
-2.2 链接选项 (links)
-
-定义玩家可选择的选项：
-
+```json
+"nodes": {
+  "start": {
+    "text": "欢迎来到VelaOS_BandTwine！\n请选择：\n{0}\n{1}",
     "links": [
-      {
-        "text": "探索森林",
-        "target": "forest_explore",
-        "condition": "var.show.health.value > 30",
-        "actions": [
-          {
-            "type": "add",
-            "target": "var.show.health.value",
-            "value": -10
-          }
-        ]
-      },
-      {
-        "text": "前往村庄",
-        "target": "village",
-        "random": [
-          {
-            "target": "village_safe",
-            "weight": 8,
-            "if": "var.inventory.sword == true"
-          },
-          {
-            "target": "village_attack",
-            "weight": 2
-          }
-        ]
-      }
+      { "text": "进入冒险", "target": "adventure" },
+      { "text": "查看说明", "target": "help" }
     ]
-
-链接属性：
-
-    text：选项显示文本
-
-    target：跳转的目标节点ID
-
-    condition：选项显示条件（可选）
-
-    actions：选择后执行的动作（可选）
-
-    random：随机跳转选项（可选）
-
-2.3 图片资源 (imgs)
-
-定义节点中使用的图片：
-
-    "imgs": {
-      "forest": {
-        "path": "forest_scene.png",
-        "width": 300
-      },
-      "npc": {
-        "path": "characters/${var.character.gender}_${var.character.class}.png",
-        "width": 150
-      }
-    }
-
-图片属性：
-
-    path：图片路径（支持变量表达式）
-
-    width：显示宽度（像素）
-
-2.4 随机组 (randoms)
-
-定义文本中使用的随机内容：
-
-    "randoms": {
-      "encounter": [
-        {
-          "text": "一只野兔从草丛中窜出",
-          "weight": 5
-        },
-        {
-          "text": "你发现了一个宝箱！",
-          "weight": 2,
-          "condition": "var.flags.has_key == true"
-        },
-        {
-          "text": "一群狼包围了你！",
-          "weight": 3
-        }
-      ]
-    }
-
-2.5 条件组 (conds)
-
-根据条件显示不同文本：
-
-    "conds": {
-      "health_status": [
-        {
-          "text": "你感觉精力充沛",
-          "condition": "var.show.health.value > 70"
-        },
-        {
-          "text": "你感觉有些疲惫",
-          "condition": "var.show.health.value > 30"
-        },
-        {
-          "text": "你濒临死亡，需要治疗"
-        }
-      ]
-    }
-
-2.6 脚本 (scripts)（暂未完善）
-
-在节点中执行JavaScript代码：
-
-    "scripts": {
-      "calculate_damage": "set('var.show.health.value', get('var.show.health.value') - (10 * get('var.enemy.strength'));"
-    }
-
-脚本API：
-
-    set(path, value)：设置变量
-
-    get(path)：获取变量值
-
-    rand(min, max)：生成随机数
-
-    print(msg)：输出调试信息
-
-2.7 节点动作 (actions)
-
-节点加载时自动执行的动作：
-
-    "actions": [
-      {
-        "type": "add",
-        "target": "var.show.money.value",
-        "value": 50
-      },
-      {
-        "type": "toggle",
-        "target": "var.flags.met_king"
-      }
-    ]
-
-动作类型：
-
-    set：设置变量值
-
-    add：增加变量值
-
-    toggle：切换布尔值
-
-    random：随机执行子动作
-
-3. 条件表达式
-
-游戏中使用类似JavaScript的条件表达式：
-基本语法：
-
-    // 变量比较
-    "var.show.health.value > 50"
-
-    // 逻辑运算
-    "var.inventory.sword == true && var.show.money.value >= 100"
-    
-    // 组合条件
-    "(var.flags.met_ally || var.inventory.letter == true) && var.show.health.value > 10"
-
-支持的操作符：
-
-    比较：==, !=, >, <, >=, <=
-
-    逻辑：&&, ||
-
-    分组：()
-
-4. 完整示例
-
-```
-{
-  "variables": {
-    "show": {
-      "health": { "desc": "健康值", "value": 100 },
-      "money": { "desc": "金钱", "value": 50 }
-    },
-    "inventory": {
-      "sword": false,
-      "potion": 3
-    },
-    "flags": {
-      "met_wizard": false
-    }
-  },
-  
-  "nodes": {
-    "start": {
-      "text": "你在一个神秘森林中醒来。{img.forest}\n健康值: {var.show.health.value}\n{0}\n{1}",
-      "imgs": {
-        "forest": {
-          "path": "forest.png",
-          "width": 300
-        }
-      },
-      "links": [
-        {
-          "text": "探索森林深处",
-          "target": "deep_forest",
-          "condition": "var.inventory.sword == true"
-        },
-        {
-          "text": "前往村庄",
-          "target": "village"
-        }
-      ],
-      "actions": [
-        {
-          "type": "add",
-          "target": "var.show.health.value",
-          "value": -10
-        }
-      ]
-    },
-    
-    "village": {
-      "text": "你到达了一个宁静的村庄。{random.village_scene}\n{0}\n{1}",
-      "randoms": {
-        "village_scene": [
-          { "text": "村民们正在忙碌地工作。", "weight": 3 },
-          { "text": "村庄广场正在举行庆典！", "weight": 1 }
-        ]
-      },
-      "links": [
-        {
-          "text": "拜访铁匠铺",
-          "target": "blacksmith"
-        },
-        {
-          "text": "前往酒馆",
-          "target": "tavern",
-          "actions": [
-            {
-              "type": "set",
-              "target": "var.show.money.value",
-              "value": "var.show.money.value - 5"
-            }
-          ]
-        }
-      ]
-    },
-    
-    "blacksmith": {
-      "text": "铁匠打量着你：{cond.blacksmith_dialog}",
-      "conds": {
-        "blacksmith_dialog": [
-          {
-            "text": "你需要一把好剑吗？只要30金币。{0}",
-            "condition": "var.show.money.value >= 30"
-          },
-          {
-            "text": "你看起来买不起我的商品。{1}"
-          }
-        ]
-      },
-      "links": [
-        {
-          "text": "购买剑",
-          "target": "buy_sword",
-          "condition": "var.show.money.value >= 30"
-        },
-        {
-          "text": "离开",
-          "target": "village"
-        }
-      ]
-    },
-    
-    "buy_sword": {
-      "text": "你获得了一把锋利的剑！",
-      "actions": [
-        {
-          "type": "set",
-          "target": "var.inventory.sword",
-          "value": true
-        },
-        {
-          "type": "add",
-          "target": "var.show.money.value",
-          "value": -30
-        }
-      ],
-      "links": [
-        {
-          "text": "返回村庄",
-          "target": "village"
-        }
-      ]
-    }
   }
 }
-
-```
-5. 最佳实践
-
-    模块化设计：将大型游戏拆分为多个JSON文件，按章节或区域组织(在下一个版本中支持多json文件)
-
-    命名规范：使用一致的节点ID命名规则（如forest_intro, village_market）
-
-    变量管理：
-
-        使用show对象存储玩家可见的状态
-
-        使用flags跟踪重要事件
-
-        使用inventory管理物品
-
-    内容测试：
-
-        使用调试模式验证条件表达式
-
-        测试所有可能的随机分支
-
-        验证图片资源路径
-
-    版本控制：使用Git等工具管理节点文件变更
-
-# 结语
-
-通过本教程，你应该已经掌握了游戏节点文件的基本结构和编写方法。节点文件作为游戏内容的核心载体，通过合理的结构设计和丰富的交互元素，可以构建出引人入胜的互动叙事体验。
-
-## 快速上手
-
-### 1. 开发
-
-```
-npm install
-npm run start
 ```
 
-### 2. 构建
+#### 节点字段说明
 
+- `text`：节点内容，支持变量插值。
+- `links`：选项数组，决定玩家可以做什么，每项格式如下：
+  - `text`：选项内容
+  - `target`：跳转到的节点ID
+  - `actions`（可选）：选中后会执行的动作（见下节）
+- 可定义其他自定义字段，如图片、脚本等。
+
+---
+
+### 动作（actions）
+
+用于节点跳转时修改变量、调用功能、执行脚本等。
+
+**常用动作类型：**
+
+- `add`：对数值型变量加减
+- `set`：设定变量
+- `toggle`：切换布尔值
+- `jump`：条件跳转到指定节点
+- `toast`：弹出提示
+- `vibrate`：设备震动
+- `autosave` :帮用户自动存档到第5槽位
+- `advanceTime`：推进游戏内时间
+- `addListener`/`removeListener`：添加/移除监听器
+
+**示例：**
+
+```json
+{
+  "text": "计数器：{var.show.counter.value}",
+  "links": [
+    {
+      "text": "加一",
+      "target": "counter_test",
+      "actions": [
+        { "type": "add", "target": "var.show.counter.value", "value": 1 }
+      ]
+    },
+    {
+      "text": "切换状态",
+      "target": "counter_test",
+      "actions": [
+        { "type": "toggle", "target": "var.show.flag.value" }
+      ]
+    }
+  ]
+}
 ```
-npm run build
-npm run release
+
+---
+
+### 脚本（scripts）（未完善）
+
+用于复用复杂的逻辑或批量动作，在节点或监听器中触发。
+
+---
+
+## 自定义与扩展
+
+- 你可以自由添加节点，设计分支剧情。
+- 支持条件渲染、复杂表达式，如：
+  ```json
+  "condition": "var.show.counter.value > 10 && var.show.flag.value"
+  ```
+- 可添加监听器，实现“计数器大于3时触发事件”等功能。
+- 支持图片、存档、Toast、Jump跳转等功能。
+- 变量、动作类型均可扩展，建议参考内置测试节点。
+
+---
+
+## 常见问题
+
+**Q: 如何引用变量？**  
+A: 用 `{var.变量路径}`，如 `{var.player.name.value}`。
+
+**Q: 支持哪些动作？**  
+A: 详见“动作”章节，或参考 `game-data.json` 的内置测试节点。
+
+**Q: 如何实现条件分支？**  
+A: 在 link 或 action 里加 `condition` 字段，满足时才会显示或执行。
+
+---
+
+## 致谢
+
+- 灵感参考自 Twine
+- 感谢所有开源贡献者
+
+---
+
+## 进阶参考
+
+建议从 `src/common/game-data.json` 的测试节点（如 `test_variables`、`test_conditions` 等）学习各类功能的用法。可以直接复制后定制自己的节点。
+
+---
+
+如需更多帮助，请提 Issue 或讨论。欢迎贡献你的故事和节点！
+
+---
+
+**附录：节点完整示例**
+
+```json
+"my_node": {
+  "text": "你遇到了一只猫，当前分数：{var.show.score.value}",
+  "links": [
+    {
+      "text": "撸猫 +10分",
+      "target": "my_node",
+      "actions": [
+        { "type": "add", "target": "var.show.score.value", "value": 10 }
+      ]
+    },
+    {
+      "text": "离开",
+      "target": "start"
+    }
+  ]
+}
 ```
-
-### 3. 调试
-
-```
-npm run watch
-```
-### 4. 代码规范化配置
-代码规范化可以帮助开发者在git commit前进行代码校验、格式化、commit信息校验
-
-使用前提：必须先关联git
-
-macOS or Linux
-```
-sh husky.sh
-```
-
-windows
-```
-./husky.sh
-```
-
-
-## 了解更多
-
-你可以通过我们的[官方文档](https://iot.mi.com/vela/quickapp)熟悉和了解快应用。
