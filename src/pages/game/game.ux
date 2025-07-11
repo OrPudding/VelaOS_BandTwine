@@ -1,125 +1,125 @@
 <template>
-  <!-- 主容器 -->
-  <div class="main-container">
-    <!-- 独立侧边栏菜单 -->
-    <div if="{{showMenu}}" class="sidebar-menu">
-      <div class="menu-header">
-        <text class="menu-title" onclick="toggleMenu">菜单</text>
-      </div>
+	<!-- 主容器 -->
+	<div class="main-container">
+		<!-- 独立侧边栏菜单 -->
+		<div if="{{showMenu}}" class="sidebar-menu">
+			<div class="menu-header">
+				<text class="menu-title" onclick="toggleMenu">菜单</text>
+			</div>
 
-      <!-- 标签页导航 -->
-      <div class="menu-tabs">
-        <text class="menu-tab {{activeTab === 'status' ? 'active-tab' : ''}}" onclick="switchTab('status')">
-          状态
-        </text>
-        <text class="menu-tab {{activeTab === 'save' ? 'active-tab' : ''}}" onclick="switchTab('save')">
-          存档
-        </text>
-        <text class="menu-tab {{activeTab === 'settings' ? 'active-tab' : ''}}" onclick="switchTab('settings')">
-          设置
-        </text>
-      </div>
+			<!-- 标签页导航 -->
+			<div class="menu-tabs">
+				<text class="menu-tab {{activeTab === 'status' ? 'active-tab' : ''}}" onclick="switchTab('status')">
+					状态
+				</text>
+				<text class="menu-tab {{activeTab === 'save' ? 'active-tab' : ''}}" onclick="switchTab('save')">
+					存档
+				</text>
+				<text class="menu-tab {{activeTab === 'settings' ? 'active-tab' : ''}}" onclick="switchTab('settings')">
+					设置
+				</text>
+			</div>
 
-      <!-- 标签页内容容器 -->
-      <div class="tab-content-container">
-        <!-- 状态标签页 -->
-        <scroll if="{{activeTab === 'status'}}" class="menu-scroll" scroll-y="true">
-          <div class="status-section" for="{{showVars}}">
-            <text class="status-label">{{ $item.desc }}:</text>
-            <text class="status-value">{{ $item.value }}</text>
-          </div>
-        </scroll>
+			<!-- 标签页内容容器 -->
+			<div class="tab-content-container">
+				<!-- 状态标签页 -->
+				<scroll if="{{activeTab === 'status'}}" class="menu-scroll" scroll-y="true">
+					<div class="status-section" for="{{showVars}}">
+						<text class="status-label">{{ $item.desc }}:</text>
+						<text class="status-value">{{ $item.value }}</text>
+					</div>
+				</scroll>
 
-        <!-- 存档标签页 -->
-        <scroll if="{{activeTab === 'save'}}" class="menu-scroll" scroll-y="true">
-          <div class="save-section">
-            <div class="save-item" for="{{item in saveSlots}}">
-              <div class="save-header">
-                <div style="flex-direction: row; justify-content: space-between">
-                  <text class="save-title">存档{{ $idx + 1 }}</text>
-                  <text class="delete-btn" onclick="deleteSaveSlot($idx)">
-                    删除
-                  </text>
-                </div>
-                <div class="save-time">
-                  <text class="save-date">
-                    {{ item.time ? item.time.split(" ")[0] : "暂无存档" }}
-                  </text>
-                  <text class="save-time-part">
-                    {{ item.time ? item.time.split(" ")[1] : "" }}
-                  </text>
-                </div>
-              </div>
+				<!-- 存档标签页 -->
+				<scroll if="{{activeTab === 'save'}}" class="menu-scroll" scroll-y="true">
+					<div class="save-section">
+						<div class="save-item" for="{{item in saveSlots}}">
+							<div class="save-header">
+								<div style="flex-direction: row; justify-content: space-between">
+									<text class="save-title">存档{{ $idx + 1 }}</text>
+									<text class="delete-btn" onclick="deleteSaveSlot($idx)">
+										删除
+									</text>
+								</div>
+								<div class="save-time">
+									<text class="save-date">
+										{{ item.time ? item.time.split(" ")[0] : "暂无存档" }}
+									</text>
+									<text class="save-time-part">
+										{{ item.time ? item.time.split(" ")[1] : "" }}
+									</text>
+								</div>
+							</div>
 
-              <div class="save-actions">
-                <text class="save-btn" onclick="saveToSlot($idx)">保存</text>
-                <text class="load-btn" onclick="loadFromSlot($idx)">加载</text>
-              </div>
-            </div>
-          </div>
-        </scroll>
+							<div class="save-actions">
+								<text class="save-btn" onclick="saveToSlot($idx)">保存</text>
+								<text class="load-btn" onclick="loadFromSlot($idx)">加载</text>
+							</div>
+						</div>
+					</div>
+				</scroll>
 
-        <!-- 设置标签页 -->
-        <div if="{{activeTab === 'settings'}}" class="settings-section">
-          <div class="setting-item">
-            <text style="font-size: 24px; color: #fff">调试</text>
-            <switch checked="{{debugMode}}" style="height: 30px" onchange="toggleDebugMode" />
-          </div>
-          <div class="menu-action" onclick="backToHome">
-            <text style="
+				<!-- 设置标签页 -->
+				<div if="{{activeTab === 'settings'}}" class="settings-section">
+					<div class="setting-item">
+						<text style="font-size: 24px; color: #fff">调试</text>
+						<switch checked="{{debugMode}}" style="height: 30px" onchange="toggleDebugMode" />
+					</div>
+					<div class="menu-action" onclick="backToHome">
+						<text style="
 								font-size: 24px;
 								border-radius: 5px;
 								background-color: #e74c3c;
 								color: #fff;
 							">
-              返回主菜单
-            </text>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- 内容滚动区域 -->
-    <scroll id="scrollId" class="content-scroll" scroll-y="true">
-      <!-- 顶部区域 -->
-      <!-- 感谢wuhaiqi提供的弧形时间-->
-      <div class="header" style="width: 212px; position: absolute; left: 0; top: 0; height: 35px" @click="toggleMenu">
-        <text class="time" style="left: 60.9px; top: 3.8px; transform: rotate(-21deg)">
-          {{ time[0] }}
-        </text>
-        <text class="time" style="left: 79px; top: -1px; transform: rotate(-9deg)">
-          {{ time[1] }}
-        </text>
-        <text class="time" style="left: 93.5px; top: -5px">{{ ":" }}</text>
-        <text class="time" style="left: 108px; top: -1px; transform: rotate(9deg)">
-          {{ time[2] }}
-        </text>
-        <text class="time" style="left: 126.1px; top: 3.8px; transform: rotate(21deg)">
-          {{ time[3] }}
-        </text>
-      </div>
+							返回主菜单
+						</text>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 内容滚动区域 -->
+		<scroll id="scrollId" class="content-scroll" scroll-y="true">
+			<!-- 顶部区域 -->
+			<!-- 感谢wuhaiqi提供的弧形时间-->
+			<div class="header" style="width: 212px; position: absolute; left: 0; top: 0; height: 35px" @click="toggleMenu">
+				<text class="time" style="left: 60.9px; top: 3.8px; transform: rotate(-21deg)">
+					{{ time[0] }}
+				</text>
+				<text class="time" style="left: 79px; top: -1px; transform: rotate(-9deg)">
+					{{ time[1] }}
+				</text>
+				<text class="time" style="left: 93.5px; top: -5px">{{ ":" }}</text>
+				<text class="time" style="left: 108px; top: -1px; transform: rotate(9deg)">
+					{{ time[2] }}
+				</text>
+				<text class="time" style="left: 126.1px; top: 3.8px; transform: rotate(21deg)">
+					{{ time[3] }}
+				</text>
+			</div>
 
-      <!-- 内容区域 -->
-      <div class="scene">
-        <block for="{{segments}}">
-          <text if="$item.type === 'text'" class="normal-text">
-            {{ $item.content }}
-          </text>
-          <div if="$item.type === 'newline'" style="width: 100%"></div>
-          <text if="$item.type === 'link'" class="link-text" onclick="selectOption($item.linkIndex)">
-            {{ $item.content }}
-          </text>
-          <text if="$item.type === 'disabled'" class="disabled-text">
-            {{ $item.content }}
-          </text>
-          <image if="$item.type === 'image'" src="{{$item.path}}" style="width:{{$item.width}}px" data-index="{{$idx}}"
-            onerror="handleImageError" />
-          <text if="$item.type === 'error'" class="error-text">
-            [ERR] {{ $item.content }}
-          </text>
-        </block>
-      </div>
-    </scroll>
-  </div>
+			<!-- 内容区域 -->
+			<div class="scene">
+				<block for="{{segments}}">
+					<text if="$item.type === 'text'" class="normal-text">
+						{{ $item.content }}
+					</text>
+					<div if="$item.type === 'newline'" style="width: 100%"></div>
+					<text if="$item.type === 'link'" class="link-text" onclick="selectOption($item.linkIndex)">
+						{{ $item.content }}
+					</text>
+					<text if="$item.type === 'disabled'" class="disabled-text">
+						{{ $item.content }}
+					</text>
+					<image if="$item.type === 'image'" src="{{$item.path}}" style="width:{{$item.width}}px"
+						data-index="{{$idx}}" onerror="handleImageError" />
+					<text if="$item.type === 'error'" class="error-text">
+						[ERR] {{ $item.content }}
+					</text>
+				</block>
+			</div>
+		</scroll>
+	</div>
 </template>
 
 <script>
@@ -132,7 +132,7 @@ import gameData from "../../common/game-data.json";
 
 export default {
 	private: {
-    time: ['0','0','0','0'], // 新增时间数组初始化
+		time: ["0", "0", "0", "0"], // 新增时间数组初始化
 		debugMode: false,
 		timer: null,
 		showMenu: false,
@@ -155,8 +155,8 @@ export default {
 		dayChanged: false, // 天数变化标志
 		currentNode: null, // 当前节点引用
 	},
-	protected:{
-		loadSlot: null
+	protected: {
+		loadSlot: null,
 	},
 
 	// ================= 生命周期方法 =================
@@ -181,21 +181,21 @@ export default {
 		return true;
 	},
 
-  updateGameTime() {
-  // 使用游戏内格式化时间
-  const formattedTime = this.getFormattedTime();
-  
-  // 拆分小时和分钟
-  const [hours, minutes] = formattedTime.split(":");
-  
-  // 更新弧形时间显示
-  this.time = [
-    hours[0],    // 小时十位
-    hours[1],    // 小时个位 
-    minutes[0], // 分钟十位
-    minutes[1]  // 分钟个位
-  ];
-},
+	updateGameTime() {
+		// 使用游戏内格式化时间
+		const formattedTime = this.getFormattedTime();
+
+		// 拆分小时和分钟
+		const [hours, minutes] = formattedTime.split(":");
+
+		// 更新弧形时间显示
+		this.time = [
+			hours[0], // 小时十位
+			hours[1], // 小时个位
+			minutes[0], // 分钟十位
+			minutes[1], // 分钟个位
+		];
+	},
 
 	// ================= UI交互方法 =================
 	scrollTo() {
@@ -289,7 +289,7 @@ export default {
 		} catch (e) {
 			this.handleError("节点加载错误", e);
 		}
-    this.updateGameTime();
+		this.updateGameTime();
 		this.scrollTo();
 	},
 
@@ -814,7 +814,7 @@ export default {
 		this.setVariable("var.world.time", newTime);
 		this.setVariable("var.world.day", newDay);
 		this.setVariable("var.world.formattedTime", this.formatGameTime(newTime));
-    this.updateGameTime();
+		this.updateGameTime();
 
 		this.hourChanged = hourChanged;
 		this.dayChanged = dayChanged;
@@ -1365,7 +1365,8 @@ export default {
 }
 
 .save-btn,
-.load-btn .delete-btn {
+.load-btn,
+.delete-btn {
 	padding: 4px 8px;
 	border-radius: 4px;
 	font-size: 24px;

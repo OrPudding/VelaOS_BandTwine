@@ -1,34 +1,26 @@
 <template>
   <div class="container">
     <!-- 顶部区域 -->
-          <!-- 感谢wuhaiqi提供的弧形时间-->
-          <div class="header" style="width: 212px;position: absolute;left: 0;top: 0;height: 77px;" @click="terminate()">
-            <text class="time" style="left:60.9px;top:3.8px;transform: rotate(-21deg)">{{time[0]}}</text>
-            <text class="time" style="left:79px;top:-1px;transform: rotate(-9deg)">{{time[1]}}</text>
-            <text class="time" style="left:93.5px;top:-5px;" >{{':'}}</text>
-            <text class="time" style="left:108px;top:-1px;transform: rotate(9deg)">{{time[2]}}</text>
-            <text class="time" style="left:126.1px;top:3.8px;transform: rotate(21deg)">{{time[3]}}</text>
-          <text class="pagetitle">开始</text>
-          </div>
-    
+    <!-- 感谢wuhaiqi提供的弧形时间-->
+    <div class="header" style="width: 212px;position: absolute;left: 0;top: 0;height: 77px;" @click="terminate()">
+      <text class="time" style="left:60.9px;top:3.8px;transform: rotate(-21deg)">{{time[0]}}</text>
+      <text class="time" style="left:79px;top:-1px;transform: rotate(-9deg)">{{time[1]}}</text>
+      <text class="time" style="left:93.5px;top:-5px;">{{':'}}</text>
+      <text class="time" style="left:108px;top:-1px;transform: rotate(9deg)">{{time[2]}}</text>
+      <text class="time" style="left:126.1px;top:3.8px;transform: rotate(21deg)">{{time[3]}}</text>
+      <text class="pagetitle">开始</text>
+    </div>
+
     <!-- 按钮区域 -->
     <div class="button-container">
-      <input 
-        class="game-btn" 
-        type="button" 
-        value="开始" 
-        @click="quickStart" 
-      />
-      
-      <input 
-        class="game-btn" 
-        type="button" 
-        value="返回" 
-        @click="terminate" 
-      />
+      <input class="game-btn" type="button" value="开始" @click="quickStart" />
+
+      <input class="game-btn" type="button" value="返回" @click="terminate" />
+      <text class="copyright-line">Powered by BandTwine</text>
+      <text class="copyright-line">Copyright © 2025 OrPudding</text>
     </div>
   </div>
-</template>
+</div></template>
 
 <script>
 import router from "@system.router"
@@ -110,12 +102,12 @@ export default {
   width: 25px;
   height: 33px;
   font-size: 25px;
- font-weight: 600;
- line-height: normal;
- text-align: center;
- display: flex;
- align-items: flex-end;
- letter-spacing: normal;
+  font-weight: 600;
+  line-height: normal;
+  text-align: center;
+  display: flex;
+  align-items: flex-end;
+  letter-spacing: normal;
   color: rgba(255, 255, 255, 0.6);
   transform-origin: 12.5px 16.5px;
 }
@@ -144,7 +136,7 @@ export default {
 
 /* 统一按钮样式 */
 .game-btn {
-  width: 192x;
+  width: 192px;
   height: 91px;
   font-size: 36px;
   background-color: #262626;
@@ -152,5 +144,11 @@ export default {
   border-radius: 36px;
   color: #ffffff;
   margin-bottom: 30px;
+}
+
+.copyright-line {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
 }
 </style>

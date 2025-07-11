@@ -953,5 +953,93 @@
           "target": "start"
         }
       ]
+    },
+    "test_debug": {
+      "text": "调试日志测试\n当前日志级别：{var.show.logLevel.value}\n最近错误码：{var.show.errorCode.value}\n操作选项：\n{0}\n{1}\n{2}\n{3}",
+      "links": [
+        {
+          "text": "生成调试日志",
+          "target": "test_debug",
+          "actions": [
+            {
+              "type": "script",
+              "id": "generate_logs"
+            }
+          ]
+        },
+        {
+          "text": "触发模拟错误",
+          "target": "test_debug",
+          "actions": [
+            {
+              "type": "script",
+              "id": "trigger_error"
+            }
+          ]
+        },
+        {
+          "text": "切换日志级别",
+          "target": "test_debug",
+          "actions": [
+            {
+              "type": "set",
+              "target": "var.show.logLevel.value",
+              "value": "$(var.show.logLevel.value === 'DEBUG' ? 'INFO' : 'DEBUG')"
+            }
+          ]
+        },
+        {
+          "text": "返回主节点",
+          "target": "start"
+        }
+      ]
     }
+  },
+  "scripts": {
+    "generate_logs": [
+      {
+        "type": "set",
+        "target": "var.show.script.value",
+        "value": "日志生成中..."
+      },
+      {
+        "type": "debug",
+        "message": "调试信息测试"
+      },
+      {
+        "type": "info",
+        "message": "普通信息测试"
+      },
+      {
+        "type": "warn",
+        "message": "警告信息测试"
+      },
+      {
+        "type": "set",
+        "target": "var.show.script.value",
+        "value": "日志已生成"
+      }
+    ],
+    "trigger_error": [
+      {
+        "type": "set",
+        "target": "var.show.script.value",
+        "value": "触发错误中..."
+      },
+      {
+        "type": "error",
+        "message": "模拟错误测试"
+      },
+      {
+        "type": "set",
+        "target": "var.show.errorCode.value",
+        "value": "ERR-TEST"
+      },
+      {
+        "type": "set",
+        "target": "var.show.script.value",
+        "value": "错误已触发"
+      }
+    ]
+  }
 }
