@@ -17,215 +17,321 @@
 有关详细信息，请参阅 LICENSE 文件。
 
 
-## 目录
+### 节点文件编写教程（游戏引擎数据层）
 
-- [项目简介](#项目简介)
-- [快速开始](#快速开始)
-- [game-data.json 结构说明](#game-datajson-结构说明)
-  - [变量（variables）](#变量variables)
-  - [节点（nodes）](#节点nodes)
-  - [动作（actions）](#动作actions)
-  - [脚本（scripts）](#脚本scripts)
-- [自定义与扩展](#自定义与扩展)
-- [常见问题](#常见问题)
-- [致谢](#致谢)
+本教程详细解析游戏引擎节点文件的数据结构和配置方法，不包含脚本实现部分。节点文件(`game-data.json`)是游戏内容的核心载体，采用JSON格式定义所有游戏内容。
 
 ---
 
-## 项目简介
-
-BandTwine 让你像写故事一样设计互动小说/文字冒险游戏，支持条件跳转、变量操作、时间推进、监听器、图片、存档、表达式等丰富功能。
-
----
-
-## 快速开始
-
-1. 克隆本仓库并安装依赖。
-2. 编辑 `src/common/game-data.json`，编写你的游戏内容。
-3. 在支持的设备或模拟器上运行。
-
----
-
-## game-data.json 结构说明
-
-### 文件总览
-
+#### **一、节点基础结构**
+每个节点代表游戏中的一个场景或事件，基础结构如下：
 ```json
 {
-  "variables": { ... },
-  "nodes": { ... }
+  "nodes": {
+    "unique_node_id": {
+      "title": "场景标题",
+      "text": "场景内容{支持动态标记}",
+      "links": [],
+      "actions": [],
+      "imgs": {},
+      "randoms": {},
+      "conds": {}
+    }
+  },
+  "variables": {}
 }
 ```
-
-### 变量（variables）
-
-用于保存全局状态、玩家数据、系统信息等。支持嵌套结构。
-
-**示例：**
-
-```json
-"variables": {
-  "world": {
-    "time": 480,
-    "day": 1,
-    "formattedTime": "08:00",
-    "timePeriod": "早晨"
-  },
-  "player": {
-    "name": { "value": "玩家" },
-    "level": { "value": 1 }
-  },
-  "show": {
-    "counter": { "value": 0, "desc": "计数器" },
-    "flag": { "value": false, "desc": "状态标志" },
-    "score": { "value": 100, "desc": "分数" }
-  }
-}
-```
-
-- 可通过 `{var.变量路径}` 方式在文本和条件中引用，如 `{var.show.counter.value}`。
-- 支持数字、字符串、布尔类型。
-- show组的变量将会显示在侧边状态标签页，必须有value和desc，请开发者自行规划
 
 ---
 
-### 节点（nodes）
+#### **二、核心元素详解**
 
-每个节点代表一个“场景”或“步骤”，包含显示文本、跳转链接、可选动作等。
-
-**基本结构：**
-
+##### 1. **文本内容（text）**
+支持动态标记系统，标记会被实时解析：
 ```json
-"nodes": {
-  "start": {
-    "text": "欢迎来到VelaOS_BandTwine！\n请选择：\n{0}\n{1}",
-    "links": [
-      { "text": "进入冒险", "target": "adventure" },
-      { "text": "查看说明", "target": "help" }
+"text": "现在是{var.world.formattedTime}，{cond.time_period}。\n{img.background}{0}{1}"
+```
+
+| **标记类型**      | **语法**             | **示例**                     | **说明**                     |
+|-------------------|----------------------|------------------------------|------------------------------|
+| 变量引用          | `{var.path}`         | `{var.player.name}`          | 显示变量值                   |
+| 条件文本块        | `{cond.group_name}`  | `{cond.greeting}`            | 显示条件组匹配文本           |
+| 图片              | `{img.image_id}`     | `{img.background}`           | 插入配置的图片               |
+| 链接按钮          | `{数字}`             | `{0}`                        | 显示第0个链接按钮            |
+| 随机文本          | `{random.group_id}`  | `{random.dialog}`            | 显示随机组结果               |
+| 换行符            | `\n`                 | `第一行\n第二行`             | 强制文本换行                 |
+
+---
+
+##### 2. **链接选项（links）**
+定义玩家可选择的选项：
+```json
+"links": [
+  {
+    "text": "查看地图",
+    "target": "map_scene",
+    "condition": "var.items.map == true",
+    "actions": [
+      {"type": "add", "target": "var.stats.explore", "value": 1}
+    ],
+    "incom": {"location": "town_square"},
+    "random": [
+      {"if": "var.weather == 'rain'", "target": "indoor_map", "weight": 1.0},
+      {"target": "outdoor_map", "weight": 0.5}
     ]
   }
-}
+]
 ```
 
-#### 节点字段说明
-
-- `text`：节点内容，支持变量插值。
-- `links`：选项数组，决定玩家可以做什么，每项格式如下：
-  - `text`：选项内容
-  - `target`：跳转到的节点ID
-  - `actions`（可选）：选中后会执行的动作（见下节）
-- 可定义其他自定义字段，如图片、脚本等。
+| **属性**    | **类型**  | **必填** | **说明**                                  |
+|-------------|-----------|----------|-------------------------------------------|
+| text        | string    | ✓        | 选项显示文本                              |
+| target      | string    | ✓        | 目标节点ID                                |
+| condition   | string    |          | 显示条件表达式                            |
+| actions     | array     |          | 选择后执行的动作                          |
+| incom       | object    |          | 向目标节点传递临时变量 {key: value}       |
+| random      | array     |          | 随机跳转子选项（见随机组说明）            |
 
 ---
 
-### 动作（actions）
+##### 3. **条件组（conds）**
+实现动态文本内容：
+```json
+"conds": {
+  "time_period": [
+    {
+      "condition": "var.world.time < 300",
+      "text": "深夜"
+    },
+    {
+      "condition": "var.world.time < 480",
+      "text": "凌晨"
+    },
+    {
+      "text": "白天" // 默认选项
+    }
+  ]
+}
+```
+- 引擎按顺序检查条件，返回第一个匹配的`text`
+- 最后一个元素可作为默认项（无`condition`）
 
-用于节点跳转时修改变量、调用功能、执行脚本等。
+---
 
-**常用动作类型：**
+##### 4. **随机组（randoms）**
+实现概率分支：
+```json
+"randoms": {
+  "enemy_encounter": [
+    {
+      "text": "遇到哥布林！",
+      "actions": [{"type": "jump", "target": "goblin_fight"}],
+      "weight": 0.7,
+      "condition": "var.area == 'forest'"
+    },
+    {
+      "text": "发现宝箱！",
+      "weight": 0.3
+    }
+  ]
+}
+```
 
-- `add`：对数值型变量加减
-- `set`：设定变量
-- `toggle`：切换布尔值
-- `jump`：条件跳转到指定节点
-- `toast`：弹出提示
-- `vibrate`：设备震动
-- `autosave` :帮用户自动存档到第5槽位
-- `advanceTime`：推进游戏内时间
-- `addListener`/`removeListener`：添加/移除监听器
+| **属性**    | **类型**  | **必填** | **说明**                     |
+|-------------|-----------|----------|------------------------------|
+| text        | string    |          | 直接返回的文本               |
+| actions     | array     |          | 选中时执行的动作             |
+| weight      | number    | ✓        | 权重值（≥0）                 |
+| condition   | string    |          | 生效条件                     |
 
-**示例：**
+---
 
+##### 5. **图片配置（imgs）**
+定义场景图片资源：
+```json
+"imgs": {
+  "tavern": {
+    "path": "tavern_${var.weather}.png",
+    "width": 300
+  }
+}
+```
+| **属性** | **类型** | **必填** | **说明**                                    |
+|----------|-----------|----------|---------------------------------------------|
+| path     | string    | ✓        | 路径（支持${表达式}动态路径）               |
+| width    | number    |          | 显示宽度（px），默认150                     |
+
+> **路径解析规则**：
+> - 自动添加前缀`/common/images/`（除非包含`/`或`http`）
+> - 示例：`"bg.png"` → `/common/images/bg.png`
+
+---
+
+##### 6. **动作系统（actions）**
+节点和链接均可包含动作列表：
+```json
+"actions": [
+  // 变量操作
+  {"type": "set", "target": "var.player.hp", "value": 100},
+  {"type": "add", "target": "var.player.gold", "value": 50},
+  {"type": "toggle", "target": "var.flags.hasKey"},
+
+  // 游戏流程
+  {"type": "jump", "target": "next_node", "condition": "var.day > 3"},
+  {"type": "autosave"},
+
+  // 系统交互
+  {"type": "vibrate", "mode": "short"},
+  {"type": "toast", "message": "金币+${var.gain}"},
+
+  // 时间推进
+  {"type": "advanceTime", "minutes": 30},
+
+  // 事件监听
+  {"type": "addListener", 
+   "id": "midnight", 
+   "condition": "var.world.time == 0",
+   "actions": [{"type": "jump", "target": "midnight_event"}],
+   "options": {"once": true}
+  }
+]
+```
+
+**动作类型详解**：
+
+| **类型**       | **参数**              | **说明**                                      |
+|----------------|-----------------------|-----------------------------------------------|
+| set            | target, value         | 设置变量值                                    |
+| add            | target, value         | 变量加法（支持数字）                          |
+| toggle         | target                | 布尔值取反                                    |
+| jump           | target, condition     | 条件跳转到节点                                |
+| autosave       | -                     | 自动存档到槽位4                              |
+| vibrate        | mode:short/long       | 触发设备震动                                  |
+| toast          | message, duration     | 显示消息提示                                  |
+| advanceTime    | minutes               | 推进游戏时间（分钟）                          |
+| addListener    | id, condition, actions| 添加事件监听器                                |
+| removeListener | id / "all"            | 移除监听器                                    |
+
+---
+
+##### 7. **全局变量（variables）**
+定义游戏初始状态：
+```json
+"variables": {
+  "player": {
+    "name": "旅行者",
+    "hp": 100,
+    "gold": 50
+  },
+  "world": {
+    "day": 1,
+    "time": 480,  // 分钟制 (8:00)
+    "formattedTime": "08:00"
+  },
+  "flags": {
+    "metKing": false
+  },
+  "show": {
+    "reputation": {
+      "desc": "声望值",
+      "value": "var.player.reputation"
+    }
+  }
+}
+```
+
+**特殊变量组**：
+- `show`：定义状态界面显示的变量
+  - `desc`：界面显示的名称
+  - `value`：绑定的变量路径
+
+---
+
+#### **三、高级用法示例**
+
+##### 复合条件链接
 ```json
 {
-  "text": "计数器：{var.show.counter.value}",
-  "links": [
+  "text": "进入森林？",
+  "condition": "var.energy > 30 && var.hasTorch == true",
+  "actions": [
+    {"type": "add", "target": "var.energy", "value": -10}
+  ],
+  "random": [
     {
-      "text": "加一",
-      "target": "counter_test",
-      "actions": [
-        { "type": "add", "target": "var.show.counter.value", "value": 1 }
-      ]
+      "if": "var.weather == 'rain'",
+      "target": "forest_rain",
+      "incom": {"difficulty": 2}
     },
     {
-      "text": "切换状态",
-      "target": "counter_test",
-      "actions": [
-        { "type": "toggle", "target": "var.show.flag.value" }
-      ]
+      "target": "forest_sunny",
+      "incom": {"difficulty": "$(var.base_difficulty + 1)"}
     }
   ]
 }
 ```
 
----
-
-### 脚本（scripts）（未完善）
-
-用于复用复杂的逻辑或批量动作，在节点或监听器中触发。
-
----
-
-## 自定义与扩展
-
-- 你可以自由添加节点，设计分支剧情。
-- 支持条件渲染、复杂表达式，如：
-  ```json
-  "condition": "var.show.counter.value > 10 && var.show.flag.value"
-  ```
-- 可添加监听器，实现“计数器大于3时触发事件”等功能。
-- 支持图片、存档、Toast、Jump跳转等功能。
-- 变量、动作类型均可扩展，建议参考内置测试节点。
-
----
-
-## 常见问题
-
-**Q: 如何引用变量？**  
-A: 用 `{var.变量路径}`，如 `{var.player.name.value}`。
-
-**Q: 支持哪些动作？**  
-A: 详见“动作”章节，或参考 `game-data.json` 的内置测试节点。
-
-**Q: 如何实现条件分支？**  
-A: 在 link 或 action 里加 `condition` 字段，满足时才会显示或执行。
-
----
-
-## 致谢
-
-- 灵感参考自 Twine
-- 感谢所有开源贡献者
-
----
-
-## 进阶参考
-
-建议从 `src/common/game-data.json` 的测试节点（如 `test_variables`、`test_conditions` 等）学习各类功能的用法。可以直接复制后定制自己的节点。
-
----
-
-如需更多帮助，请提 Issue 或讨论。欢迎贡献你的故事和节点！
-
----
-
-**附录：节点完整示例**
-
+##### 动态图片路径
 ```json
-"my_node": {
-  "text": "你遇到了一只猫，当前分数：{var.show.score.value}",
-  "links": [
-    {
-      "text": "撸猫 +10分",
-      "target": "my_node",
-      "actions": [
-        { "type": "add", "target": "var.show.score.value", "value": 10 }
-      ]
-    },
-    {
-      "text": "离开",
-      "target": "start"
-    }
-  ]
+"imgs": {
+  "character": {
+    "path": "char_${var.gender}_${var.mood}.png",
+    "width": 200
+  }
 }
+// 解析为: char_male_happy.png
 ```
+
+##### 时间监听器
+```json
+"actions": [
+  {
+    "type": "addListener",
+    "id": "lunch_time",
+    "condition": "var.world.time == 720", // 12:00
+    "actions": [
+      {"type": "jump", "target": "lunch_event"}
+    ],
+    "options": {"type": "time"}
+  }
+]
+```
+
+---
+
+#### **四、最佳实践指南**
+
+1. **ID命名规范**
+   - 节点ID：`location_event`（城堡_宴会）
+   - 随机组：`sceneId_result`（洞穴_宝藏）
+   - 条件组：`sceneId_display`（商店_折扣提示）
+
+2. **复杂逻辑拆分**
+   ```json
+   // 不推荐
+   "condition": "var.a>1 && (var.b<3 || var.c=='yes')"
+   
+   // 推荐：拆分为多条件链接
+   "links": [
+     {
+       "text": "选项A",
+       "condition": "var.a>1 && var.b<3",
+       "target": "..."
+     },
+     {
+       "text": "选项B",
+       "condition": "var.a>1 && var.c=='yes'",
+       "target": "..."
+     }
+   ]
+   ```
+
+3. **存档兼容设计**
+   - 关键变量用`var.permanent`命名
+   - 避免在`temp`中存储长期数据
+   - 时间相关变量必须使用`var.world.time/day`
+
+4. **性能优化**
+   - 超过5个选项改用随机组
+   - 复杂条件预先计算到变量
+   - 大图片使用压缩格式（webp/jpg）
