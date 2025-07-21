@@ -167,7 +167,7 @@
 
 ---
 
-##### 6. **动作系统（actions）**
+##### 6. **动作系统（actions）**（详见附录）
 节点和链接均可包含动作列表：
 ```json
 "actions": [
@@ -335,3 +335,453 @@
    - 超过5个选项改用随机组
    - 复杂条件预先计算到变量
    - 大图片使用压缩格式（webp/jpg）
+
+---
+>附录
+---
+### 动作系统（Actions）深度教程
+
+动作系统是游戏引擎的核心逻辑驱动机制，用于处理游戏状态变化、流程控制和玩家交互反馈。以下是每个动作类型的详细解析、参数设置和底层原理说明。
+
+---
+
+#### **动作基础结构**
+所有动作共享的基础结构：
+```json
+{
+  "type": "动作类型",
+  "参数1": "值",
+  "参数2": "值",
+  // 条件参数（可选）
+  "condition": "布尔表达式"
+}
+```
+
+---
+
+### **一、变量操作类动作**
+
+#### 1. **set - 设置变量**
+```json
+{
+  "type": "set",
+  "target": "var.player.hp",
+  "value": 100
+}
+```
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| target | string | ✓ | 变量路径（以`var.`开头） |
+| value | 任意 | ✓ | 支持表达式、变量引用、原始值 |
+| condition | string |  | 执行条件表达式 |
+
+**原理**：
+- 解析`value`（处理变量引用和表达式）
+- 沿路径创建嵌套对象（如`var.player.stats`自动创建）
+- 类型转换：字符串"10"转为数字10
+
+**高级用法**：
+```json
+{
+  "type": "set",
+  "target": "var.system.lastChoice",
+  "value": "{img.choice_${var.currentOption}}"
+}
+// 动态变量名：存储当前选项的图片路径
+```
+
+---
+
+#### 2. **add - 增减变量值**
+```json
+{
+  "type": "add",
+  "target": "var.player.gold",
+  "value": -50
+}
+```
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| target | string | ✓ | 数字类型变量路径 |
+| value | number | ✓ | 支持负数和表达式 |
+
+**原理**：
+1. 获取当前值（不存在则视为0）
+2. 解析`value`（支持`$(表达式)`）
+3. 执行加法运算
+4. 处理整数溢出（引擎自动处理）
+
+**特殊案例**：
+```json
+{
+  "type": "add",
+  "target": "var.world.time",
+  "value": "$(60 - var.world.time % 60)" 
+}
+// 精确推进到下个整点
+```
+
+---
+
+#### 3. **toggle - 布尔值取反**
+```json
+{
+  "type": "toggle",
+  "target": "var.flags.hasKey"
+}
+```
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| target | string | ✓ | 布尔变量路径 |
+
+**原理**：
+- 非布尔值转换规则：
+  - 数字0 → false
+  - 空字符串 → false
+  - 其他值 → true
+
+---
+
+### **二、游戏流程控制**
+
+#### 1. **jump - 条件跳转**
+```json
+{
+  "type": "jump",
+  "target": "forest_encounter",
+  "condition": "var.player.level > 5",
+  "beforeActions": [
+    {"type": "set", "target": "var.temp.area", "value": "forest"}
+  ],
+  "afterActions": [
+    {"type": "vibrate", "mode": "long"}
+  ]
+}
+```
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| target | string | ✓ | 目标节点ID |
+| condition | string |  | 跳转条件 |
+| beforeActions | array |  | 跳转前执行的动作 |
+| afterActions | array |  | 跳转后执行的动作 |
+
+**执行流程**：
+1. 检查`condition`（为空则视为true）
+2. 执行`beforeActions`
+3. 加载目标节点
+4. 目标节点加载完成后执行`afterActions`
+
+---
+
+#### 2. **random - 随机分支**
+```json
+{
+  "type": "random",
+  "id": "tavern_events"
+}
+```
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | ✓ | 当前节点的随机组ID |
+
+**底层机制**：
+1. 获取`randoms`下对应ID的数组
+2. 过滤掉不满足`condition`的选项
+3. 按权重随机选择（权重和归一化算法）
+4. 执行选中项的`actions`
+
+---
+
+### **三、系统交互动作**
+
+#### 1. **vibrate - 设备震动**
+```json
+{
+  "type": "vibrate",
+  "mode": "short" // 或 "long"
+}
+```
+**原理**：
+- `short`：触发100ms震动
+- `long`：触发400ms震动
+- 依赖设备API，无设备时静默失败
+
+---
+
+#### 2. **toast - 消息提示**
+```json
+{
+  "type": "toast",
+  "message": "获得${var.goldAmount}金币!",
+  "duration": 1500
+}
+```
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|------|------|
+| message | string | ✓ | - | 支持动态表达式 |
+| duration | number |  | 2000 | 显示时长(ms) |
+
+**解析顺序**：
+1. 处理`${表达式}`
+2. 解析变量引用`{var.path}`
+3. 执行数学运算`$(1+1)`
+
+---
+
+#### 3. **autosave - 自动存档**
+```json
+{"type": "autosave"}
+```
+**执行逻辑**：
+1. 创建存档数据包：
+   ```js
+   {
+     time: "2025-01-01 12:00", 
+     state: {
+       vars: {...},
+       currentNodeId: "...",
+       listeners: [...]
+     }
+   }
+   ```
+2. 存储到槽位4
+3. 更新存档菜单显示
+
+---
+
+### **四、时间系统动作**
+
+#### 1. **advanceTime - 推进时间**
+```json
+{
+  "type": "advanceTime",
+  "minutes": "$(var.travelTime * 60)"
+}
+```
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| minutes | number | ✓ | 推进的分钟数 |
+
+**时间推进算法**：
+```javascript
+advanceTime(minutes) {
+  const current = this.getVariable("var.world.time");
+  let newTime = current + minutes;
+  let daysAdded = 0;
+  
+  // 处理跨天
+  while (newTime >= 1440) {
+    newTime -= 1440;
+    daysAdded++;
+  }
+  
+  // 更新状态
+  this.setVariable("var.world.time", newTime);
+  this.setVariable("var.world.day", this.getVariable("var.world.day") + daysAdded);
+  
+  // 触发时间监听器
+  this.checkTimeListeners();
+}
+```
+
+---
+
+### **五、事件监听系统**
+
+#### 1. **addListener - 添加监听器**
+```json
+{
+  "type": "addListener",
+  "id": "midnight_event",
+  "condition": "var.world.time == 0",
+  "actions": [
+    {"type": "jump", "target": "midnight_scene"}
+  ],
+  "options": {
+    "once": true,
+    "type": "time",
+    "nodeId": "tavern"
+  }
+}
+```
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | ✓ | 监听器唯一ID |
+| condition | string | ✓ | 触发条件表达式 |
+| actions | array | ✓ | 触发时执行的动作 |
+| options | object |  | 配置项 |
+
+**options详解**：
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|------|------|
+| once | boolean | true | 是否单次触发 |
+| type | string | "general" | 监听器类型(time/general) |
+| nodeId | string | null | 限定生效节点 |
+
+---
+
+#### 2. **removeListener - 移除监听器**
+```json
+{
+  "type": "removeListener",
+  "id": "all" // 或指定ID
+}
+```
+**执行效果**：
+- `"all"`：清除所有监听器
+- 指定ID：移除匹配ID的监听器
+
+---
+
+### **六、复合动作示例**
+
+#### 商店购买系统
+```json
+{
+  "type": "jump",
+  "target": "shop_buy_result",
+  "condition": "var.player.gold >= var.item.price",
+  "beforeActions": [
+    {
+      "type": "add",
+      "target": "var.player.gold",
+      "value": "$(-var.item.price)"
+    },
+    {
+      "type": "add",
+      "target": "var.player.inventory.{var.item.id}",
+      "value": 1
+    },
+    {
+      "type": "addListener",
+      "id": "first_use_{var.item.id}",
+      "condition": "var.player.inventory.{var.item.id} == 1",
+      "actions": [{"type": "jump", "target": "item_first_use"}],
+      "options": {"once": true}
+    }
+  ]
+}
+```
+
+#### 时间敏感事件
+```json
+{
+  "type": "addListener",
+  "id": "full_moon",
+  "condition": "var.world.day % 28 == 0 && var.world.time == 1260", // 21:00
+  "actions": [
+    {"type": "set", "target": "var.flags.fullMoon", "value": true},
+    {"type": "jump", "target": "werewolf_event"}
+  ],
+  "options": {
+    "type": "time",
+    "once": false
+  }
+}
+```
+
+---
+
+### **七、执行原理与优先级**
+
+#### 动作执行流程
+1. **条件检查**：验证`condition`表达式
+2. **参数解析**：处理动态表达式和变量引用
+3. **执行动作**：修改游戏状态
+4. **副作用处理**：
+   - 时间推进 → 检查时间监听器
+   - 变量修改 → 更新状态界面
+   - 跳转动作 → 中断当前执行队列
+
+#### 优先级规则
+1. 节点内动作优先于链接动作
+2. `jump`动作会中断后续动作
+3. 监听器按添加顺序执行
+4. 时间监听器优先于常规监听器
+
+#### 错误处理机制
+- 变量不存在：创建并赋默认值（数字0，字符串""）
+- 表达式错误：返回0并记录日志
+- 无效节点：显示错误信息并返回起始点
+- API调用失败：静默失败（存档、震动等）
+
+---
+
+### **八、最佳实践指南**
+
+1. **变量管理**
+   ```json
+   // 避免
+   {"type": "set", "target": "var.temp", "value": 10}
+   
+   // 推荐
+   {"type": "set", "target": "var.session.tempValue", "value": 10}
+   ```
+
+2. **时间推进策略**
+   - 短操作：15-30分钟
+   - 长场景：2-4小时
+   - 睡眠：8小时（自动触发日出事件）
+
+3. **监听器优化**
+   ```json
+   // 低效
+   "condition": "var.world.time >= 480 && var.world.time <= 720"
+   
+   // 高效
+   "condition": "$(Math.floor(var.world.time/60) == 12)"
+   ```
+
+4. **存档设计**
+   - 自动存档：关键决策后
+   - 手动存档：场景切换时
+   - 临时存档：长时间操作前
+
+5. **跨平台兼容**
+   ```json
+   {
+     "type": "toast",
+     "message": "震动提示!",
+     "condition": "var.device.hasVibrator"
+   },
+   {
+     "type": "vibrate",
+     "condition": "var.device.hasVibrator"
+   }
+   ```
+
+---
+
+### **九、调试技巧**
+
+1. 调试模式激活：
+   ```json
+   {
+     "type": "set",
+     "target": "var.system.debug",
+     "value": true
+   }
+   ```
+   
+2. 状态监控动作：
+   ```json
+   {
+     "type": "toast",
+     "message": "HP={var.player.hp}/nGold={var.player.gold}",
+     "duration": 3000
+   }
+   ```
+
+3. 快速存档/读档：
+   ```json
+   {
+     "type": "autosave"
+   },
+   {
+     "type": "jump",
+     "target": "debug_room",
+     "condition": "var.system.debug"
+   }
+   ```
+
+通过合理组合这些动作，您可以构建复杂的游戏机制，如昼夜循环、经济系统、任务链等，同时保持代码的可维护性和性能。
