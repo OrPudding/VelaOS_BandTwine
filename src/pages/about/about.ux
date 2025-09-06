@@ -1,56 +1,66 @@
 <template>
-  <div class="container">
-    <!-- 顶部区域 -->
-    <!-- 感谢wuhaiqi提供的弧形时间-->
-    <div class="header" style="width: 212px; position: absolute; left: 0; top: 0; height: 77px" @click="terminate()">
-      <text class="time" style="left: 60.9px; top: 3.8px; transform: rotate(-21deg)">
-        {{ time[0] }}
-      </text>
-      <text class="time" style="left: 79px; top: -1px; transform: rotate(-9deg)">
-        {{ time[1] }}
-      </text>
-      <text class="time" style="left: 93.5px; top: -5px">{{ ":" }}</text>
-      <text class="time" style="left: 108px; top: -1px; transform: rotate(9deg)">
-        {{ time[2] }}
-      </text>
-      <text class="time" style="left: 126.1px; top: 3.8px; transform: rotate(21deg)">
-        {{ time[3] }}
-      </text>
-      <text class="pagetitle">关于</text>
-    </div>
+	<div class="container">
+		<!-- 统一顶部区域样式 -->
+		<!-- 感谢Charlie_Q提供的弧形时间,由OrPudding移植圆表 -->
+		<div class="header" @click="backToHome">
+			<text class="time time1">{{ time[0] }}</text>
+			<text class="time time2">{{ time[1] }}</text>
+			<text class="time time3">{{ ":" }}</text>
+			<text class="time time4">{{ time[2] }}</text>
+			<text class="time time5">{{ time[3] }}</text>
+			<text class="pagetitle">{{ title }}</text>
+		</div>
 
-    <!-- 应用信息区域 -->
-    <div class="app-info">
-      <!-- 应用名称和版本 -->
-      <div class="app-details">
-        <text class="app-name">{{ appInfo.name }}</text>
-        <text class="app-version">{{ appInfo.version }}</text>
-      </div>
-      <!-- 应用图标 -->
-      <image src="/common/icon.png" class="app-icon"></image>
-    </div>
+		<!-- 应用信息区域 -->
+		<div class="app-info">
+			<image src="/common/icon.png" class="app-icon"></image>
+			<div class="app-details">
+				<text class="app-name">{{ appInfo.name }}</text>
+				<text class="app-version">{{ appInfo.version }}</text>
+			</div>
+		</div>
 
-    <!-- 开发者区域 -->
-    <text class="section-title">参与开发的人员</text>
-    <div class="developers">
-      <text class="developer">@OrPudding</text>
-      <text class="section-title">UI设计</text>
-      <text class="developer">@无源流沙</text>
-    </div>
+		<div class="developer-columns">
+			<div class="developer-column">
+				<text class="section-title">文本</text>
+				<text class="developer">@棍母</text>
+			</div>
+			<div class="developer-column">
+				<text class="section-title">美术</text>
+				<text class="developer">@棍母</text>
+			</div>
+			<div class="developer-column">
+				<text class="section-title">音乐</text>
+				<text class="developer">@棍母</text>
+			</div>
+		</div>
 
-    <!-- 网站信息 -->
-    <text class="website-info">更多资源请访问</text>
-    <text class="website-url">bandbbs.cn</text>
+		<!-- 开发者区域 - 改为两列布局 -->
+		<div class="developer-columns">
+			<div class="developer-column">
+				<text class="section-title">引擎</text>
+				<text class="developer">@OrPudding</text>
+			</div>
+			<div class="developer-column">
+				<text class="section-title">UI参考</text>
+				<text class="developer">@无源流沙</text>
+			</div>
+		</div>
+		<!-- 网站信息 -->
+		<text class="website-info">更多资源请访问</text>
+		<text class="website-url">bandbbs.cn</text>
+		<text class="website-url">astrobox.online</text>
 
-    <!-- 版权信息 -->
-    <div class="copyright">
-      <text class="copyright-line">本游戏基于BandTwine</text>
-      <text class="copyright-line">文字游戏引擎开发</text>
-      <text class="copyright-line">程序部分遵循AGPLv3协议</text>
-      <text class="copyright-line">Copyright © 2025 OrPudding</text>
-      <text class="copyright-line">禁止删除此段声明</text>
-    </div>
-  </div>
+		<!-- 版权信息 -->
+		<div class="copyright">
+			<text class="section-title">引擎版权信息</text>
+			<text class="copyright-line">Powered by BandTwine</text>
+			<text class="copyright-line" onclick="clicked">
+				Copyright © 2025 OrPudding.
+			</text>
+			<text class="copyright-line">All Rights Reserved</text>
+		</div>
+	</div>
 </template>
 
 <script>
@@ -60,11 +70,13 @@ import prompt from "@system.prompt";
 
 export default {
 	private: {
-		time: ["0", "0", "0", "0"], // 新增时间数组初始化
+		time: [0, 0, 0, 0],
+		title: "关于",
 		appInfo: {
 			name: "程序名",
 			version: "1.0",
 		},
+		clickCount: 1,
 	},
 
 	onInit() {
@@ -87,11 +99,7 @@ export default {
 		const hours = now.getHours().toString().padStart(2, "0");
 		const minutes = now.getMinutes().toString().padStart(2, "0");
 
-		// 更新原有时间显示
-		this.hours = hours;
-		this.minutes = minutes;
-
-		// 新增弧形时间处理：将小时和分钟拆分为单个字符
+		// 更新为index页的时间处理逻辑
 		this.time = [
 			hours[0], // 小时十位
 			hours[1], // 小时个位
@@ -100,7 +108,18 @@ export default {
 		];
 	},
 
-	terminate() {
+	clicked() {
+		if (this.clickCount < 2) {
+			this.clickCount++;
+		} else {
+			this.clickCount = 0;
+			router.push({
+				uri: "pages/advanced",
+			});
+		}
+	},
+
+	backToHome() {
 		router.push({
 			uri: "pages/index",
 			params: {
@@ -112,138 +131,168 @@ export default {
 </script>
 
 <style>
-.container {
-	width: 100%;
-	height: 100%;
-	background-color: #000000;
-	flex-direction: column;
-	align-items: center;
-	padding-bottom: 60px;
-}
+@import "../../common/comm.css";
 
-/* 顶部区域 */
-.header {
-	width: 100%;
-	height: 77px;
-	flex-direction: column;
-	align-items: center;
-}
-
-.time {
-	position: absolute;
-	width: 25px;
-	height: 33px;
-	font-size: 25px;
-	font-weight: 600;
-	line-height: normal;
-	text-align: center;
-	display: flex;
-	align-items: flex-end;
-	letter-spacing: normal;
-	color: rgba(255, 255, 255, 0.6);
-	transform-origin: 12.5px 16.5px;
-}
-
-.pagetitle {
-	position: absolute;
-	left: 0px;
-	top: 35px;
-	width: 212px;
-	height: 42px;
-	font-size: 32px;
-	font-weight: 600;
-	line-height: normal;
-	text-align: center;
-	letter-spacing: normal;
-	color: rgba(255, 255, 255, 1);
-}
-
-/* 应用信息区域 */
+/* 应用信息区域 - 使用卡片样式 */
 .app-info {
-	width: 192px;
-	height: 194px;
+	width: 291px;
+	height: 142px;
 	border-radius: 36px;
 	background-color: #262626;
-	border: 3px solid #333333;
-	margin-top: 90px;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-around;
+	padding: 0 20px;
+	margin-top: 95px;
+	margin-bottom: 5px;
 }
 
 .app-icon {
-	width: 72px;
-	height: 72px;
-	position: absolute;
-	right: 16px;
-	top: 112px;
+	width: 80px;
 }
 
 .app-details {
-	position: absolute;
-	left: 24px;
-	top: 18px;
 	flex-direction: column;
+	align-items: flex-start;
 }
 
 .app-name {
-	font-size: 28px;
+	font-size: 36px;
 	color: #ffffff;
+	margin-bottom: 10px;
 }
 
 .app-version {
-	font-size: 28px;
+	font-size: 30px;
 	color: rgba(255, 255, 255, 0.6);
 }
 
-/* 开发者区域 */
+/* 统一区域标题样式 */
 .section-title {
 	width: 100%;
-	text-align: left;
+	text-align: center;
 	font-size: 28px;
 	color: rgba(255, 255, 255, 0.6);
-	text-align: center;
-	margin-top: 5px;
-}
-
-.developers {
-	width: 100%;
-	flex-direction: column;
-	justify-content: flex-start;
-	margin-bottom: 5px;
 }
 
 .developer {
 	font-size: 32px;
 	color: #ffffff;
-	font-weight: 500;
-	text-align: center;
+}
+.dev-pfp {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
 }
 
-/* 版权信息 */
-.copyright {
-	width: 100%;
+/* 新增两列布局样式 */
+.developer-columns {
+	flex-direction: row;
+	justify-content: center;
+	width: 466px;
+	padding: 0 25px;
+}
+
+.developer-column {
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: 24px;
-}
-
-.copyright-line {
-	font-size: 25px;
-	color: #ffffff;
-	text-align: center;
-	margin-bottom: 8px;
 }
 
 /* 网站信息 */
 .website-info {
-	width: 100%;
-	text-align: center;
-	font-size: 25px;
+	font-size: 28px;
 	color: rgba(255, 255, 255, 0.6);
+	margin-bottom: 2px;
 }
 
 .website-url {
-	width: 100%;
-	text-align: center;
-	font-size: 26px;
+	font-size: 32px;
 	color: #ffffff;
+}
+
+/* 版权信息 */
+.copyright {
+	flex-direction: column;
+	align-items: center;
+	padding: 2px 0 45px 0;
+}
+
+.copyright-line {
+	font-size: 24px;
+	color: rgba(255, 255, 255, 0.6);
+	margin-bottom: 2px;
+	text-align: center;
+}
+@media (shape: circle) {
+	.developer-columns {
+		width: 90%;
+	}
+}
+@media (shape: rect) {
+	.app-info {
+		width: 80%;
+		height: 132px;
+		margin-top: 6px;
+	}
+	.app-name {
+		font-size: 32px;
+	}
+	.app-version {
+		font-size: 28px;
+	}
+
+	.developer-columns {
+		width: 90%;
+		padding: 0 10px;
+	}
+	.section-title {
+		font-size: 24px;
+	}
+	.developer {
+		font-size: 24px;
+	}
+	.website-info {
+		font-size: 24px;
+	}
+	.website-url {
+		font-size: 26px;
+	}
+	.copyright-line {
+		font-size: 20px;
+	}
+}
+@media (shape: pill-shaped) {
+	.app-info {
+		flex-direction: column;
+		width: 90%;
+		margin-top: 6px;
+		height: auto;
+	}
+	.app-details {
+		align-items: center;
+	}
+	.app-name {
+		font-size: 28px;
+		margin-bottom: 0px;
+	}
+	.app-version {
+		font-size: 24px;
+	}
+
+	.developer-columns {
+		width: 90%;
+		padding: 0 10px;
+		flex-wrap: wrap;
+	}
+	.developer {
+		font-size: 28px;
+	}
+	.website-url {
+		font-size: 28px;
+	}
+	.copyright-line {
+		font-size: 20px;
+	}
 }
 </style>

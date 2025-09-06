@@ -1,0 +1,1519 @@
+<template>
+	<!--主容器-->
+	<div class="container">
+		<!--独立侧边栏菜单-->
+		<div if="{{ showMenu }}" class="sidebar-menu">
+			<div class="menu-header" onclick="toggleMenu">
+				<text class="menu-title">菜单</text>
+			</div>
+			<!--标签页导航-->
+			<div class="menu-tabs">
+				<text
+					class="menu-tab {{ activeTab === 'status' ? 'active-tab' : '' }}"
+					onclick="switchTab('status')"
+				>
+					状态
+				</text>
+				<text
+					class="menu-tab {{ activeTab === 'save' ? 'active-tab' : '' }}"
+					onclick="switchTab('save')"
+				>
+					存档
+				</text>
+				<text
+					class="menu-tab {{ activeTab === 'settings' ? 'active-tab' : '' }}"
+					onclick="switchTab('settings')"
+				>
+					设置
+				</text>
+			</div>
+			<!--标签页内容容器-->
+			<div class="tab-content-container">
+				<!--状态标签页-->
+				<scroll
+					if="{{ activeTab === 'status' }}"
+					class="menu-scroll"
+					scroll-y="true"
+				>
+					<div class="status-section" for="{{ showVars }}">
+						<text class="status-label">{{ $item.desc }}:</text>
+						<text class="status-value">{{ $item.value }}</text>
+					</div>
+				</scroll>
+				<!--存档标签页-->
+				<scroll
+					if="{{ activeTab === 'save' }}"
+					class="menu-scroll"
+					scroll-y="true"
+				>
+					<div class="save-section">
+						<!-- 为自动存档位添加单独的样式 -->
+						<div
+							class="save-item auto-save-item"
+							style="flex-direction: row"
+							if="{{ saveSlots[0] }}"
+						>
+							<div class="save-header">
+								<div
+									style="flex-direction: row; justify-content: space-between"
+								>
+									<text class="save-title">自动存档</text>
+									<!-- 自动存档位移除删除按钮 -->
+								</div>
+								<div class="save-time">
+									<text class="save-date">
+										{{
+											saveSlots[0].time
+												? saveSlots[0].time.split(" ")[0]
+												: "暂无存档"
+										}}
+									</text>
+									<text class="save-time-part">
+										{{
+											saveSlots[0].time ? saveSlots[0].time.split(" ")[1] : ""
+										}}
+									</text>
+								</div>
+							</div>
+							<div class="save-actions">
+								<!-- 自动存档位只能加载，移除保存按钮 -->
+								<text
+									class="load-btn auto-load-btn"
+									style="height: 56px"
+									onclick="deleteSaveSlot(0)"
+								>
+									加载
+								</text>
+							</div>
+						</div>
+						<!-- 手动存档位（1-4号） -->
+						<div
+							class="save-item normal-save-item"
+							for="{{ (index, item) in saveSlots.slice(1) }}"
+							tid="index"
+						>
+							<div class="save-header">
+								<div
+									style="flex-direction: row; justify-content: space-between"
+								>
+									<text class="save-title">存档{{ index + 1 }}</text>
+									<text class="delete-btn" onclick="deleteSaveSlot(index + 1)">
+										删除
+									</text>
+								</div>
+								<div class="save-time">
+									<text class="save-date">
+										{{ item.time ? item.time.split(" ")[0] : "暂无存档" }}
+									</text>
+									<text class="save-time-part">
+										{{ item.time ? item.time.split(" ")[1] : "" }}
+									</text>
+								</div>
+							</div>
+							<div class="save-actions">
+								<text class="save-btn" onclick="saveToSlot(index + 1)">
+									保存
+								</text>
+								<text class="load-btn" onclick="loadFromSlot(index + 1)">
+									加载
+								</text>
+							</div>
+						</div>
+					</div>
+				</scroll>
+				<!--设置标签页-->
+				<div if="{{ activeTab === 'settings' }}" class="settings-section">
+					<div class="setting-item">
+						<text style="font-size: 24px; color: #fff">调试模式</text>
+						<switch
+							checked="{{ debugMode }}"
+							style="margin-left: 20px; height: 30px; width: 60px"
+							onchange="toggleDebugMode"
+						/>
+					</div>
+					<div class="menu-action" onclick="backToHome">
+						<text
+							style="
+								font-size: 28px;
+								font-weight: bold;
+								text-align: center;
+								border-radius: 12px;
+								color: #e74c3c;
+							"
+						>
+							返回主菜单
+						</text>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--内容滚动区域-->
+		<scroll id="scrollId" class="content-scroll" scroll-y="true">
+			<!--顶部时间显示-->
+			<!--感谢Charlie_Q提供的弧形时间,由OrPudding移植圆表-->
+			<div class="header" @click="toggleMenu">
+				<text class="time time1">{{ time[0] }}</text>
+				<text class="time time2">{{ time[1] }}</text>
+				<text class="time time3">{{ ":" }}</text>
+				<text class="time time4">{{ time[2] }}</text>
+				<text class="time time5">{{ time[3] }}</text>
+				<text class="pagetitle">{{ title }}</text>
+			</div>
+			<!--内容区域-->
+			<div class="scene">
+				<block for="{{ segments }}">
+					<text if="$item.type === 'text'" class="normal-text">
+						{{ $item.content }}
+					</text>
+					<div
+						if="$item.type === 'newline'"
+						style="width: 100%; height: 6px"
+					></div>
+					<text
+						if="$item.type === 'link'"
+						class="link-text"
+						onclick="selectOption($item.linkIndex, $item.target)"
+					>
+						{{ $item.content }}
+					</text>
+					<text if="$item.type === 'disabled'" class="disabled-text">
+						{{ $item.content }}
+					</text>
+					<image
+						if="$item.type === 'image'"
+						src="{{ $item.path }}"
+						style="width:{{ $item.width }}px"
+						data-index="{{ $idx }}"
+						onerror="handleImageError"
+					/>
+					<text if="$item.type === 'error'" class="error-text">
+						[ERR]{{ $item.content }}
+					</text>
+				</block>
+			</div>
+		</scroll>
+	</div>
+</template>
+<script>
+import router from "@system.router";
+import storage from "@system.storage";
+import prompt from "@system.prompt";
+import vibrator from "@system.vibrator";
+
+import storyData from "../../common/data.json";
+
+export default {
+	private: {
+		time: ["0", "0", "0", "0"],
+		debugMode: false,
+		logLevel: "info",
+		timer: null,
+		showMenu: false,
+		activeTab: "status",
+		saveSlots: [
+			{ time: "" },
+			{ time: "" },
+			{ time: "" },
+			{ time: "" },
+			{ time: "" },
+		],
+		currentNodeId: "index_1",
+		segments: [],
+		currentLinks: [],
+		STORAGE_KEY: "story_state",
+		showVars: [],
+		listeners: [],
+		vars: {},
+		hourChanged: false,
+		dayChanged: false,
+		currentNode: null,
+		title: "114514",
+	},
+	protected: { loadSlot: 0 },
+	onInit() {
+		router.clear();
+		this.currentNodeId = storyData.metadata.indexNode;
+		this.loadFromSlot(this.loadSlot);
+		this.initVariableSystem();
+		this.updateShowVars();
+		this.loadSaveSlots();
+		this.loadNode(this.currentNodeId);
+		this.debugLog("游戏初始化完成");
+	},
+	onReady() {
+		this.scrollTo();
+	},
+	onDestroy() {
+		clearInterval(this.timer);
+	},
+	onBackPress() {
+		this.toggleMenu();
+		return true;
+	},
+	updateStoryTime() {
+		const formattedTime = this.getFormattedTime();
+		const [hours, minutes] = formattedTime.split(":");
+		this.time = [hours[0], hours[1], minutes[0], minutes[1]];
+	},
+	scrollTo() {
+		this.$element("scrollId").scrollTo({ top: 0, left: 0 });
+	},
+	toggleMenu() {
+		this.showMenu = !this.showMenu;
+		if (this.showMenu) {
+			this.activeTab = "status";
+			this.loadSaveSlots();
+		}
+	},
+	switchTab(tabName) {
+		this.activeTab = tabName;
+	},
+	backToHome() {
+		router.replace({ uri: "pages/index" });
+	},
+	toggleDebugMode(e) {
+		this.debugMode = e.checked;
+		this.showToast(`调试模式${e.checked ? "开启" : "关闭"}`);
+	},
+	handleImageError(e) {
+		const index = parseInt(e.target.dataset.index);
+		if (isNaN(index)) return;
+		const segment = this.segments[index];
+		if (segment?.type === "image") {
+			this.pushErrorSegment(`图片加载失败:${segment.path}`);
+			this.$page.$forceUpdate();
+		}
+	},
+	loadNode(nodeId) {
+		try {
+			const jumpTarget = this.beforeLoadNode(nodeId);
+			if (jumpTarget) {
+				this.debugLog(`监听器触发跳转:${jumpTarget}`);
+				this.loadNode(jumpTarget);
+				return;
+			}
+			const node = storyData.nodes[nodeId];
+			if (!node) throw new Error(`节点${nodeId}未找到`);
+			this.currentNode = node;
+			this.currentNodeId = nodeId;
+			this.currentLinks = node.links || [];
+			this.executeActions(node.actions || []);
+			this.parseTextWithLinks(node.text);
+			this.title = node.title;
+			this.debugLog(`加载节点:${nodeId}`, { links: this.currentLinks.length });
+		} catch (e) {
+			this.handleError("节点加载错误", e);
+		} finally {
+			this.updateStoryTime();
+			setTimeout(() => this.scrollTo(), 100);
+		}
+	},
+
+	parseTextWithLinks(text) {
+		this.segments = [];
+		if (!text) return;
+
+		// 新增文本缓冲区
+		let textBuffer = "";
+		const flushTextBuffer = () => {
+			if (textBuffer.length > 0) {
+				this.segments.push({ type: "text", content: textBuffer });
+				textBuffer = "";
+			}
+		};
+
+		// 修改正则表达式以捕获换行符和图片标记
+		const regex = /(\{\w+\.?[\w\.]*\}|\n)/g;
+		let lastIndex = 0;
+		let match;
+
+		while ((match = regex.exec(text)) !== null) {
+			// 处理匹配前的普通文本
+			if (match.index > lastIndex) {
+				textBuffer += text.substring(lastIndex, match.index);
+			}
+
+			const matched = match[1];
+			if (matched === "\n") {
+				// 遇到换行符时提交缓冲区并添加换行segment
+				flushTextBuffer();
+				this.segments.push({ type: "newline" });
+			} else if (matched.startsWith("{cond.")) {
+				// 解析条件文本并加入缓冲区
+				const condValue = this.resolveCondition(matched.replace(/\{|\}/g, ""));
+				textBuffer += condValue;
+			} else if (matched.startsWith("{random.")) {
+				// 解析随机文本并加入缓冲区
+				const randomValue = this.resolveValue(matched.replace(/\{|\}/g, ""));
+				textBuffer += randomValue;
+			} else if (matched.startsWith("{var.")) {
+				// 新增变量处理
+				const varValue = this.resolveValue(matched.replace(/\{|\}/g, ""));
+				textBuffer += varValue;
+			} else if (matched.startsWith("{img.")) {
+				// 遇到图片标记时提交缓冲区并处理图片
+				flushTextBuffer();
+				const imgId = matched.replace(/\{|\}/g, "").substring(4); // 移除{img.和}
+				this.handleImageMarker(imgId);
+			} else if (/^\{\d+\}$/.test(matched)) {
+				// 遇到链接标记时提交缓冲区
+				flushTextBuffer();
+				const linkId = parseInt(matched.replace(/\{|\}/g, ""));
+				this.handleLinkMarker(linkId);
+			} else {
+				// 其他标记直接加入缓冲区
+				textBuffer += matched;
+			}
+
+			lastIndex = match.index + matched.length;
+		}
+
+		// 处理剩余文本
+		if (lastIndex < text.length) {
+			textBuffer += text.substring(lastIndex);
+		}
+		flushTextBuffer();
+	},
+
+	resolveCondition(path) {
+		const parts = path.split(".");
+		if (parts[0] !== "cond") return `[无效条件标记:${path}]`;
+		const groupName = parts[1];
+		const conditionGroup = this.currentNode?.conds?.[groupName];
+		if (!conditionGroup) return `[条件组不存在:${groupName}]`;
+		for (const item of conditionGroup) {
+			if (item.condition) {
+				try {
+					const conditionResult = this.parseExpression(item.condition);
+					if (conditionResult) {
+						return item.text || "";
+					}
+				} catch (e) {
+					this.debugLog(`条件解析失败:${item.condition}`, e);
+					return `[条件错误:${item.condition}]`;
+				}
+			} else {
+				return item.text || "";
+			}
+		}
+		return `[无匹配条件:${path}]`;
+	},
+	initVariableSystem() {
+		this.vars = JSON.parse(JSON.stringify(storyData.variables || {}));
+		this.debugLog("变量系统初始化");
+	},
+	parseVariablePath(path) {
+		if (!path.startsWith("var.")) {
+			this.debugLog(`无效变量路径:${path}`);
+			return null;
+		}
+		return path.substring(4).split(".");
+	},
+	getVariable(path) {
+		const parts = path.split(".");
+		if (parts[0] !== "var") return undefined;
+		let value = this.vars;
+		for (let i = 1; i < parts.length; i++) {
+			if (value === null || value === undefined) return undefined;
+			value = value[parts[i]];
+		}
+		return value;
+	},
+	setVariable(path, value) {
+		const parts = this.parseVariablePath(path);
+		if (!parts) return;
+		let current = this.vars;
+		for (let i = 0; i < parts.length - 1; i++) {
+			const part = parts[i];
+			if (!current[part] || typeof current[part] !== "object") {
+				current[part] = {};
+			}
+			current = current[part];
+		}
+		const lastKey = parts[parts.length - 1];
+		current[lastKey] = this.resolveValue(value);
+		this.debugLog(`变量设置:${path}=${JSON.stringify(current[lastKey])}`);
+		this.updateShowVars();
+	},
+	updateShowVars() {
+		const showVars = [];
+		const showBranch = this.vars.show || {};
+		Object.entries(showBranch).forEach(([key, config]) => {
+			if (config && typeof config === "object") {
+				showVars.push({
+					desc: config.desc || key,
+					value: config.value !== undefined ? config.value : "无数据",
+				});
+			}
+		});
+		this.showVars = showVars;
+	},
+	resolveValue(input) {
+		if (typeof input !== "string") return input;
+		if (input.startsWith("##") && input.endsWith("##")) {
+			return input.slice(2, -2);
+		}
+		if (input.startsWith("var.")) {
+			const value = this.getVariable(input);
+			// 修复：直接返回原始值，不强制类型转换
+			return value;
+		}
+		if (input.startsWith("$(") && input.endsWith(")")) {
+			const result = this.parseExpression(input.slice(2, -1));
+			// 修复：保留表达式结果的原始类型
+			return result;
+		}
+		if (input.startsWith("random.")) {
+			const result = this.getRandomResult(input);
+			if (result?.actions) {
+				this.$nextTick(() => {
+					this.executeActions(result.actions);
+				});
+			}
+			return result?.text || result || `[随机错误:${input}]`;
+		}
+		return input;
+	},
+
+	parseTextMarkers(text) {
+		if (typeof text !== "string") return text;
+		return text.replace(
+			/\{(var\.[^}]+|random\.[^}]+|cond\.[^}]+)\}/g,
+			(_, path) => {
+				if (path.startsWith("cond.")) {
+					return this.resolveCondition(path);
+				}
+				return this.resolveValue(path);
+			}
+		);
+	},
+	parseExpression(expr) {
+		try {
+			const varPattern = /var\.([\w.]+)/g;
+			let processedExpr = expr.replace(varPattern, (_, path) => {
+				const value = this.getVariable(`var.${path}`);
+				// 修复：正确处理所有类型
+				if (typeof value === "boolean") {
+					return value; // 布尔值保持原样
+				} else if (typeof value === "number") {
+					return value; // 数字保持原样
+				} else if (typeof value === "string") {
+					return JSON.stringify(value); // 字符串需要引号
+				} else if (value === null || value === undefined) {
+					return "null"; // 空值处理
+				} else {
+					return JSON.stringify(value); // 其他对象类型
+				}
+			});
+			const context = {
+				Math: Math,
+				utils: this.expressionUtils || {},
+				engine: this,
+				var: this.vars,
+			};
+			return new Function(
+				"context",
+				`with(context){return ${processedExpr}}`
+			).call(context, context);
+		} catch (e) {
+			this.debugLog(`表达式解析失败:${expr}`, e);
+			return false;
+		}
+	},
+
+	checkCondition(condition) {
+		if (condition === "hourChanged") return this.hourChanged;
+		if (condition === "dayChanged") return this.dayChanged;
+		if (!condition) return true;
+		if (condition.startsWith("$(") && condition.endsWith(")")) {
+			try {
+				return !!this.parseExpression(condition.slice(2, -1));
+			} catch (e) {
+				this.debugLog(`条件表达式错误:${condition}`, e);
+				return false;
+			}
+		}
+		const andParts = condition.split("&&").map((s) => s.trim());
+		if (andParts.length > 1)
+			return andParts.every((p) => this.checkCondition(p));
+		const orParts = condition.split("||").map((s) => s.trim());
+		if (orParts.length > 1) return orParts.some((p) => this.checkCondition(p));
+		const match = condition.match(
+			/([\w.]+|'[^']*'|"[^"]*")\s*(==|!=|>|<|>=|<=)\s*(['"].*?['"]|[\w.]+)/
+		);
+		if (match) {
+			let [, left, operator, right] = match;
+			left = this.resolveValue(left);
+			right = this.resolveValue(right);
+			switch (operator) {
+				case "==":
+					return left == right;
+				case "!=":
+					return left != right;
+				case ">":
+					return left > right;
+				case "<":
+					return left < right;
+				case ">=":
+					return left >= right;
+				case "<=":
+					return left <= right;
+			}
+		}
+		if (condition === "true") return true;
+		if (condition === "false") return false;
+		if (condition.startsWith("var.")) return !!this.getVariable(condition);
+		return false;
+	},
+	executeActions(actions = []) {
+		let jumpTriggered = false;
+		actions.forEach((action) => {
+			try {
+				switch (action.type) {
+					case "set":
+						this.setVariable(action.target, action.value);
+						break;
+					case "add":
+						const current = this.getVariable(action.target) || 0;
+						const addValue = this.resolveValue(action.value);
+						const numValue =
+							typeof addValue === "number"
+								? addValue
+								: !isNaN(addValue)
+								? parseFloat(addValue)
+								: 0;
+						this.setVariable(action.target, current + numValue);
+						break;
+					case "toggle":
+						const currentBool = this.getVariable(action.target) || false;
+						this.setVariable(action.target, !currentBool);
+						break;
+					case "random":
+						const result = this.getRandomResult(`random.${action.id}`);
+						if (result?.actions) this.executeActions(result.actions);
+						break;
+					case "vibrate":
+						if (vibrator?.vibrate)
+							vibrator.vibrate({ mode: action.mode || "long" });
+						break;
+					case "autosave":
+						this.saveToSlot(0);
+						break;
+					case "addListener":
+						const options = {
+							once: action.once !== false,
+							nodeId: action.nodeId || null,
+						};
+						this.addListener(
+							action.id,
+							action.condition,
+							action.actions || [],
+							options
+						);
+						break;
+					case "removeListener":
+						if (action.id === "all") {
+							this.listeners = [];
+						} else {
+							this.removeListener(action.id);
+						}
+						break;
+					case "advanceTime":
+						const minutes = this.resolveValue(action.minutes);
+						if (typeof minutes === "number" && minutes > 0) {
+							this.advanceTime(minutes);
+						}
+						break;
+					case "toast":
+						const rawMessage = action.message;
+						// 调整解析顺序：先解析文本标记，再处理表达式
+						const parsedMessage = this.parseTextMarkers(rawMessage).replace(
+							/\$\(([^)]+)\)/g,
+							(_, expr) => {
+								try {
+									const result = this.parseExpression(expr);
+									// 确保返回数值类型
+									return typeof result === "number"
+										? result
+										: Number(result) || 0;
+								} catch (e) {
+									return `[表达式错误: ${expr}]`;
+								}
+							}
+						);
+						const finalMessage = this.resolveValue(parsedMessage);
+						const displayMessage =
+							typeof finalMessage === "string"
+								? finalMessage
+								: JSON.stringify(finalMessage);
+						const duration = this.resolveValue(action.duration) || 2000;
+						this.showToast(displayMessage, duration);
+						break;
+
+					case "jump":
+						if (jumpTriggered) return;
+						const targetNode = this.resolveValue(action.target);
+						const condition = action.condition;
+						if (!condition || this.checkCondition(condition)) {
+							this.debugLog(`执行跳转操作:${targetNode}`);
+							if (action.beforeActions) {
+								this.executeActions(action.beforeActions);
+							}
+							this.loadNode(targetNode);
+							jumpTriggered = true;
+							if (action.afterActions) {
+								setTimeout(() => {
+									this.executeActions(action.afterActions);
+								}, 100);
+							}
+							return;
+						}
+						break;
+				}
+			} catch (e) {
+				this.debugLog(`操作执行失败:${JSON.stringify(action)}`, e);
+			}
+		});
+		return jumpTriggered;
+	},
+
+	selectOption(linkIndex, target) {
+		if (!this.validateLinkIndex(linkIndex)) return;
+
+		const segment = this.segments.find((s) => s.linkIndex === linkIndex);
+		const link = this.currentLinks[linkIndex];
+		let jumpTriggered = false;
+
+		// 先处理随机逻辑
+		const randomResult = this.processRandomLink(link);
+		if (randomResult) {
+			jumpTriggered = this.executeActions(randomResult.actions);
+			if (!jumpTriggered) this.loadNode(randomResult.target);
+			return;
+		}
+
+		// 调用变体处理方法
+		if (segment?.selectedVariant) {
+			jumpTriggered = this.handleVariantActions(segment);
+		}
+
+		// 处理普通链接
+		if (!jumpTriggered) {
+			this.handleNormalLink(link, segment, target);
+		}
+	},
+
+	handleVariantActions(segment) {
+		let jumpTriggered = false;
+
+		if (segment?.selectedVariant?.actions?.length) {
+			console.log("执行变体动作:", segment.selectedVariant.actions);
+			jumpTriggered = this.executeActions(segment.selectedVariant.actions);
+			console.log(
+				`变体动作执行结果:${jumpTriggered} 目标节点:${segment.selectedVariant?.target}`
+			);
+		}
+
+		return jumpTriggered;
+	},
+
+	handleNormalLink(link, segment, target) {
+		let targetNode = this.processRandomLink(link);
+
+		if (segment?.selectedVariant?.target) {
+			targetNode = segment.selectedVariant.target;
+		} else if (target) {
+			targetNode = target;
+		} else if (segment?.target) {
+			targetNode = segment.target;
+		}
+
+		// 执行普通链接动作
+		if (link?.actions?.length) {
+			const actionsTriggered = this.executeActions(link.actions);
+			if (actionsTriggered) return;
+		}
+
+		if (targetNode) {
+			console.log(`最终跳转节点:${targetNode}`);
+			this.loadNode(targetNode);
+		} else {
+			console.log("无有效跳转路径");
+		}
+	},
+
+	processRandomLink(link) {
+		if (!link.random) return null;
+
+		const validOptions = link.random.filter(
+			(opt) => !opt.condition || this.checkCondition(opt.condition)
+		);
+
+		const totalWeight = validOptions.reduce(
+			(sum, o) => sum + (o.weight || 1),
+			0
+		);
+
+		let randomVal = Math.random() * totalWeight;
+		for (const opt of validOptions) {
+			randomVal -= opt.weight || 1;
+			if (randomVal <= 0) return opt;
+		}
+		return validOptions[0];
+	},
+
+	// 修复后的handleLinkMarker方法
+	handleLinkMarker(linkIndex) {
+		if (!this.validateLinkIndex(linkIndex)) {
+			console.error("无效链接索引:", linkIndex);
+			return;
+		}
+
+		const link = this.currentLinks[linkIndex];
+
+		if (link.variants) {
+			// 修复：将linkIndex传递给handleLinkVariants
+			this.handleLinkVariants(link, linkIndex);
+		} else {
+			const segment = {
+				type: this.checkCondition(link.condition) ? "link" : "disabled",
+				content: link.text,
+				linkIndex: linkIndex, // 直接使用传入的索引
+				target: link.target,
+				actions: link.actions,
+			};
+			this.segments.push(segment);
+		}
+	},
+
+	// 修复后的handleLinkVariants方法
+	handleLinkVariants(link, linkIndex) {
+		let validVariant = null;
+
+		for (const variant of link.variants) {
+			const conditionResult = this.checkCondition(variant.condition);
+			this.debugLog(
+				`变体条件检查:${JSON.stringify(variant)} => ${conditionResult}`
+			);
+
+			if (conditionResult) {
+				validVariant = variant;
+				break;
+			}
+		}
+
+		const displayText = validVariant?.text || link.text;
+		const target = validVariant?.target || link.target;
+
+		this.segments.push({
+			type: validVariant ? "link" : "disabled",
+			content: displayText,
+			linkIndex: linkIndex, // 使用传入的正确索引
+			target: target,
+			selectedVariant: validVariant,
+		});
+
+		this.debugLog(
+			`生成变体链接段:${JSON.stringify(
+				this.segments[this.segments.length - 1]
+			)}`
+		);
+	},
+
+	handleImageMarker(markerId) {
+		const imgId = markerId.replace("img.", "");
+		const currentNode = storyData.nodes[this.currentNodeId];
+		if (!currentNode || !currentNode.imgs || !currentNode.imgs[imgId]) {
+			return this.pushErrorSegment(`图片配置错误:${imgId}`);
+		}
+		const imgDef = currentNode.imgs[imgId];
+		let path = imgDef.path || "";
+		if (path.includes("${")) {
+			try {
+				path = path.replace(
+					/\${(.*?)}/g,
+					(_, expr) => this.parseExpression(expr)?.toString() || ""
+				);
+			} catch (e) {
+				return this.pushErrorSegment(`图片路径表达式错误:${imgId}`);
+			}
+		}
+		let finalPath = path;
+		if (
+			path &&
+			!path.includes("/common/images/") &&
+			!path.startsWith("/") &&
+			!path.startsWith("http") &&
+			!path.startsWith(".")
+		) {
+			finalPath = "/common/images/" + path;
+		}
+		this.segments.push({
+			type: "image",
+			path: finalPath,
+			width: imgDef.width || 150,
+		});
+	},
+	handleScriptMarker(marker) {
+		this.debugLog(`脚本标记:${marker}`);
+	},
+	getRandomResult(markerId) {
+		const randomId = markerId.replace("random.", "");
+		try {
+			const randoms = storyData.nodes[this.currentNodeId]?.randoms;
+			if (!randoms || !randoms[randomId]) {
+				this.debugLog(`随机组未定义:${randomId}`);
+				return { text: `[ERROR]随机组未定义` };
+			}
+
+			const options = randoms[randomId];
+			const validOptions = options.filter(
+				(opt) => !opt.condition || this.checkCondition(opt.condition)
+			);
+
+			if (validOptions.length === 0) {
+				this.debugLog(`无可用选项:${randomId}`);
+				return { text: "[无可用选项]" };
+			}
+
+			const totalWeight = validOptions.reduce(
+				(sum, o) =>
+					sum + (typeof o.weight === "number" ? Math.max(0, o.weight) : 1),
+				0
+			);
+
+			if (totalWeight <= 0) {
+				this.debugLog(`权重错误:${randomId}`, { options: validOptions });
+				return validOptions[0] || { text: "[权重错误]" };
+			}
+
+			let randomVal = Math.random() * totalWeight;
+			for (const opt of validOptions) {
+				randomVal -= opt.weight || 1;
+				if (randomVal <= 0) {
+					this.debugLog(`随机选择结果`, {
+						group: randomId,
+						selected: opt.text,
+						hasActions: !!opt.actions,
+					});
+					return opt;
+				}
+			}
+
+			const defaultReturn = validOptions[0] || { text: "[随机错误]" };
+			this.debugLog(`随机默认返回`, defaultReturn);
+			return defaultReturn;
+		} catch (e) {
+			this.debugLog(`随机处理失败:${randomId}`, e);
+			return { text: `[ERROR]随机处理失败` };
+		}
+	},
+
+	addListener(id, condition, actions = [], options = {}) {
+		this.removeListener(id);
+		this.listeners.push({
+			id,
+			condition,
+			actions,
+			once: options.once !== false,
+			nodeId: options.nodeId || null,
+			type: options.type || "general",
+		});
+		this.debugLog(`监听器添加:${id}`);
+	},
+	removeListener(id) {
+		const newLength = this.listeners.filter((l) => l.id !== id).length;
+		if (this.listeners.length !== newLength) {
+			this.listeners = this.listeners.filter((l) => l.id !== id);
+			this.debugLog(`监听器移除:${id}`);
+		}
+	},
+	advanceTime(minutes) {
+		if (typeof minutes !== "number" || minutes <= 0) return;
+		const currentTime = this.getVariable("var.world.time");
+		const currentDay = this.getVariable("var.world.day");
+		let newTime = currentTime + minutes;
+		let newDay = currentDay;
+		let dayChanged = false;
+		if (newTime >= 1440) {
+			newDay += Math.floor(newTime / 1440);
+			newTime = newTime % 1440;
+			dayChanged = true;
+		}
+		let hourChanged = false;
+		const currentHour = Math.floor(currentTime / 60);
+		const newHour = Math.floor(newTime / 60);
+		if (currentHour !== newHour) {
+			hourChanged = true;
+		}
+		this.setVariable("var.world.time", newTime);
+		this.setVariable("var.world.day", newDay);
+		this.setVariable("var.world.formattedTime", this.formatStoryTime(newTime));
+		this.setVariable("var.world.timePeriod", this.getTimePeriod(newTime));
+		this.hourChanged = hourChanged;
+		this.dayChanged = dayChanged;
+		this.checkAllListeners();
+		this.hourChanged = false;
+		this.dayChanged = false;
+	},
+	formatStoryTime(minutes) {
+		const hours = Math.floor(minutes / 60);
+		const mins = minutes % 60;
+		return `${hours.toString().padStart(2, "0")}:${mins
+			.toString()
+			.padStart(2, "0")}`;
+	},
+	checkAllListeners() {
+		this.listeners.forEach((listener) => {
+			try {
+				if (this.checkCondition(listener.condition)) {
+					this.executeActions(listener.actions);
+					if (listener.once) {
+						this.removeListener(listener.id);
+					}
+				}
+			} catch (e) {
+				this.debugLog(`监听器检查失败:${listener.id}`, e);
+			}
+		});
+	},
+	beforeLoadNode() {
+		let jumpTarget = null;
+		const generalListeners = this.listeners.filter((l) => l.type !== "time");
+		const jumpListener = generalListeners.find(
+			(l) => l.nodeId && this.checkCondition(l.condition)
+		);
+		if (jumpListener) {
+			this.executeActions(jumpListener.actions);
+			jumpTarget = jumpListener.nodeId;
+			if (jumpListener.once) {
+				this.removeListener(jumpListener.id);
+			}
+			return jumpTarget;
+		}
+		generalListeners.forEach((listener) => {
+			if (this.checkCondition(listener.condition)) {
+				this.executeActions(listener.actions);
+				if (listener.once) {
+					this.removeListener(listener.id);
+				}
+			}
+		});
+		return null;
+	},
+	validateSlotIndex(index) {
+		return index >= 0 && index < this.saveSlots.length;
+	},
+	getSlotKey(index) {
+		return `save_slot_${index}`;
+	},
+	loadSaveSlots() {
+		[0, 1, 2, 3, 4].forEach((slotIndex) => {
+			storage.get({
+				key: this.getSlotKey(slotIndex),
+				success: (data) => {
+					if (data) {
+						try {
+							const saveData = JSON.parse(data);
+							this.saveSlots[slotIndex].time = saveData.time;
+						} catch (e) {
+							this.saveSlots[slotIndex].time = "损坏存档";
+						}
+					}
+				},
+			});
+		});
+	},
+	// 新增过滤方法
+	filterTempVars(vars) {
+		const filtered = { ...vars };
+		delete filtered.temp;
+		return filtered;
+	},
+
+	saveStoryState() {
+		const state = {
+			vars: JSON.parse(JSON.stringify(this.filterTempVars(this.vars))),
+			currentNodeId: this.currentNodeId,
+			listeners: JSON.parse(JSON.stringify(this.listeners)),
+		};
+		storage.set({
+			key: this.STORAGE_KEY,
+			value: JSON.stringify(state),
+			success: () => this.debugLog("游戏状态已保存"),
+			fail: (code) => this.debugLog(`保存失败:code=${code}`),
+		});
+	},
+
+	saveToSlot(slotIndex) {
+		if (!this.validateSlotIndex(slotIndex)) return;
+		const saveData = {
+			time: this.getCurrentDateTime(),
+			state: {
+				vars: JSON.parse(JSON.stringify(this.filterTempVars(this.vars))),
+				currentNodeId: this.currentNodeId,
+				listeners: JSON.parse(JSON.stringify(this.listeners)),
+			},
+		};
+		storage.set({
+			key: this.getSlotKey(slotIndex),
+			value: JSON.stringify(saveData),
+			success: () => {
+				this.saveSlots[slotIndex] = saveData;
+				if (slotIndex === 0) {
+					this.showToast("自动存档成功", 1000);
+				} else {
+					this.showToast(`存档${slotIndex}成功`, 1000);
+				}
+			},
+			fail: () => this.showToast("存档失败", 1000),
+		});
+	},
+	loadFromSlot(slotIndex) {
+		slotIndex = Number(slotIndex);
+		if (!this.validateSlotIndex(slotIndex)) return;
+		storage.get({
+			key: this.getSlotKey(slotIndex),
+			success: (data) => {
+				if (data) {
+					try {
+						const saveData = JSON.parse(data);
+						this.vars = saveData.state.vars || {};
+						this.currentNodeId = saveData.state.currentNodeId || "start";
+						this.listeners = saveData.state.listeners || [];
+						this.updateShowVars();
+						this.loadNode(this.currentNodeId);
+						if (slotIndex === 0) {
+							this.showToast("加载自动存档成功", 1000);
+						} else {
+							this.showToast(`加载存档${slotIndex}成功`, 1000);
+						}
+					} catch (e) {
+						this.showToast("存档损坏", 1500);
+					}
+				} else {
+					this.showToast("无存档数据", 1000);
+				}
+				this.showMenu = false;
+			},
+			fail: () => {
+				this.showToast("加载失败", 1000);
+				this.showMenu = false;
+			},
+		});
+	},
+	deleteSaveSlot(slotIndex) {
+		if (!this.validateSlotIndex(slotIndex)) return;
+		storage.delete({
+			key: this.getSlotKey(slotIndex),
+			success: () => {
+				this.saveSlots[slotIndex].time = "";
+				this.showToast(`删除存档${slotIndex + 1}成功`, 1000);
+			},
+			fail: () => this.showToast("删除失败", 1000),
+		});
+	},
+	validateLinkIndex(index) {
+		return index >= 0 && index < this.currentLinks.length;
+	},
+
+	processIncomingData(data) {
+		Object.entries(data).forEach(([key, value]) => {
+			try {
+				const finalValue = this.resolveValue(value);
+				this.setVariable(`var.temp.${key}`, finalValue);
+			} catch (e) {
+				this.setVariable(`var.temp.${key}`, value);
+			}
+		});
+	},
+	getCurrentTime() {
+		const now = new Date();
+		return `${now.getHours().toString().padStart(2, "0")}:${now
+			.getMinutes()
+			.toString()
+			.padStart(2, "0")}`;
+	},
+	getCurrentDateTime() {
+		const now = new Date();
+		return (
+			`${now.getFullYear()}-${(now.getMonth() + 1)
+				.toString()
+				.padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")} ` +
+			`${now.getHours().toString().padStart(2, "0")}:${now
+				.getMinutes()
+				.toString()
+				.padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`
+		);
+	},
+
+	getFormattedTime() {
+		const timeVar = this.getVariable("var.world.time");
+		if (typeof timeVar !== "number") {
+			return timeVar || "08:00";
+		}
+		const normalizedTime = ((timeVar % 1440) + 1440) % 1440;
+		const hours = Math.floor(normalizedTime / 60);
+		const minutes = normalizedTime % 60;
+		return `${hours.toString().padStart(2, "0")}:${minutes
+			.toString()
+			.padStart(2, "0")}`;
+	},
+	getFullTimeInfo() {
+		const day = this.getVariable("var.world.day") || 1;
+		const time = this.getVariable("var.world.time") || 480;
+		return {
+			day,
+			time,
+			formatted: this.getFormattedTime(),
+			period: this.getTimePeriod(time),
+		};
+	},
+	getTimePeriod(time) {
+		const hour = Math.floor(time / 60);
+		if (hour < 5) return "深夜";
+		if (hour < 8) return "凌晨";
+		if (hour < 11) return "早晨";
+		if (hour < 13) return "中午";
+		if (hour < 17) return "下午";
+		if (hour < 20) return "傍晚";
+		return "夜晚";
+	},
+	debugLog(message) {
+		if (this.debugMode) {
+			this.showToast(`${message}`, 500);
+		}
+	},
+	showToast(message, duration = 2000) {
+		prompt.showToast({ message, duration });
+	},
+	handleError(context, error) {
+		const msg = `${context}:${error.message || error}`;
+		this.pushErrorSegment(msg);
+		this.showToast(msg);
+	},
+	pushErrorSegment(message) {
+		this.segments.push({ type: "error", content: message });
+	},
+};
+</script>
+<style>
+@import "../../common/comm.css";
+
+.container {
+	flex-direction: row;
+}
+
+.content-scroll {
+	background-color: #000;
+	flex-direction: column;
+	align-items: center;
+}
+
+@media (shape: circle) {
+	.content-scroll {
+		width: 466px;
+		height: 466px;
+		padding: 16px 28px 95px 28px;
+	}
+	.scene {
+		width: 380px;
+		padding: 8px;
+		border-radius: 36px;
+		margin-top: 70px;
+	}
+	.sidebar-menu {
+		width: 330px;
+		height: 466px;
+	}
+	.menu-scroll {
+		padding-bottom: 30px;
+	}
+	.save-item {
+		padding: 18px 10px;
+		width: 240px;
+		margin-bottom: 20px;
+	}
+	.normal-save-item {
+		left: 20px;
+	}
+	.auto-save-item {
+		width: 260px;
+	}
+	.auto-load-btn {
+		top: 20px;
+	}
+	.save-btn {
+		margin-right: 20px;
+	}
+}
+
+/* 矩形设备样式 */
+@media (shape: rect) {
+	.container {
+		padding-bottom: 0px;
+	}
+	.content-scroll {
+		width: 336px;
+		height: 480px;
+		padding: 4px;
+	}
+	.scene {
+		width: 320px;
+		padding: 4px;
+		border-radius: 16px;
+	}
+	.sidebar-menu {
+		width: 300px;
+		height: 480px;
+	}
+	.save-item {
+		padding: 18px 10px;
+		width: 260px;
+		margin-bottom: 20px;
+	}
+	.save-btn {
+		margin-right: 10px;
+	}
+}
+/* 药丸形设备样式 */
+@media (shape: pill-shaped) {
+	.content-scroll {
+		width: 212px;
+		height: 520px;
+	}
+	.scene {
+		width: 200px;
+		padding: 2px;
+		border-radius: 10px;
+		padding-bottom: 50px;
+	}
+	.sidebar-menu {
+		width: 212px;
+		height: 520px;
+	}
+	.menu-title {
+		margin-right: 25px;
+	}
+	.menu-action {
+		padding: 5px;
+	}
+	.save-section {
+		margin-top: 6px;
+	}
+	.save-item {
+		width: 192px;
+		padding: 8px 4px;
+		margin-bottom: 10px;
+		flex-wrap: wrap;
+	}
+	.save-header {
+		flex-direction: column;
+		margin-bottom: 0px;
+	}
+	.delete-btn {
+		margin-left: 6px;
+	}
+	.save-btn {
+		margin-left: 4px;
+		margin-right: 3px;
+	}
+}
+
+.scene {
+	background-color: #1a1a1a;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+.normal-text {
+	font-size: 28px;
+	color: #fff;
+}
+
+.link-text {
+	font-size: 30px;
+	background-color: rgba(255, 255, 255, 0.06);
+	border-radius: 28px;
+	padding: 6px 12px;
+	color: #4a90e2;
+}
+
+.disabled-text {
+	font-size: 30px;
+	background-color: rgba(255, 255, 255, 0.06);
+	border-radius: 28px;
+	padding: 6px 12px;
+	color: #777;
+}
+
+.error-text {
+	font-size: 24px;
+	color: #ff4d4f;
+	background-color: rgba(255, 142, 142, 0.06);
+	border-radius: 28px;
+	padding: 6px 12px;
+}
+
+.sidebar-menu {
+	align-items: flex-end;
+	flex-direction: column;
+	background-color: #1a1a1a;
+}
+
+.menu-header {
+	width: 300px;
+	flex-direction: row;
+	justify-content: flex-end;
+	align-items: center;
+	padding: 12px 20px;
+	margin-bottom: 5px;
+	background-color: #1a1a1a;
+}
+
+.menu-title {
+	font-size: 30px;
+	padding-right: 15px;
+	font-weight: bold;
+	color: #fff;
+}
+
+.menu-tabs {
+	flex-direction: row;
+	height: 60px;
+	width: 260px;
+	background-color: #1a1a1a;
+	border-radius: 36px;
+}
+
+.menu-tab {
+	flex: 1;
+	height: 60px;
+	text-align: center;
+	font-size: 30px;
+	color: #fff;
+	background-color: #1a1a1a;
+	border: none;
+}
+
+.active-tab {
+	background-color: rgba(255, 255, 255, 0.06);
+	color: #4a90e2;
+	border-radius: 36px;
+}
+
+.tab-content-container {
+	flex: 1;
+	flex-direction: column;
+}
+
+.menu-scroll {
+	flex: 1;
+	padding: 10px;
+	flex-direction: column;
+}
+
+.status-section {
+	flex-direction: row;
+	justify-content: space-between;
+	padding: 4px 0;
+}
+
+.status-label {
+	font-size: 24px;
+	color: #ccc;
+}
+
+.status-value {
+	font-size: 24px;
+	color: #fff;
+}
+
+.save-section {
+	flex-direction: column;
+	padding: 5px;
+}
+
+.save-item {
+	flex-direction: column;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	background-color: rgba(255, 255, 255, 0.03);
+	border-radius: 24px;
+}
+
+.save-header {
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 0 10px;
+	margin-bottom: 8px;
+}
+
+.save-title {
+	font-size: 28px;
+	color: #fff;
+}
+
+.save-time {
+	flex-direction: column;
+}
+
+.save-date {
+	font-size: 20px;
+	color: #999;
+}
+
+.save-time-part {
+	font-size: 20px;
+	color: #999;
+}
+
+.save-actions {
+	flex-direction: row;
+	justify-content: space-around;
+}
+
+.save-btn,
+.load-btn,
+.delete-btn {
+	padding: 8px 15px;
+	border-radius: 18px;
+	font-size: 24px;
+	color: #fff;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	background-color: rgba(255, 255, 255, 0.07);
+}
+
+.save-btn {
+	color: #2ecc71;
+}
+
+.load-btn {
+	color: #3498db;
+}
+
+.delete-btn {
+	color: #e74c3c;
+}
+
+.settings-section {
+	flex: 1;
+	flex-direction: column;
+	padding: 15px;
+}
+
+.setting-item {
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	padding: 15px 0;
+}
+
+.menu-action {
+	margin-top: 20px;
+	padding: 15px;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	background-color: rgba(255, 255, 255, 0.07);
+	border-radius: 24px;
+	text-align: center;
+}
+</style>

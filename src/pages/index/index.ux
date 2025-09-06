@@ -1,221 +1,164 @@
 <template>
-  <div class="container">
-    <!-- 顶部区域 -->
-          <!-- 感谢wuhaiqi提供的弧形时间-->
-    <div class="header" style="width: 212px;position: absolute;left: 0;top: 0;height: 77px;" @click="terminate()">
-      <text class="time" style="left:60.9px;top:3.8px;transform: rotate(-21deg)">{{time[0]}}</text>
-      <text class="time" style="left:79px;top:-1px;transform: rotate(-9deg)">{{time[1]}}</text>
-      <text class="time" style="left:93.5px;top:-5px;" >{{':'}}</text>
-      <text class="time" style="left:108px;top:-1px;transform: rotate(9deg)">{{time[2]}}</text>
-      <text class="time" style="left:126.1px;top:3.8px;transform: rotate(21deg)">{{time[3]}}</text>
-    <text class="pagetitle">{{ title }}</text>
-    </div>
-    
-    <!-- 游戏标题图片 -->
-    <image 
-      src="/common/title.png" 
-      style="width:192px; margin-top:90px;"
-    ></image>
-    
-    <!-- 游戏介绍 -->
-    <text class="section-title">游戏介绍游戏介绍游戏介绍游戏介绍游戏介绍</text>
-    
-    <!-- 游戏按钮区域 -->
-    <div class="game-container">
-      <div 
-        class="game-btn" 
-        for="{{ gameList }}" 
-        onclick="handleGameSelect($item)" 
-        tid="game-btn"
-      >
-        <text class="btn-text">{{ $item.name }}</text>
-      </div>
-    </div>
-    
-    <!-- 关于按钮 -->
-    <input 
-      class="btn" 
-      type="button" 
-      value="关于" 
-      @click="routeToAbout" 
-    />
-  </div>
+	<div class="container">
+		<!-- 顶部时间显示区域 -->
+		<div class="header" @click="exitApp">
+			<text class="time time1">{{ time[0] }}</text>
+			<text class="time time2">{{ time[1] }}</text>
+			<text class="time time3">{{ ":" }}</text>
+			<text class="time time4">{{ time[2] }}</text>
+			<text class="time time5">{{ time[3] }}</text>
+			<text class="pagetitle">{{ title }}</text>
+		</div>
+
+		<!-- 游戏标题图片 -->
+		<img src="/common/title.png" class="title-img" />
+
+		<!-- 游戏介绍 -->
+		<text class="section-title">作品介绍:</text>
+
+		<!-- 游戏按钮区域 -->
+		<div class="game-container">
+			<div
+				class="game-btn"
+				for="{{ gameList }}"
+				onclick="handleGameSelect($item)"
+				tid="game-btn"
+			>
+				<text class="btn-text">{{ $item.name }}</text>
+			</div>
+		</div>
+
+		<!-- 关于按钮 -->
+		<input class="btn" type="button" value="关于" @click="routeToAbout" />
+	</div>
 </template>
 
 <script>
-import router from "@system.router"
-import prompt from "@system.prompt"
-import app from "@system.app"
+import router from "@system.router";
+import prompt from "@system.prompt";
+import app from "@system.app";
 
 export default {
-  private: {
-    title: "游戏名",
-    hours: '00',
-    minutes: '00',
-    time: ['0','0','0','0'], // 新增时间数组初始化
-    timer: null,
-    gameList: [
-      { id: 1, name: '开始游戏', uri: "pages/start" },
-      { id: 2, name: '继续游戏', uri: "pages/save" }
-    ]
-  },
+	private: {
+		title: "标题title",
+		hours: "00",
+		minutes: "00",
+		timer: null,
+		time: ["0", "0", "0", "0"], // 初始化时间数组
+		gameList: [
+			{ id: 1, name: "开始游戏", uri: "pages/start" },
+			{ id: 2, name: "继续游戏", uri: "pages/save" },
+		],
+	},
 
-  onInit() {
-    this.updateTime();
-    this.timer = setInterval(() => this.updateTime(), 1000);
-  },
-  
-  updateTime() {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    
-    // 更新原有时间显示
-    this.hours = hours;
-    this.minutes = minutes;
-    
-    // 新增弧形时间处理：将小时和分钟拆分为单个字符
-    this.time = [
-      hours[0],    // 小时十位
-      hours[1],    // 小时个位
-      minutes[0], // 分钟十位
-      minutes[1]  // 分钟个位
-    ];
-  },
+	onInit() {
+		this.updateTime();
+		this.timer = setInterval(() => this.updateTime(), 1000);
+	},
 
-  onDestroy() {
-    if (this.timer) clearInterval(this.timer);
-  },
-  
-  updateTime() {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    
-    // 更新原有时间显示
-    this.hours = hours;
-    this.minutes = minutes;
-    
-    // 新增弧形时间处理：将小时和分钟拆分为单个字符
-    this.time = [
-      hours[0],    // 小时十位
-      hours[1],    // 小时个位
-      minutes[0], // 分钟十位
-      minutes[1]  // 分钟个位
-    ];
-  },
+	onDestroy() {
+		this.timer && clearInterval(this.timer);
+	},
 
-  handleGameSelect(item) {
-    if (item.uri) {
-      router.push({ uri: item.uri });
-    } else {
-      prompt.showToast({ message: '页面未配置' });
-    }
-  },
+	updateTime() {
+		const now = new Date();
+		const hours = now.getHours().toString().padStart(2, "0");
+		const minutes = now.getMinutes().toString().padStart(2, "0");
 
-  routeToAbout() {
-    router.push({ uri: "pages/about" });
-  },
-  terminate() {
-    app.terminate();
-  }
-}
+		this.hours = hours;
+		this.minutes = minutes;
+		this.time = [hours[0], hours[1], minutes[0], minutes[1]];
+	},
+
+	handleGameSelect(item) {
+		item.uri
+			? router.push({ uri: item.uri })
+			: prompt.showToast({ message: "页面未配置" });
+	},
+
+	routeToAbout() {
+		router.push({ uri: "pages/about" });
+	},
+
+	exitApp() {
+		app.terminate();
+	},
+};
 </script>
 
 <style>
-.container {
-  width: 100%;
-  height: 100%;
-  background-color: #000000;
-  flex-direction: column;
-  align-items: center;
-  padding-bottom: 50px;
-}
+@import "../../common/comm.css";
 
-/* 顶部区域 */
-.header {
-  width: 100%;
-  height: 77px;
-  flex-direction: column;
-  align-items: center;
-}
-
-.time {
-  position: absolute;
-  width: 25px;
-  height: 33px;
-  font-size: 25px;
-font-weight: 600;
-line-height: normal;
-text-align: center;
-display: flex;
-align-items: flex-end;
-letter-spacing: normal;
-color: rgba(255, 255, 255, 0.6);
-  transform-origin: 12.5px 16.5px;
-}
-
-.pagetitle {
-  position: absolute;
-  left: 0px;
-  top: 35px;
-  width: 212px;
-  height: 42px;
-  font-size: 32px;
-  font-weight: 600;
-  line-height: normal;
-  text-align: center;
-  letter-spacing: normal;
-  color: rgba(255, 255, 255, 1);
-}
-
-/* 游戏介绍标题 */
 .section-title {
-  width: 100%;
-  text-align: left;
-  font-size: 28px;
-  color: #ffffff;
-  padding: 8px
+	width: 80%;
+	font-size: 28px;
+	color: #ffffff;
+	margin: 12px 0;
+	text-align: left;
 }
 
-/* 游戏按钮容器 */
 .game-container {
-  width: 100%;
-  flex-direction: column;
-  align-items: center; /* 使按钮居中 */
+	width: 100%;
+	flex-direction: column;
+	align-items: center;
 }
 
-
-/* 游戏按钮样式 */
 .game-btn {
-  width: 192px;
-  height: 91px;
-  opacity: 1;
-  border-radius: 36px;
-  background-color: #262626;
-  border: 3px solid #333333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
+	width: 291px;
+	height: 78px;
+	opacity: 1;
+	border-radius: 28px;
+	background-color: #262626;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 16px;
 }
 
-/* 按钮文字样式 */
 .btn-text {
-  font-size: 36px;
-  color: #ffffff;
+	font-size: 32px;
+	font-weight: 500;
+	color: #ffffff;
 }
 
-
-/* 关于按钮 *//* 关于按钮样式更新 */
 .btn {
-  width: 156px; /* 与其他按钮同宽 */
-  height: 91px;
-  font-size: 36px;
-  text-align: center;
-  border: 3px solid #333333;
-  border-radius: 36px;
-  color: #ffffff;
+	width: 291px;
+	height: 78px;
+	font-size: 32px;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	border-radius: 28px;
+	color: #ffffff;
 }
 
+/* 圆形设备样式 */
+@media (shape: circle) {
+	.container {
+		padding-bottom: 60px;
+	}
+	.title-img {
+		margin-top: 95px;
+	}
+}
+
+/* 矩形设备样式 */
+@media (shape: rect) {
+	.title-img {
+		width: 268px;
+	}
+}
+
+/* 药丸形设备样式 */
+@media (shape: pill-shaped) {
+	.title-img {
+		width: 192px;
+	}
+	.game-btn {
+		width: 192px;
+	}
+	.btn {
+		width: 132px;
+		height: 68px;
+	}
+}
 </style>

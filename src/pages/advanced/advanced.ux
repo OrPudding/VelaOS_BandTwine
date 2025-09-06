@@ -1,0 +1,284 @@
+<template>
+	<div class="container">
+		<!-- 统一顶部区域样式 -->
+		<!-- 感谢Charlie_Q提供的弧形时间,由OrPudding移植圆表 -->
+		<div
+			class="header"
+			style="width: 466px; position: absolute; left: 0; top: 0; height: 169px"
+			@click="backToAbout"
+		>
+			<text
+				class="time"
+				style="left: 168px; top: 9px; transform: rotate(-14deg)"
+			>
+				{{ time[0] }}
+			</text>
+			<text
+				class="time"
+				style="left: 189px; top: 6px; transform: rotate(-9deg)"
+			>
+				{{ time[1] }}
+			</text>
+			<text class="time" style="left: 205.5px; top: 2px">{{ ":" }}</text>
+			<text class="time" style="left: 222px; top: 6px; transform: rotate(9deg)">
+				{{ time[2] }}
+			</text>
+			<text
+				class="time"
+				style="left: 242px; top: 9px; transform: rotate(14deg)"
+			>
+				{{ time[3] }}
+			</text>
+
+			<text class="pagetitle">{{ title }}</text>
+		</div>
+		<text class="hint-text first-text">警告！以下所有操作</text>
+		<text class="hint-text">均无二次确认和撤销功能</text>
+		<text class="hint-text">后果自负</text>
+		<!-- 新增设备信息列表 -->
+		<div class="info-list">
+			<div class="info-item" for="{{ deviceInfoList }}" @click="showQR">
+				<text class="info-label">{{ $item.label }}</text>
+				<text class="info-value">{{ $item.value }}</text>
+				<qrcode
+					value="{{ deviceId }}"
+					if="{{ showQRCode }}"
+					style="
+						padding: 5px;
+						width: 150px;
+						height: 150px;
+						color: #000;
+						background-color: #fff;
+					"
+				></qrcode>
+			</div>
+		</div>
+		<div class="test-list">
+			<text class="test-btn" for="{{ testList }}" @click="handleTest($item)">
+				{{ $item.label }}
+			</text>
+		</div>
+	</div>
+</template>
+
+<script>
+import router from "@system.router";
+import device from "@system.device";
+import prompt from "@system.prompt";
+import storage from "@system.storage";
+
+export default {
+	private: {
+		title: "高级设置",
+		time: ["0", "0", "0", "0"],
+		deviceInfoList: [
+			{ label: "设备唯一标识", value: "加载中...", method: "getDeviceId" },
+		],
+		testList: [
+			{ label: "重置验证", method: "reVerify" },
+			{ label: "清空数据", method: "clearData" },
+		],
+		showQRCode: false,
+	},
+	onInit() {
+		this.updateTime();
+		this.getDeviceInfo();
+		setInterval(() => this.updateTime(), 60000);
+	},
+
+	updateTime() {
+		const now = new Date();
+		const hours = now.getHours().toString().padStart(2, "0");
+		const minutes = now.getMinutes().toString().padStart(2, "0");
+
+		// 更新为index页的时间处理逻辑
+		this.time = [
+			hours[0], // 小时十位
+			hours[1], // 小时个位
+			minutes[0], // 分钟十位
+			minutes[1], // 分钟个位
+		];
+	},
+
+	// 新增设备信息获取方法
+	getDeviceInfo() {
+		this.deviceInfoList.forEach((item) => {
+			if (item.method === "getDeviceId") {
+				device.getDeviceId({
+					success: (data) => {
+						this.deviceId = data.deviceId;
+						item.value = data.deviceId;
+					},
+					fail: (err, code) => {
+						item.value = "获取失败 (错误码:" + code + ")";
+					},
+				});
+			}
+		});
+	},
+
+	openAdvancedSettings() {
+		router.push({
+			uri: "pages/advanced",
+		});
+	},
+
+	backToAbout() {
+		router.push({
+			uri: "pages/about",
+			params: {
+				___PARAM_LAUNCH_FLAG___: "clearTask",
+			},
+		});
+	},
+
+	showQR() {
+		if (this.showQRCode == false) {
+			this.showQRCode = true;
+		} else {
+			this.showQRCode = false;
+		}
+	},
+
+	handleTest(item) {
+		if (item.method) {
+			this[item.method]();
+		}
+	},
+
+	enterTest() {
+		router.push({
+			uri: "pages/game",
+			params: {
+				___PARAM_LAUNCH_FLAG___: "clearTask",
+			},
+		});
+	},
+
+	reVerify() {
+		prompt.showToast({
+			message: "重新验证",
+			duration: 2000,
+		});
+		// 清除本地存储的激活码
+		storage.delete({
+			key: "valid_activation_code",
+		});
+		router.push({
+			uri: "pages/verify",
+		});
+	},
+
+	clearData() {
+		prompt.showToast({
+			message: "存档已清空",
+			duration: 2000,
+		});
+		// 删除0-4号存档位
+		for (let i = 0; i <= 4; i++) {
+			storage.delete({
+				key: `save_slot_${i}`,
+			});
+		}
+	},
+};
+</script>
+
+<style>
+.container {
+	background-color: #000;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	padding-bottom: 20px;
+	align-items: center;
+}
+
+.container {
+	width: 100%;
+	height: 100%;
+	background-color: #000000;
+	flex-direction: column;
+	align-items: center;
+	/* 统一根容器内边距 */
+}
+
+/* 统一顶部区域样式 */
+.header {
+	width: 466px;
+	height: 160px;
+	flex-direction: column;
+	align-items: center;
+}
+
+.time {
+	position: absolute;
+	width: 55px;
+	height: 36px;
+	font-size: 28px;
+	font-weight: 600;
+	text-align: center;
+	display: flex;
+	align-items: flex-end;
+	color: rgba(255, 255, 255, 0.6);
+	transform-origin: 27.5px 18px;
+}
+
+.pagetitle {
+	position: absolute;
+	left: 0;
+	top: 40px;
+	width: 466px;
+	height: 46px;
+	font-size: 32px;
+	font-weight: 600;
+	text-align: center;
+	color: rgba(255, 255, 255, 1);
+}
+
+.first-text {
+	margin-top: 100px;
+}
+
+.hint-text {
+	font-size: 24px;
+	color: #ff0000;
+}
+
+/* 新增列表样式 */
+.info-list {
+	width: 100%;
+	flex-direction: column;
+	padding: 0 30px;
+}
+
+.info-item {
+	flex-direction: column;
+	align-items: center;
+}
+
+.info-label {
+	font-size: 30px;
+	color: #fff;
+}
+
+.info-value {
+	font-size: 21px;
+	color: #888;
+}
+
+.test-list {
+	flex-direction: column;
+	align-items: center;
+}
+
+.test-btn {
+	font-size: 30px;
+	margin: 10px;
+	padding: 10px 20px;
+	color: #fff;
+	background-color: #262626;
+	border-radius: 10px;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+}
+</style>

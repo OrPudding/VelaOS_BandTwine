@@ -1,167 +1,292 @@
 <template>
-  <div class="container">
-    <!-- 顶部区域 -->
-          <!-- 感谢wuhaiqi提供的弧形时间-->
-          <div class="header" style="width: 212px;position: absolute;left: 0;top: 0;height: 77px;" @click="terminate()">
-            <text class="time" style="left:60.9px;top:3.8px;transform: rotate(-21deg)">{{time[0]}}</text>
-            <text class="time" style="left:79px;top:-1px;transform: rotate(-9deg)">{{time[1]}}</text>
-            <text class="time" style="left:93.5px;top:-5px;" >{{':'}}</text>
-            <text class="time" style="left:108px;top:-1px;transform: rotate(9deg)">{{time[2]}}</text>
-            <text class="time" style="left:126.1px;top:3.8px;transform: rotate(21deg)">{{time[3]}}</text>
-          <text class="pagetitle">开始</text>
-          </div>
-    
-    <div class="game-container">
-      <div 
-        class="game-btn" 
-        for="{{ saveList }}" 
-        onclick="handleSaveSelect($idx)" 
-        tid="save-btn"
-      >
-        <text class="btn-text">{{ $item.name }}</text>
-      </div>
-    </div>
-  </div>
+	<div class="container">
+		<!-- 感谢Charlie_Q提供的弧形时间,由OrPudding移植圆表 -->
+		<div class="header" @click="backToHome">
+			<text class="time time1">{{ time[0] }}</text>
+			<text class="time time2">{{ time[1] }}</text>
+			<text class="time time3">{{ ":" }}</text>
+			<text class="time time4">{{ time[2] }}</text>
+			<text class="time time5">{{ time[3] }}</text>
+			<text class="pagetitle">{{ title }}</text>
+		</div>
+		<div class="save-section">
+			<div class="save-item" for="{{ saveSlots.slice(1) }}">
+				<div class="save-header">
+					<div style="flex-direction: row; justify-content: space-between">
+						<text class="save-title">存档{{ $idx + 1 }}</text>
+					</div>
+					<div class="save-time">
+						<text class="save-date">
+							{{ $item.time ? $item.time.split(" ")[0] : "空存档" }}
+						</text>
+						<text class="save-time-part">
+							{{ $item.time ? $item.time.split(" ")[1] : "" }}
+						</text>
+					</div>
+				</div>
+				<div class="save-actions">
+					<text class="delete-btn" onclick="deleteSaveSlot($idx + 1)">
+						删除
+					</text>
+					<text class="load-btn" onclick="loadFromSlot($idx + 1)">加载</text>
+					<text class="backup-btn" onclick="notAvailable($idx + 1)">备份</text>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
-import router from "@system.router"
-import prompt from "@system.prompt"
+import router from "@system.router";
+import storage from "@system.storage";
+import prompt from "@system.prompt";
+import interconnect from "@system.interconnect";
 
 export default {
-  private: {
-    title: "加载存档",
-    time: [0,0,0,0],
-    timer: null,
-    saveList: [
-      {id: 1, name: "存档 01"},
-      {id: 2, name: "存档 02"},
-      {id: 3, name: "存档 03"},
-      {id: 4, name: "存档 04"},
-      {id: 5, name: "存档 05"}
-    ]
-  },
+	private: {
+		title: "存档管理",
+		time: [0, 0, 0, 0],
+		timer: null,
+		saveSlots: new Array(5).fill({ time: "" }), // 初始化5个存档位
+	},
 
-  onInit() {
-    this.updateTime();
-    this.timer = setInterval(() => this.updateTime(), 1000);
-  },
-  
-  onDestroy() {
-    if (this.timer) clearInterval(this.timer);
-  },
-  
-  updateTime() {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    
-    // 更新原有时间显示
-    this.hours = hours;
-    this.minutes = minutes;
-    
-    // 新增弧形时间处理：将小时和分钟拆分为单个字符
-    this.time = [
-      hours[0],    // 小时十位
-      hours[1],    // 小时个位
-      minutes[0], // 分钟十位
-      minutes[1]  // 分钟个位
-    ];
-  },
-  
-  terminate() {
-    router.push({
-      uri: "pages/index",
-      params: {
-        ___PARAM_LAUNCH_FLAG___: "clearTask"
-      }
-    })
-  },
-  
-  handleSaveSelect(index) {
-    router.push({
-        uri: "pages/game",
-        params: {
-            loadSlot: index
-        }
-    });
-  }
-}
+	onInit() {
+		this.loadSaveSlots();
+		this.updateTime();
+		this.timer = setInterval(() => this.updateTime(), 1000);
+	},
+
+	notAvailable() {
+		prompt.showToast({
+			message: "后续将支持备份存档到远端AstroBox插件，敬请期待",
+		});
+	},
+
+	handleBackup(index) {
+		const connect = interconnect.instance();
+		connect.getReadyState({
+			success: (data) => {
+				if (data.status !== 1) {
+					prompt.showToast({ message: "请先连接远端AstroBox插件" });
+					return;
+				}
+
+				if (!this.saveSlots[index].time) {
+					// 空存档时请求数据
+					connect.send({
+						data: { type: "request_save", index },
+						success: () => this.onBackupMessage(index),
+					});
+				} else {
+					// 非空存档直接备份
+					this.backupSaveData(index, connect);
+				}
+			},
+			fail: () => prompt.showToast({ message: "连接检查失败" }),
+		});
+	},
+
+	onBackupMessage(index) {
+		const connect = interconnect.instance();
+		connect.onmessage = (data) => {
+			if (data.type === "save_response") {
+				storage.set({
+					key: this.getSlotKey(index),
+					value: JSON.stringify(data),
+					success: () => {
+						this.saveSlots[index] = data;
+						prompt.showToast({ message: `存档${index}已从远端恢复` });
+					},
+				});
+			}
+		};
+	},
+
+	backupSaveData(index, connect) {
+		storage.get({
+			key: this.getSlotKey(index),
+			success: (saveData) => {
+				connect.send({
+					data: {
+						type: "backup",
+						index,
+						data: saveData,
+					},
+					success: () => prompt.showToast({ message: `存档${index}备份成功` }),
+					fail: (err) => prompt.showToast({ message: `备份失败: ${err.data}` }),
+				});
+			},
+		});
+	},
+
+	// 从engine.ux迁移过来的方法
+	loadSaveSlots() {
+		this.saveSlots.forEach((_, index) => {
+			storage.get({
+				key: this.getSlotKey(index),
+				success: (data) => {
+					if (data) {
+						this.saveSlots[index] = JSON.parse(data);
+					}
+				},
+			});
+		});
+	},
+
+	getSlotKey(index) {
+		return `save_slot_${index}`;
+	},
+
+	loadFromSlot(index) {
+		router.replace({
+			uri: "pages/engine",
+			params: { loadSlot: index },
+		});
+	},
+
+	deleteSaveSlot(index) {
+		storage.delete({
+			key: this.getSlotKey(index),
+			success: () => {
+				this.saveSlots[index] = { time: "" };
+				prompt.showToast({ message: `存档${index}已删除` });
+			},
+		});
+	},
+	updateTime() {
+		const now = new Date();
+		const hours = now.getHours().toString().padStart(2, "0");
+		const minutes = now.getMinutes().toString().padStart(2, "0");
+
+		// 更新为index页的时间处理逻辑
+		this.time = [
+			hours[0], // 小时十位
+			hours[1], // 小时个位
+			minutes[0], // 分钟十位
+			minutes[1], // 分钟个位
+		];
+	},
+
+	backToHome() {
+		router.replace({
+			uri: "pages/index",
+		});
+	},
+};
 </script>
 
 <style>
-.container {
-  width: 100%;
-  height: 100%;
-  background-color: #000000;
-  flex-direction: column;
-  align-items: center;
-  padding-bottom: 60px;
+@import "../../common/comm.css";
+.save-section {
+	flex-direction: column;
+	margin-top: 100px;
 }
 
-/* 顶部区域 */
-.header {
-  width: 100%;
-  height: 77px;
-  flex-direction: column;
-  align-items: center;
+.save-item {
+	flex-direction: column;
+	padding: 8px 8px 14px 8px;
+	width: 324px;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	background-color: rgba(255, 255, 255, 0.09);
+	border-radius: 24px;
 }
 
-.time {
-  position: absolute;
-  width: 25px;
-  height: 33px;
-  font-size: 25px;
- font-weight: 600;
- line-height: normal;
- text-align: center;
- display: flex;
- align-items: flex-end;
- letter-spacing: normal;
-  color: rgba(255, 255, 255, 0.6);
-  transform-origin: 12.5px 16.5px;
+.save-header {
+	justify-content: space-between;
+	padding: 0 10px;
+	margin-bottom: 8px;
 }
 
-.pagetitle {
-  position: absolute;
-  left: 0px;
-  top: 35px;
-  width: 212px;
-  height: 42px;
-  font-size: 32px;
-  font-weight: 600;
-  line-height: normal;
-  text-align: center;
-  letter-spacing: normal;
-  color: rgba(255, 255, 255, 1);
+.save-title {
+	font-size: 28px;
+	font-weight: bold;
+	color: #fff;
 }
 
-/* 存档按钮容器 */
-.game-container {
-  width: 100%;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 90px;
+.save-time {
+	flex-direction: column;
 }
 
-/* 存档按钮样式 */
-.game-btn {
-  width: 192px;
-  height: 91px;
-  opacity: 1;
-  border-radius: 36px;
-  background-color: #262626;
-  border: 3px solid #333333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
+.save-date {
+	font-size: 20px;
+	color: #999;
 }
 
-/* 按钮文字样式 */
-.btn-text {
-  font-size: 36px;
-  color: #ffffff;
+.save-time-part {
+	font-size: 20px;
+	color: #999;
 }
 
+.save-actions {
+	flex-direction: row;
+	justify-content: space-around;
+}
+
+.backup-btn,
+.load-btn,
+.delete-btn {
+	padding: 8px 15px;
+	border-radius: 16px;
+	font-size: 24px;
+	color: #fff;
+	border: 3px solid rgba(255, 255, 255, 0.06);
+	background-color: rgba(255, 255, 255, 0.07);
+}
+
+.backup-btn {
+	color: #2ecc71;
+}
+
+.load-btn {
+	color: #3498db;
+}
+
+.delete-btn {
+	color: #e74c3c;
+}
+/* 圆形设备样式 */
+@media (shape: circle) {
+	.container {
+		padding-bottom: 60px;
+	}
+	.save-item {
+		margin-bottom: 20px;
+	}
+}
+
+/* 矩形设备样式 */
+@media (shape: rect) {
+	.save-section {
+		margin-top: 6px;
+	}
+	.save-item {
+		margin-bottom: 10px;
+		width: 316px;
+	}
+}
+
+/* 药丸形设备样式 */
+@media (shape: pill-shaped) {
+	.container {
+		padding-bottom: 60px;
+	}
+	.save-section {
+		margin-top: 6px;
+	}
+	.save-item {
+		width: 192px;
+		margin-top: 5px;
+	}
+	.save-header {
+		flex-direction: column;
+	}
+	.save-actions {
+		flex-wrap: wrap;
+	}
+	.backup-btn,
+	.load-btn,
+	.delete-btn {
+		margin: 0.5px;
+	}
+}
 </style>

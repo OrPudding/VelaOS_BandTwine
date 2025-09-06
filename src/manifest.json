@@ -1,8 +1,8 @@
 {
-  "package": "band_moe.orpu.bandtwine",
+  "package": "moe.orpu.bandtwine",
   "name": "BandTwine",
-  "versionName": "v0.3.0-beta",
-  "versionCode": 2,
+  "versionName": "0.4-alpha",
+  "versionCode": 4,
   "minPlatformVersion": 1000,
   "icon": "/common/icon.png",
   "deviceTypeList": [
@@ -26,11 +26,23 @@
     },
     {
       "name": "system.vibrator"
+    },
+    {
+      "name": "system.device"
+    },
+    {
+      "name": "system.interconnect"
+    },
+    {
+      "name": "system.crypto"
     }
+  ],
+  "permissions": [
+    { "name": "hapjs.permission.DEVICE_INFO" }
   ],
   "config": {
     "logLevel": "log",
-    "designWidth": 212
+    "designWidth": "device-width"
   },
   "router": {
     "entry": "pages/index",
@@ -47,8 +59,14 @@
       "pages/save": {
         "component": "save"
       },
-      "pages/game": {
-        "component": "game"
+      "pages/engine": {
+        "component": "engine"
+      },
+      "pages/verify": {
+        "component": "verify"
+      },
+      "pages/advanced": {
+        "component": "advanced"
       }
     }
   }

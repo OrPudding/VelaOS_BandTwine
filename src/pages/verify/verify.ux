@@ -1,0 +1,408 @@
+<template>
+	<div class="container">
+		<!-- 标题区域 -->
+		<div class="header">
+			<text class="title-text">{{ title }}</text>
+			<text
+				class="status-text {{ isActive ? 'active-status' : 'inactive-status' }}"
+			>
+				{{ isActive ? "已激活" : "未激活" }}
+			</text>
+		</div>
+
+		<!-- 主体内容 -->
+		<div class="content">
+			<div class="qrcode-container">
+				<text class="qrcode-title">{{ testResult }}</text>
+				<qrcode class="qrcode" value="{{ deviceId }}"></qrcode>
+				<text class="activation-tip" if="{{ !isActive }}">
+					请使用AstroBox插件进行激活
+				</text>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+import router from "@system.router";
+import prompt from "@system.prompt";
+import device from "@system.device";
+import storage from "@system.storage";
+import interconnect from "@system.interconnect";
+import crypto from "@system.crypto";
+
+//const AES_KEY = "w9syrjicm/Dv7mFfb7NMt0sjVGs+YVPWo7vtj8cw3kY=";
+const RSA_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuCthw/udkCPu8fwWWtPi
+oUPP+TO5fv5YoWteDOcYkD2+WjZpFy24SUr19oTz7C43cwfCZkjalo0ewT52k71d
+vqYK3Saj+41n2WX3/Z+cvrm/qNO5zl7V1r6SL51OZoL3q28ZBlS6T2Ux1sB8xIzy
+kUunWPQPWYFMT6i8N1QQR5IezF/XayLwDv8yIRXVqhLa1maBDXZ8Jx/jJK3bXlHx
+AAMVTXNKZKTSMuBvZZPS4ZnQdzwED9fqAhHLgHnfTXzdonwbZMtU3ZBtUPDN+sqF
+LI6riEcowThuqOALpQAAWWtRNTPlQ1EiELrKRoghueP1oiKade2u17RDN+WKaguZ
+owIDAQAB
+-----END PUBLIC KEY-----`;
+
+export default {
+	data: {
+		deviceId: "",
+		connectionStatus: "未连接",
+		serverDate: "",
+		isActive: false,
+		activationTime: "",
+		title: "设备激活验证",
+		debugMode: true, // 调试模式开关
+		debugDeviceId: "d4cd0dabcf4caa22ad92fab40844c786", // 硬编码设备ID
+		debugEncryptedData:
+			"cFpbuhWkVjPv25kCbqQuI1Kzx3wYZ2d+8HOaVK9HfpxiHE+c5tJ74AY/0417bMJXT+qvYdEXFm/MP0+zOu3hc2IBFl35r8J0QCOzbnmFu+AnJdkResdrhMXLY6RqrbGB1lm0OwB+vXd/REZEH05ryTirKftKZquL0MVQSG9s15y03MRLTqsYt383WhdQMwrV+CwDQ57wkuR75rTd45S03SxN0NS2btlyQ52Rf3KOqtpSdMHL+wu/jygEtAGGafXsa93q2QBeAtx5gKMSjdcUTGgXVnGyBhnFOJ/WyHlEPA5DOoDD2+ZcjzXSMFgWDcflWIkZiC7YJ1vLD6TXgsNccFzh+Ak89SpxpBND2Pq1olQwEwbsgwi9Re6CE6ZXC4DnSwr1avPQbF9GRhojO0b4Mgpsqnnfeu04RkTUqcnnnCNOstEKLX3cTr9qzT4SIZxvgntQp3ZxmYgyfnr2UiBCrw==", // 硬编码加密数据
+		debugAesKey: "w9syrjicm/Dv7mFfb7NMt0sjVGs+YVPWo7vtj8cw3kY=", // 硬编码AES密钥
+		// 用于调试Web端生成的数据
+		webEncryptedData: "", // 在这里粘贴从Web端生成的加密数据
+		webAesKey: "", // 在这里粘贴从Web端生成的AES密钥
+		testResult: "", // 显示测试结果
+	},
+
+	onInit() {
+		crypto.encrypt({
+			//待加密的文本内容
+			data: "BMNJMD|aSdQhGHOMJgLrffbn4t1jG1CmWZH28T3aywrdGneOZyoD4X5U99BsFFnUhIfeiu2QHp/LuYP7hT7B38nQ0pMuznXk9K7FSlpFpqxYQBCoiIeTFQQBCcGsvnpqxJs9WvUFrVwuReC0WmmYF+3qvN50lu2Z8hGgVPAYEi6elPvQZBtyHUV/uyAmDdhNsDJytIy11Ph9uBFbpQ/IADTN/4SYuk2zjoaTYIQMsNhwU+pZf5aIilUMqll87t+mc4yUJNP/cKUFpTL6WcGqMXEJ/efDFKoNlxgIbZsAytiVg+76cEMEPSxrokhsKIypwz/OXbkwzguVMGxXPlrUcRKcrU6Cw==",
+			//base64编码后的加密公钥
+			key: crypto.btoa("GYJ1ojM1C6yp+0Ztd2Xv6A=="),
+			algo: "AES",
+			options: {
+				iv: "1234567890abcdef", // 显式指定 IV（需与加密时一致）
+			},
+			success: function (res) {
+				console.log(`### crypto.encrypt success:`, res.data);
+				crypto.decrypt({
+					data: res.data,
+					algo: "AES",
+					key: crypto.btoa("GYJ1ojM1C6yp+0Ztd2Xv6A=="),
+					options: {
+						iv: "1234567890abcdef", // 显式指定 IV（需与加密时一致）
+					},
+					success: function (res) {
+						console.log(`### crypto.decrypt success:`, res.data);
+					},
+					//fail: (data, code) => reject(new Error(`解密失败[${code}]: ${data}`)),
+				});
+			},
+			fail: function (data, code) {
+				console.log(`### crypto.encrypt fail ### ${code}: ${data}`);
+			},
+		});
+		//this.initDeviceInfo();
+		//this.initInterconnect();
+	},
+
+	verifySignature(data, signature) {
+		return new Promise((resolve) => {
+			const textEncoder = new TextEncoder();
+			const verifyData = textEncoder.encode(`${this.debugDeviceId}|${data}`);
+
+			crypto.verify({
+				data: verifyData,
+				signature: signature,
+				publicKey: RSA_PUBLIC_KEY,
+				algo: "RSA-SHA256",
+				success: (isValid) => resolve(isValid),
+				fail: (data, code) => {
+					console.error(`签名验证失败[${code}]:`, data);
+					resolve(false);
+				},
+			});
+		});
+	},
+
+	backToHome() {
+		router.back();
+	},
+
+	async initDeviceInfo() {
+		try {
+			if (this.debugMode) {
+				// 硬编码设备ID
+				this.deviceId = this.debugDeviceId;
+				// 硬编码加密数据
+				const encryptedData = this.debugEncryptedData;
+				// 硬编码AES密钥
+				const aesKey = this.debugAesKey;
+				await this.handleActivation(encryptedData, aesKey);
+			} else {
+				// 原逻辑：获取设备ID并读取存储
+				this.deviceId = await this.getDeviceId();
+				if (!/^[a-f0-9]{32}$/.test(this.deviceId)) {
+					return prompt.showToast({ message: "设备ID格式无效" });
+				}
+				const activationData = await storage.get({ key: "activation_data" });
+				activationData && (await this.handleActivation(activationData));
+			}
+			this.$update();
+		} catch (error) {
+			prompt.showToast({ message: `设备ID获取失败: ${error.message}` });
+		}
+	},
+
+	getDeviceId() {
+		return new Promise((resolve, reject) => {
+			device.getDeviceId({
+				success: (res) => {
+					console.log("原始设备ID:", res.deviceId);
+					resolve(res.deviceId);
+					this.handleActivation(
+						"zVANgDhnVAIHdHmBbiqH1KiKe3q1OmSFcUVLT79JSXuUsfb8SZOw40EvGLHMy+JdP+WzHqgmkk4eXAFZKqGBvWAwdLe+p85PgQ+yqvsDjq8M3T9tvNOqI0HNk8pvDuF/suWmKKYfDHpYkJL6hYezmP+zSBn/SZBMQiUx4t+dBMG16sRY4y/o8SHSRSI7U9CPd88a4HdH9xQ0+gfqJpgnk2k5NdH1QWZjwkhI3fctPpyvQ8Z9fLQmKLmXeKvigDieAbPKyCMO01ZfG4KQ6OS9nXbMF/9qy0fuJby2cB1OlW1YUQKL736usrhNJOp9kBgiWT0AyQekE431CH/W/wKPUUVQVrJePXiU3mcyEkL00LS8Q/Bf8bLJ3IXTzT0MkiYk7y8v8382aVbN2X186XS1OBDBUk+Mut3RAgQ3/gEha6TQLpbicnrS/iSjUffWG1GlIwRr0v9EpnUTaphvGoX8t0+yci9IFulmecpr4iPxvZM="
+					);
+				},
+				fail: (data, code) => {
+					reject(new Error(`获取设备ID失败 [${code}]`));
+				},
+				complete: () => {
+					console.log("设备ID获取完成");
+				},
+			});
+		});
+	},
+
+	initInterconnect() {
+		const conn = interconnect.instance();
+		conn.onmessage = (msg) => {
+			this.handleIncomingMessage(msg.data);
+		};
+		conn.onopen = () => {
+			this.connectionStatus = "已连接";
+			this.sendDeviceHello();
+		};
+		conn.onclose = () => {
+			this.connectionStatus = "连接断开";
+		};
+	},
+
+	sendDeviceHello() {
+		interconnect.instance().send({
+			data: {
+				type: "hello",
+				deviceId: this.deviceId,
+				timestamp: Date.now(),
+			},
+			success: () => {
+				console.info("握手信号已发送");
+			},
+			fail: (err, code) => {
+				this.connectionStatus = "发送失败";
+				console.error("握手失败:", err, "错误码:", code);
+			},
+			complete: () => {
+				console.log("握手信号发送完成");
+				this.$update();
+			},
+		});
+	},
+
+	handleIncomingMessage(data) {
+		switch (data.type) {
+			case "date_response":
+				this.serverDate = data.date;
+				storage.set({
+					key: "lastSyncDate",
+					value: data.date,
+					complete: () => {
+						console.log("服务器日期保存完成");
+						this.$update();
+					},
+				});
+				break;
+			case "activation":
+				this.handleActivation(data.payload)
+					.catch((err) => {
+						prompt.showToast({ message: `激活失败: ${err.message}` });
+					})
+					.finally(() => {
+						this.$update();
+					});
+				break;
+			default:
+				console.warn("未知消息类型:", data.type);
+		}
+	},
+
+	async handleActivation(encryptedData, aesKey = this.debugAesKey) {
+		console.log("原始加密数据:", encryptedData);
+		try {
+			this.connectionStatus = "解密数据中...";
+			const decrypted = await this.aesDecrypt(encryptedData, aesKey);
+			const [activationCode, signature, timestamp] = decrypted.split("|");
+
+			if (Date.now() - parseInt(timestamp) > 300000) {
+				throw new Error("激活码已过期");
+			}
+
+			const isValid = await this.verifySignature(activationCode, signature);
+			if (!isValid) {
+				throw new Error("签名验证失败");
+			}
+
+			await new Promise((resolve, reject) => {
+				storage.set({
+					key: "activation_data",
+					value: encryptedData,
+					success: () => {
+						this.isActive = true;
+						this.activationTime = new Date().toLocaleString();
+						prompt.showToast({ message: "设备激活成功" });
+						resolve();
+					},
+					fail: (data, code) => {
+						reject(new Error(`激活数据保存失败 [${code}]`));
+					},
+					complete: () => {
+						console.log("激活数据保存完成");
+					},
+				});
+			});
+		} finally {
+			this.connectionStatus = "已连接";
+		}
+	},
+
+	async deleteActivation() {
+		try {
+			await new Promise((resolve, reject) => {
+				storage.delete({
+					key: "activation_data",
+					success: () => {
+						this.isActive = false;
+						prompt.showToast({ message: "激活信息已清除" });
+						resolve();
+					},
+					fail: (data, code) => {
+						reject(new Error(`清除失败 [${code}]`));
+					},
+					complete: () => {
+						console.log("激活信息清除完成");
+						this.$update();
+					},
+				});
+			});
+		} catch (error) {
+			prompt.showToast({ message: "清除失败: " + error.message });
+		}
+	},
+};
+</script>
+
+<style>
+.container {
+	flex-direction: column;
+	background-color: #000;
+	height: 100%;
+	width: 100%;
+}
+
+/* 标题区域适配 */
+.header {
+	width: 100%;
+	padding: 20px 0;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+}
+
+.title-text {
+	font-size: 36px;
+	color: #fff;
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+/* 修改后 */
+.status-text {
+	font-size: 28px;
+}
+.status-text.active-status {
+	color: #4caf50;
+}
+
+.status-text.inactive-status {
+	color: #f44336;
+}
+
+/* 内容区域适配 */
+.content {
+	justify-content: center;
+	align-items: center;
+}
+
+.qrcode-container {
+	max-width: 400px;
+	align-items: center;
+	flex-direction: column;
+}
+
+.qrcode-title {
+	font-size: 28px;
+	color: #fff;
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+.qrcode {
+	width: 80%;
+	background-color: #fff;
+	padding: 10px;
+}
+
+.activation-tip {
+	font-size: 24px;
+	color: #e0e0e0;
+	text-align: center;
+	margin-top: 20px;
+}
+
+/* 多屏适配 */
+@media (shape: circle) {
+	.header {
+		padding-top: 20%;
+	}
+	.qrcode {
+		width: 50%;
+	}
+}
+
+@media (shape: rect) {
+	.header {
+		margin-top: 10%;
+	}
+	.title-text {
+		font-size: 45px;
+	}
+	.status-text {
+		font-size: 35px;
+	}
+	.qrcode-title {
+		font-size: 35px;
+	}
+	.qrcode {
+		width: 60%;
+	}
+	.activation-tip {
+		font-size: 35px;
+	}
+}
+
+@media (shape: pill-shaped) {
+	.header {
+		padding-top: 80px;
+	}
+	.title-text {
+		font-size: 65px;
+	}
+	.status-text {
+		font-size: 60px;
+	}
+	.qrcode-title {
+		font-size: 50px;
+	}
+	.activation-tip {
+		font-size: 50px;
+	}
+}
+</style>
