@@ -34,7 +34,7 @@
 
 想要立即开始您的创作之旅吗？我们为您准备了详尽的文档。
 
-**➡️ 前往我们的官方文档网站：[https://orpu.jp.wksmym.top/zh/home](https://orpu.jp.wksmym.top/zh/home )**
+**➡️ 前往我们的官方文档网站：[BandTwine Docs](https://velaos-bandtwine.pages.dev/)**
 
 在文档中，您会找到：
 *   **快速上手教程**: 手把手带您创建第一个场景，添加选项，并实现简单的逻辑。
@@ -66,7 +66,7 @@
 
 ## ❤️ 支持项目
 
-如果您觉得这个项目对您有帮助，可以考虑[**捐赠**](https://orpu.jp.wksmym.top/zh/about/donation )支持我们，让项目能更长久地发展下去。您的每一份支持都是我们前进的动力！
+如果您觉得这个项目对您有帮助，可以考虑[捐赠](https://velaos-bandtwine.pages.dev/)支持我们，让项目能更长久地发展下去。您的每一份支持都是我们前进的动力！
 
 ## 📜 开源协议
 
