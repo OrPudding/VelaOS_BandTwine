@@ -1,5 +1,5 @@
 {
-  "name": "BandTwine",
+  "name": "bandtwine",
   "version": "1.0.0",
   "description": "",
   "engines": {
@@ -10,7 +10,10 @@
     "build": "aiot build",
     "release": "aiot release",
     "watch": "aiot watch --open-nuttx",
-    "lint": "eslint --format codeframe --fix --ext .ux,.js src/"
+    "lint": "eslint --format codeframe --fix --ext .ux,.js src/",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "lint-staged": {
     "*.{ux,js}": [
@@ -46,7 +49,8 @@
     "stylelint-config-recess-order": "^3.0.0",
     "stylelint-config-standard": "^25.0.0",
     "stylelint-order": "^5.0.0",
-    "ux-types": "^0.1.1"
+    "ux-types": "^0.1.1",
+    "vitepress": "^1.2.3"
   },
   "dependencies": {
     "@aiot-toolkit/jsc": "^1.0.7",
