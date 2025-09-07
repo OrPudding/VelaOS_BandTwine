@@ -8,7 +8,8 @@
   </p>
         <p>轻量化引擎 · 深度叙事 · 多设备适配</p>
   <p align="center">
-    <a href="https://orpu.jp.wksmym.top/zh/home"><strong>📚 完整文档 »</strong></a>
+    <a href="https://velaos-bandtwine.pages.dev/"><strong>📚 完整文档 »</strong></a>
+
   </p>
 </div>
 
