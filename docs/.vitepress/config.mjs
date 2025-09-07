@@ -37,12 +37,12 @@ export default defineConfig({
         ]
       },
       {
-        text: 'data.json 教程',
+        text: '深入学习',
         collapsed: false, // 默认展开这个分组
         items: [
           { text: '1. data.json 简介', link: '/1_introduction_to_data_js' },
           { text: '2. 节点 (Nodes ) 定义', link: '/2_nodes_definition' },
-          { text: '3. 文本格式化与标记', link: '/3_text_formatting_and_markers' },
+          { text: '3. 文本格式与标记', link: '/3_text_formatting_and_markers' },
           { text: '4. 变量系统', link: '/4_variable_system' },
           { text: '5. 动作 (Actions)', link: '/5_actions' },
           { text: '6. 条件与随机', link: '/6_conditions_and_randoms' },
