@@ -3,3 +3,5 @@ dist
 build
 .idea
 neofetch.sh
+docs/.vitepress/cache
+.vitepress/cache

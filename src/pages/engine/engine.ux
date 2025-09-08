@@ -80,7 +80,8 @@
 								<text
 									class="load-btn auto-load-btn"
 									style="height: 56px"
-									onclick="deleteSaveSlot(0)"
+									onclick="loadFromSlot(0)"
+									onlongpress="deleteSaveSlot(0)"
 								>
 									加载
 								</text>
