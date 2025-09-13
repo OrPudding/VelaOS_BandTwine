@@ -21,10 +21,6 @@
 *   第一时间获取引擎的**最新动态**和测试版本。
 *   分享你的灵感和作品截图。
 
-<div align="center">
-  <img src="imgs/QR_Code.jpg" alt="QQ Group QR Code" width="200"/>
-</div>
-
 ---
 
 ## <a id="github-互动"></a> 💻 GitHub 互动
