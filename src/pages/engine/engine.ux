@@ -80,8 +80,7 @@
 								<text
 									class="load-btn auto-load-btn"
 									style="height: 56px"
-									onclick="loadFromSlot(0)"
-									onlongpress="deleteSaveSlot(0)"
+									onclick="deleteSaveSlot(0)"
 								>
 									加载
 								</text>
@@ -196,50 +195,87 @@
 	</div>
 </template>
 <script>
+// ========================================================================
+// 新增：轻量级深拷贝函数，以替代高消耗的 JSON.parse(JSON.stringify())
+// ========================================================================
+function deepClone(obj, hash = new WeakMap()) {
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+    // 处理循环引用，防止无限递归
+    if (hash.has(obj)) {
+        return hash.get(obj);
+    }
+
+    // 根据不同对象类型创建新的实例
+    let clone;
+    if (obj instanceof Date) {
+        clone = new Date(obj.getTime());
+    } else if (obj instanceof Array) {
+        clone = [];
+    } else if (obj.constructor) {
+        // 保持原型链
+        clone = Object.create(Object.getPrototypeOf(obj));
+    } else {
+        clone = {};
+    }
+    
+    hash.set(obj, clone);
+
+    for (let key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            clone[key] = deepClone(obj[key], hash);
+        }
+    }
+    return clone;
+}
+
 import router from "@system.router";
 import storage from "@system.storage";
 import prompt from "@system.prompt";
 import vibrator from "@system.vibrator";
 
-import storyData from "../../common/data.json";
+// 变更 1: 直接导入编译生成的 JavaScript 模块。
+// 构建工具会处理这个导入，storyData 在这里直接就是一个可用的 JS 对象。
+import storyData from "../../common/story.compiled.js";
+import metadata from "../../common/metadata.js";
 
 export default {
 	private: {
 		time: ["0", "0", "0", "0"],
 		debugMode: false,
-		logLevel: "info",
+		// 新增：日志等级，可选 'log', 'debug', 'develop'
+		logLevel: "log", 
 		timer: null,
 		showMenu: false,
 		activeTab: "status",
 		saveSlots: [
-			{ time: "" },
-			{ time: "" },
-			{ time: "" },
-			{ time: "" },
-			{ time: "" },
+			{ time: "" }, { time: "" }, { time: "" }, { time: "" }, { time: "" },
 		],
 		currentNodeId: "index_1",
 		segments: [],
 		currentLinks: [],
 		STORAGE_KEY: "story_state",
 		showVars: [],
+		// 新增：用于优化 showVars 更新的脏数据标记
+		showVarsDirty: false, 
 		listeners: [],
 		vars: {},
 		hourChanged: false,
 		dayChanged: false,
 		currentNode: null,
-		title: "114514",
+		title: null,
 	},
 	protected: { loadSlot: 0 },
 	onInit() {
 		router.clear();
-		this.currentNodeId = storyData.metadata.indexNode;
+		this.currentNodeId = metadata.indexNode;
 		this.loadFromSlot(this.loadSlot);
 		this.initVariableSystem();
 		this.updateShowVars();
 		this.loadSaveSlots();
 		this.loadNode(this.currentNodeId);
-		this.debugLog("游戏初始化完成");
+		this.log("游戏初始化完成");
 	},
 	onReady() {
 		this.scrollTo();
@@ -282,99 +318,123 @@ export default {
 		const segment = this.segments[index];
 		if (segment?.type === "image") {
 			this.pushErrorSegment(`图片加载失败:${segment.path}`);
-			this.$page.$forceUpdate();
-		}
-	},
-	loadNode(nodeId) {
-		try {
-			const jumpTarget = this.beforeLoadNode(nodeId);
-			if (jumpTarget) {
-				this.debugLog(`监听器触发跳转:${jumpTarget}`);
-				this.loadNode(jumpTarget);
-				return;
-			}
-			const node = storyData.nodes[nodeId];
-			if (!node) throw new Error(`节点${nodeId}未找到`);
-			this.currentNode = node;
-			this.currentNodeId = nodeId;
-			this.currentLinks = node.links || [];
-			this.executeActions(node.actions || []);
-			this.parseTextWithLinks(node.text);
-			this.title = node.title;
-			this.debugLog(`加载节点:${nodeId}`, { links: this.currentLinks.length });
-		} catch (e) {
-			this.handleError("节点加载错误", e);
-		} finally {
-			this.updateStoryTime();
-			setTimeout(() => this.scrollTo(), 100);
 		}
 	},
 
-	parseTextWithLinks(text) {
-		this.segments = [];
-		if (!text) return;
+// 变更 4: 在 loadNode 函数中增加对“同节点跳转”的判断
+loadNode(nodeId) {
+    try {
+        // --- 增加一个变量来跟踪是否是同节点加载 ---
+        const isSameNodeLoad = (this.currentNodeId === nodeId);
 
-		// 新增文本缓冲区
-		let textBuffer = "";
-		const flushTextBuffer = () => {
-			if (textBuffer.length > 0) {
-				this.segments.push({ type: "text", content: textBuffer });
-				textBuffer = "";
-			}
-		};
+        const jumpTarget = this.beforeLoadNode(nodeId);
+        if (jumpTarget) {
+            this.log(`监听器触发跳转:${jumpTarget}`);
+            // 注意：这里是递归调用，最终的 scrollTo 判断会在最外层调用中执行
+            this.loadNode(jumpTarget);
+            return;
+        }
+        const node = storyData.nodes[nodeId];
+        if (!node) throw new Error(`节点${nodeId}未找到`);
+        
+        this.currentNode = node;
+        this.currentNodeId = nodeId;
+        this.currentLinks = node.links || [];
+        
+        this.executeActions(node.actions || []);
 
-		// 修改正则表达式以捕获换行符和图片标记
-		const regex = /(\{\w+\.?[\w\.]*\}|\n)/g;
-		let lastIndex = 0;
-		let match;
+        this.processPrecompiledSegments(node.segments || []);
 
-		while ((match = regex.exec(text)) !== null) {
-			// 处理匹配前的普通文本
-			if (match.index > lastIndex) {
-				textBuffer += text.substring(lastIndex, match.index);
-			}
+        this.title = node.title;
+        this.log(`加载节点:${nodeId}`, { links: this.currentLinks.length });
+    } catch (e) {
+        this.handleError("节点加载错误", e);
+    } finally {
+        this.updateStoryTime();
+        this.$nextTick(() => {
+            // --- 核心修改在这里 ---
+            if (!isSameNodeLoad) {
+                // 只有当加载的不是当前节点时，才执行滚动到顶部的操作
+                this.scrollTo();
+                this.log("执行滚动到顶部操作");
+            } else {
+                // 如果是同一个节点，可以选择不操作，或者记录一条日志
+                this.log("同节点刷新，跳过滚动操作");
+            }
+        });
+    }
+},
 
-			const matched = match[1];
-			if (matched === "\n") {
-				// 遇到换行符时提交缓冲区并添加换行segment
-				flushTextBuffer();
-				this.segments.push({ type: "newline" });
-			} else if (matched.startsWith("{cond.")) {
-				// 解析条件文本并加入缓冲区
-				const condValue = this.resolveCondition(matched.replace(/\{|\}/g, ""));
-				textBuffer += condValue;
-			} else if (matched.startsWith("{random.")) {
-				// 解析随机文本并加入缓冲区
-				const randomValue = this.resolveValue(matched.replace(/\{|\}/g, ""));
-				textBuffer += randomValue;
-			} else if (matched.startsWith("{var.")) {
-				// 新增变量处理
-				const varValue = this.resolveValue(matched.replace(/\{|\}/g, ""));
-				textBuffer += varValue;
-			} else if (matched.startsWith("{img.")) {
-				// 遇到图片标记时提交缓冲区并处理图片
-				flushTextBuffer();
-				const imgId = matched.replace(/\{|\}/g, "").substring(4); // 移除{img.和}
-				this.handleImageMarker(imgId);
-			} else if (/^\{\d+\}$/.test(matched)) {
-				// 遇到链接标记时提交缓冲区
-				flushTextBuffer();
-				const linkId = parseInt(matched.replace(/\{|\}/g, ""));
-				this.handleLinkMarker(linkId);
-			} else {
-				// 其他标记直接加入缓冲区
-				textBuffer += matched;
-			}
+// 变更 3: 彻底重构 processPrecompiledSegments，增加文本合并逻辑
+processPrecompiledSegments(segments) {
+    const finalSegments = [];
+    let textBuffer = ''; // 用于合并连续文本的缓冲区
 
-			lastIndex = match.index + matched.length;
-		}
+    const flushTextBuffer = () => {
+        if (textBuffer) {
+            finalSegments.push({ type: 'text', content: textBuffer });
+            textBuffer = '';
+        }
+    };
 
-		// 处理剩余文本
-		if (lastIndex < text.length) {
-			textBuffer += text.substring(lastIndex);
-		}
-		flushTextBuffer();
-	},
+    segments.forEach(seg => {
+        let resolvedContent = null;
+        let isTextLike = false; // 标记此 segment 是否应被视为文本
+
+        switch (seg.type) {
+            case 'text':
+                resolvedContent = seg.content;
+                isTextLike = true;
+                break;
+            case 'variable':
+                resolvedContent = this.resolveValue(`var.${seg.path}`);
+                isTextLike = true;
+                break;
+            case 'condition':
+                resolvedContent = this.resolveCondition(`cond.${seg.id}`);
+                isTextLike = true;
+                break;
+            case 'random':
+                resolvedContent = this.resolveValue(`random.${seg.id}`);
+                isTextLike = true;
+                break;
+            case 'expression':
+                resolvedContent = this.parseExpression(seg.code);
+                isTextLike = true;
+                break;
+            
+            // 非文本类型，需要先清空缓冲区
+            case 'newline':
+                flushTextBuffer(); // 遇到换行，先将之前的文本推入
+                finalSegments.push(seg);
+                break;
+            case 'link':
+                flushTextBuffer(); // 遇到链接，先将之前的文本推入
+                const linkSegment = this.getLinkSegment(seg.index);
+                if (linkSegment) finalSegments.push(linkSegment);
+                break;
+            case 'image':
+                flushTextBuffer(); // 遇到图片，先将之前的文本推入
+                const imageSegment = this.getImageSegment(seg.id);
+                if (imageSegment) finalSegments.push(imageSegment);
+                break;
+
+            default:
+                console.warn('未知的预编译 segment 类型:', seg.type);
+        }
+
+        if (isTextLike && resolvedContent !== null && resolvedContent !== undefined) {
+            // 将所有解析出的文本内容（无论来源）都加入缓冲区
+            textBuffer += String(resolvedContent); 
+        }
+    });
+
+    // 循环结束后，不要忘记清空最后一次的缓冲区
+    flushTextBuffer();
+
+    // 一次性赋值，高效触发UI更新
+    this.segments = finalSegments;
+},
 
 	resolveCondition(path) {
 		const parts = path.split(".");
@@ -390,7 +450,7 @@ export default {
 						return item.text || "";
 					}
 				} catch (e) {
-					this.debugLog(`条件解析失败:${item.condition}`, e);
+					this.log(`条件解析失败:${item.condition}`, e);
 					return `[条件错误:${item.condition}]`;
 				}
 			} else {
@@ -400,12 +460,13 @@ export default {
 		return `[无匹配条件:${path}]`;
 	},
 	initVariableSystem() {
-		this.vars = JSON.parse(JSON.stringify(storyData.variables || {}));
-		this.debugLog("变量系统初始化");
+    // 使用 deepClone 替换
+    this.vars = deepClone(storyData.variables || {});
+		this.log("变量系统初始化");
 	},
 	parseVariablePath(path) {
 		if (!path.startsWith("var.")) {
-			this.debugLog(`无效变量路径:${path}`);
+			this.log(`无效变量路径:${path}`);
 			return null;
 		}
 		return path.substring(4).split(".");
@@ -420,22 +481,31 @@ export default {
 		}
 		return value;
 	},
-	setVariable(path, value) {
-		const parts = this.parseVariablePath(path);
-		if (!parts) return;
-		let current = this.vars;
-		for (let i = 0; i < parts.length - 1; i++) {
-			const part = parts[i];
-			if (!current[part] || typeof current[part] !== "object") {
-				current[part] = {};
-			}
-			current = current[part];
-		}
-		const lastKey = parts[parts.length - 1];
-		current[lastKey] = this.resolveValue(value);
-		this.debugLog(`变量设置:${path}=${JSON.stringify(current[lastKey])}`);
-		this.updateShowVars();
-	},
+// ========================================================================
+// 修改：setVariable 方法
+// ========================================================================
+setVariable(path, value) {
+    const parts = this.parseVariablePath(path);
+    if (!parts) return;
+    let current = this.vars;
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!current[part] || typeof current[part] !== "object") {
+            current[part] = {};
+        }
+        current = current[part];
+    }
+    const lastKey = parts[parts.length - 1];
+    const resolvedValue = this.resolveValue(value);
+    current[lastKey] = resolvedValue;
+
+    this.log('develop', `变量设置: ${path} =`, resolvedValue);
+
+    // 优化点：仅在 'show' 分支下的变量变化时，才设置脏标记
+    if (parts[0] === 'show') {
+        this.showVarsDirty = true;
+    }
+},
 	updateShowVars() {
 		const showVars = [];
 		const showBranch = this.vars.show || {};
@@ -517,7 +587,7 @@ export default {
 				`with(context){return ${processedExpr}}`
 			).call(context, context);
 		} catch (e) {
-			this.debugLog(`表达式解析失败:${expr}`, e);
+			this.log(`表达式解析失败:${expr}`, e);
 			return false;
 		}
 	},
@@ -530,7 +600,7 @@ export default {
 			try {
 				return !!this.parseExpression(condition.slice(2, -1));
 			} catch (e) {
-				this.debugLog(`条件表达式错误:${condition}`, e);
+				this.log(`条件表达式错误:${condition}`, e);
 				return false;
 			}
 		}
@@ -568,6 +638,7 @@ export default {
 	},
 	executeActions(actions = []) {
 		let jumpTriggered = false;
+		this.showVarsDirty = false;
 		actions.forEach((action) => {
 			try {
 				switch (action.type) {
@@ -656,7 +727,7 @@ export default {
 						const targetNode = this.resolveValue(action.target);
 						const condition = action.condition;
 						if (!condition || this.checkCondition(condition)) {
-							this.debugLog(`执行跳转操作:${targetNode}`);
+							this.log(`执行跳转操作:${targetNode}`);
 							if (action.beforeActions) {
 								this.executeActions(action.beforeActions);
 							}
@@ -672,11 +743,19 @@ export default {
 						break;
 				}
 			} catch (e) {
-				this.debugLog(`操作执行失败:${JSON.stringify(action)}`, e);
-			}
-		});
-		return jumpTriggered;
-	},
+            this.log('debug', `操作执行失败: ${JSON.stringify(action)}`, e);
+        }
+    });
+
+    // 优化点：在所有动作执行完毕后，根据脏标记决定是否更新UI
+    if (this.showVarsDirty) {
+        this.log('develop', '脏标记为 true，执行 updateShowVars');
+        this.updateShowVars();
+    }
+
+    return jumpTriggered;
+},
+
 
 	selectOption(linkIndex, target) {
 		if (!this.validateLinkIndex(linkIndex)) return;
@@ -763,29 +842,33 @@ export default {
 		return validOptions[0];
 	},
 
-	// 修复后的handleLinkMarker方法
-	handleLinkMarker(linkIndex) {
-		if (!this.validateLinkIndex(linkIndex)) {
+	// 变更 5: 重构 Marker 处理函数，使其返回对象而不是直接修改 this.segments
+    getLinkSegment(linkIndex) {
+        if (!this.validateLinkIndex(linkIndex)) {
 			console.error("无效链接索引:", linkIndex);
-			return;
+			return null;
 		}
-
 		const link = this.currentLinks[linkIndex];
+        let validVariant = null;
+        if (link.variants) {
+            for (const variant of link.variants) {
+                if (this.checkCondition(variant.condition)) {
+                    validVariant = variant;
+                    break;
+                }
+            }
+        }
+		const displayText = validVariant?.text || link.text;
+		const target = validVariant?.target || link.target;
+		return {
+			type: (validVariant || this.checkCondition(link.condition)) ? "link" : "disabled",
+			content: displayText,
+			linkIndex: linkIndex,
+			target: target,
+			selectedVariant: validVariant,
+		};
+    },
 
-		if (link.variants) {
-			// 修复：将linkIndex传递给handleLinkVariants
-			this.handleLinkVariants(link, linkIndex);
-		} else {
-			const segment = {
-				type: this.checkCondition(link.condition) ? "link" : "disabled",
-				content: link.text,
-				linkIndex: linkIndex, // 直接使用传入的索引
-				target: link.target,
-				actions: link.actions,
-			};
-			this.segments.push(segment);
-		}
-	},
 
 	// 修复后的handleLinkVariants方法
 	handleLinkVariants(link, linkIndex) {
@@ -793,7 +876,7 @@ export default {
 
 		for (const variant of link.variants) {
 			const conditionResult = this.checkCondition(variant.condition);
-			this.debugLog(
+			this.log(
 				`变体条件检查:${JSON.stringify(variant)} => ${conditionResult}`
 			);
 
@@ -814,18 +897,19 @@ export default {
 			selectedVariant: validVariant,
 		});
 
-		this.debugLog(
+		this.log(
 			`生成变体链接段:${JSON.stringify(
 				this.segments[this.segments.length - 1]
 			)}`
 		);
 	},
 
-	handleImageMarker(markerId) {
-		const imgId = markerId.replace("img.", "");
+
+    getImageSegment(markerId) {
+        const imgId = markerId.replace("img.", "");
 		const currentNode = storyData.nodes[this.currentNodeId];
 		if (!currentNode || !currentNode.imgs || !currentNode.imgs[imgId]) {
-			return this.pushErrorSegment(`图片配置错误:${imgId}`);
+			return { type: "error", content: `图片配置错误:${imgId}` };
 		}
 		const imgDef = currentNode.imgs[imgId];
 		let path = imgDef.path || "";
@@ -836,34 +920,28 @@ export default {
 					(_, expr) => this.parseExpression(expr)?.toString() || ""
 				);
 			} catch (e) {
-				return this.pushErrorSegment(`图片路径表达式错误:${imgId}`);
+				return { type: "error", content: `图片路径表达式错误:${imgId}` };
 			}
 		}
 		let finalPath = path;
-		if (
-			path &&
-			!path.includes("/common/images/") &&
-			!path.startsWith("/") &&
-			!path.startsWith("http") &&
-			!path.startsWith(".")
-		) {
+		if (path && !path.includes("/common/images/") && !path.startsWith("/") && !path.startsWith("http" ) && !path.startsWith(".")) {
 			finalPath = "/common/images/" + path;
 		}
-		this.segments.push({
+		return {
 			type: "image",
 			path: finalPath,
 			width: imgDef.width || 150,
-		});
-	},
+		};
+    },
 	handleScriptMarker(marker) {
-		this.debugLog(`脚本标记:${marker}`);
+		this.log(`脚本标记:${marker}`);
 	},
 	getRandomResult(markerId) {
 		const randomId = markerId.replace("random.", "");
 		try {
 			const randoms = storyData.nodes[this.currentNodeId]?.randoms;
 			if (!randoms || !randoms[randomId]) {
-				this.debugLog(`随机组未定义:${randomId}`);
+				this.log(`随机组未定义:${randomId}`);
 				return { text: `[ERROR]随机组未定义` };
 			}
 
@@ -873,7 +951,7 @@ export default {
 			);
 
 			if (validOptions.length === 0) {
-				this.debugLog(`无可用选项:${randomId}`);
+				this.log(`无可用选项:${randomId}`);
 				return { text: "[无可用选项]" };
 			}
 
@@ -884,7 +962,7 @@ export default {
 			);
 
 			if (totalWeight <= 0) {
-				this.debugLog(`权重错误:${randomId}`, { options: validOptions });
+				this.log(`权重错误:${randomId}`, { options: validOptions });
 				return validOptions[0] || { text: "[权重错误]" };
 			}
 
@@ -892,7 +970,7 @@ export default {
 			for (const opt of validOptions) {
 				randomVal -= opt.weight || 1;
 				if (randomVal <= 0) {
-					this.debugLog(`随机选择结果`, {
+					this.log(`随机选择结果`, {
 						group: randomId,
 						selected: opt.text,
 						hasActions: !!opt.actions,
@@ -902,10 +980,10 @@ export default {
 			}
 
 			const defaultReturn = validOptions[0] || { text: "[随机错误]" };
-			this.debugLog(`随机默认返回`, defaultReturn);
+			this.log(`随机默认返回`, defaultReturn);
 			return defaultReturn;
 		} catch (e) {
-			this.debugLog(`随机处理失败:${randomId}`, e);
+			this.log(`随机处理失败:${randomId}`, e);
 			return { text: `[ERROR]随机处理失败` };
 		}
 	},
@@ -920,13 +998,13 @@ export default {
 			nodeId: options.nodeId || null,
 			type: options.type || "general",
 		});
-		this.debugLog(`监听器添加:${id}`);
+		this.log(`监听器添加:${id}`);
 	},
 	removeListener(id) {
 		const newLength = this.listeners.filter((l) => l.id !== id).length;
 		if (this.listeners.length !== newLength) {
 			this.listeners = this.listeners.filter((l) => l.id !== id);
-			this.debugLog(`监听器移除:${id}`);
+			this.log(`监听器移除:${id}`);
 		}
 	},
 	advanceTime(minutes) {
@@ -974,7 +1052,7 @@ export default {
 					}
 				}
 			} catch (e) {
-				this.debugLog(`监听器检查失败:${listener.id}`, e);
+				this.log(`监听器检查失败:${listener.id}`, e);
 			}
 		});
 	},
@@ -1031,45 +1109,48 @@ export default {
 		delete filtered.temp;
 		return filtered;
 	},
+// (saveStoryState 方法同样修改，如果还在使用的话)
+saveStoryState() {
+    const state = {
+        vars: deepClone(this.filterTempVars(this.vars)),
+        currentNodeId: this.currentNodeId,
+        listeners: deepClone(this.listeners),
+    };
+    storage.set({
+        key: this.STORAGE_KEY,
+        value: JSON.stringify(state),
+        success: () => this.log("log", "游戏状态已自动保存"),
+        fail: (code) => this.log('debug', `保存失败: code=${code}`),
+    });
+},
 
-	saveStoryState() {
-		const state = {
-			vars: JSON.parse(JSON.stringify(this.filterTempVars(this.vars))),
-			currentNodeId: this.currentNodeId,
-			listeners: JSON.parse(JSON.stringify(this.listeners)),
-		};
-		storage.set({
-			key: this.STORAGE_KEY,
-			value: JSON.stringify(state),
-			success: () => this.debugLog("游戏状态已保存"),
-			fail: (code) => this.debugLog(`保存失败:code=${code}`),
-		});
-	},
+saveToSlot(slotIndex) {
+    if (!this.validateSlotIndex(slotIndex)) return;
 
-	saveToSlot(slotIndex) {
-		if (!this.validateSlotIndex(slotIndex)) return;
-		const saveData = {
-			time: this.getCurrentDateTime(),
-			state: {
-				vars: JSON.parse(JSON.stringify(this.filterTempVars(this.vars))),
-				currentNodeId: this.currentNodeId,
-				listeners: JSON.parse(JSON.stringify(this.listeners)),
-			},
-		};
-		storage.set({
-			key: this.getSlotKey(slotIndex),
-			value: JSON.stringify(saveData),
-			success: () => {
-				this.saveSlots[slotIndex] = saveData;
-				if (slotIndex === 0) {
-					this.showToast("自动存档成功", 1000);
-				} else {
-					this.showToast(`存档${slotIndex}成功`, 1000);
-				}
-			},
-			fail: () => this.showToast("存档失败", 1000),
-		});
-	},
+    // 优化：先克隆再删除，而不是使用 filterTempVars 创建额外副本
+    const varsToSave = deepClone(this.vars);
+    delete varsToSave.temp;
+
+    const saveData = {
+        time: this.getCurrentDateTime(),
+        state: {
+            vars: varsToSave,
+            currentNodeId: this.currentNodeId,
+            listeners: deepClone(this.listeners),
+        },
+    };
+    storage.set({
+        key: this.getSlotKey(slotIndex),
+        value: JSON.stringify(saveData),
+        success: () => {
+            this.saveSlots[slotIndex] = { time: saveData.time }; // 只更新时间，避免UI重新渲染整个对象
+            const message = slotIndex === 0 ? "自动存档成功" : `存档${slotIndex}成功`;
+            this.showToast(message, 1000);
+            this.log('log', `游戏存档：${message}`);
+        },
+        fail: () => this.showToast("存档失败", 1000),
+    });
+},
 	loadFromSlot(slotIndex) {
 		slotIndex = Number(slotIndex);
 		if (!this.validateSlotIndex(slotIndex)) return;
@@ -1180,11 +1261,51 @@ export default {
 		if (hour < 20) return "傍晚";
 		return "夜晚";
 	},
-	debugLog(message) {
-		if (this.debugMode) {
-			this.showToast(`${message}`, 500);
-		}
-	},
+// ========================================================================
+// 新增/替换：统一日志处理方法
+// ========================================================================
+log(level, message, ...args) {
+    // 日志等级权重
+    const levels = {
+        log: 1,     // 面向用户的核心流程日志
+        debug: 2,   // 用于排查问题的调试日志
+        develop: 3, // 面向开发者的最详细日志
+    };
+
+    // 如果设置的日志等级低于当前日志的等级，则不打印
+    if (levels[this.logLevel] < levels[level]) {
+        return;
+    }
+
+    // 格式化当前时间
+    const now = new Date();
+    const timestamp = `${now.getHours().toString().padStart(2, "0")}:${now
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}.${now
+        .getMilliseconds()
+        .toString()
+        .padStart(3, "0")}`;
+
+    // 格式化输出
+    const levelTag = `[${level.toUpperCase()}]`;
+    const finalMessage = `${timestamp} ${levelTag} ${message}`;
+    
+    // 统一通过 console.log 输出，便于后续统一重定向到文件
+    if (args.length > 0) {
+        console.log(finalMessage, ...args);
+    } else {
+        console.log(finalMessage);
+    }
+
+    // (可选) 如果是调试模式，同时在界面上用 Toast 显示 'debug' 级别以上的日志
+    if (this.debugMode && levels[level] >= levels['debug']) {
+        // 避免在 Toast 中显示复杂的对象
+        const toastMsg = typeof message === 'string' ? message : JSON.stringify(message);
+        this.showToast(toastMsg, 800);
+    }
+},
+
 	showToast(message, duration = 2000) {
 		prompt.showToast({ message, duration });
 	},

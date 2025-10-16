@@ -1,8 +1,8 @@
 {
   "package": "moe.orpu.bandtwine",
   "name": "BandTwine",
-  "versionName": "0.4-alpha",
-  "versionCode": 4,
+  "versionName": "1.0-rel",
+  "versionCode": 10,
   "minPlatformVersion": 1000,
   "icon": "/common/icon.png",
   "deviceTypeList": [

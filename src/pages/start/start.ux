@@ -29,14 +29,14 @@
 
 <script>
 import router from "@system.router";
-import storyData from "../../common/data.json";
+import metadata from "../../common/metadata.js";
 
 export default {
 	private: {
 		title: "开始",
 		time: [0, 0, 0, 0],
 		timer: null,
-		copyrightInfo: storyData.metadata.copyright,
+		copyrightInfo: metadata.copyright,
 	},
 
 	onInit() {

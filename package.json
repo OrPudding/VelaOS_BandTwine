@@ -7,13 +7,12 @@
   },
   "scripts": {
     "start": "aiot server --watch --open-nuttx",
-    "build": "aiot build",
-    "release": "aiot release --enable-image-png8 --drop-console=true --enable-protobuf --enable-jsc",
+    "compile": "node ./scripts/compile.js",
+    "compile:force": "node ./scripts/compile.js --force",
+    "build": "npm run compile && aiot build --enable-jsc --enable-protobuf",
+    "release": "npm run compile && aiot release --enable-jsc --enable-protobuf",
     "watch": "aiot watch --open-nuttx",
-    "lint": "eslint --format codeframe --fix --ext .ux,.js src/",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "lint": "eslint --format codeframe --fix --ext .ux,.js src/"
   },
   "lint-staged": {
     "*.{ux,js}": [
@@ -32,6 +31,8 @@
     "@commitlint/config-conventional": "^17.3.0",
     "aiot-toolkit": "2.0.5",
     "babel-eslint": "^10.0.1",
+    "conditional-compilation-webpack-plugin": "^1.0.0",
+    "cross-env": "^10.0.0",
     "eslint": "^6.0.0",
     "eslint-config-prettier": "^6.0.0",
     "eslint-import-resolver-node": "^0.3.7",
@@ -49,8 +50,7 @@
     "stylelint-config-recess-order": "^3.0.0",
     "stylelint-config-standard": "^25.0.0",
     "stylelint-order": "^5.0.0",
-    "ux-types": "^0.1.1",
-    "vitepress": "^1.2.3"
+    "ux-types": "^0.1.1"
   },
   "dependencies": {
     "@aiot-toolkit/jsc": "^1.0.7",
