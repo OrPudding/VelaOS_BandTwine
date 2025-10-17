@@ -1,5 +1,5 @@
 // BandTwine 自动生成: 核心故事数据
-// 生成时间: 2025-10-16T16:15:21.905Z
+// 生成时间: 2025-10-17T05:40:11.177Z
 
 export default {
   "variables": {
@@ -141,118 +141,151 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "引擎核心特性测试"
+          "content": "引擎核心特性测试",
+          "tid": "start-text-0"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "v0.3.0-beta"
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-1"
         },
         {
           "type": "text",
-          "content": "测试项目："
+          "content": "v0.3.0-beta",
+          "tid": "start-text-2"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-3"
+        },
+        {
+          "type": "text",
+          "content": "测试项目：",
+          "tid": "start-text-4"
+        },
+        {
+          "type": "newline",
+          "tid": "start-newline-5"
         },
         {
           "type": "link",
+          "tid": "start-link-6",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-7"
         },
         {
           "type": "link",
+          "tid": "start-link-8",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-9"
         },
         {
           "type": "link",
+          "tid": "start-link-10",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-11"
         },
         {
           "type": "link",
+          "tid": "start-link-12",
           "index": 3
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-13"
         },
         {
           "type": "link",
+          "tid": "start-link-14",
           "index": 4
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-15"
         },
         {
           "type": "link",
+          "tid": "start-link-16",
           "index": 5
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-17"
         },
         {
           "type": "link",
+          "tid": "start-link-18",
           "index": 6
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-19"
         },
         {
           "type": "link",
+          "tid": "start-link-20",
           "index": 7
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-21"
         },
         {
           "type": "link",
+          "tid": "start-link-22",
           "index": 8
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-23"
         },
         {
           "type": "link",
+          "tid": "start-link-24",
           "index": 9
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-25"
         },
         {
           "type": "link",
+          "tid": "start-link-26",
           "index": 10
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-27"
         },
         {
           "type": "link",
+          "tid": "start-link-28",
           "index": 11
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-29"
         },
         {
           "type": "link",
+          "tid": "start-link-30",
           "index": 12
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "start-newline-31"
         },
         {
           "type": "link",
+          "tid": "start-link-32",
           "index": 13
         }
       ]
@@ -267,41 +300,52 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "基础功能测试"
+          "content": "基础功能测试",
+          "tid": "test_basic-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_basic-newline-1"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "特殊符号：&lt;&gt;@#"
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_basic-newline-2"
         },
         {
           "type": "text",
-          "content": "变量显示："
+          "content": "特殊符号：&lt;&gt;@#",
+          "tid": "test_basic-text-3"
+        },
+        {
+          "type": "newline",
+          "tid": "test_basic-newline-4"
+        },
+        {
+          "type": "text",
+          "content": "变量显示：",
+          "tid": "test_basic-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_basic-variable-6",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_basic-newline-7"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_basic-newline-8"
         },
         {
           "type": "text",
-          "content": "长文本测试：这是一段用于测试文本显示能力的长文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容"
+          "content": "长文本测试：这是一段用于测试文本显示能力的长文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容文本内容",
+          "tid": "test_basic-text-9"
         },
         {
           "type": "link",
+          "tid": "test_basic-link-10",
           "index": 0
         }
       ]
@@ -386,95 +430,121 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "变量操作测试"
+          "content": "变量操作测试",
+          "tid": "test_variables-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-1"
         },
         {
           "type": "text",
-          "content": "当前计数器："
+          "content": "当前计数器：",
+          "tid": "test_variables-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_variables-variable-3",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-4"
         },
         {
           "type": "text",
-          "content": "当前分数："
+          "content": "当前分数：",
+          "tid": "test_variables-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_variables-variable-6",
           "path": "show.score.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-7"
         },
         {
           "type": "text",
-          "content": "当前状态："
+          "content": "当前状态：",
+          "tid": "test_variables-text-8"
         },
         {
           "type": "variable",
+          "tid": "test_variables-variable-9",
           "path": "show.flag.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-10"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_variables-text-11"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-12"
         },
         {
           "type": "link",
+          "tid": "test_variables-link-13",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-14"
         },
         {
           "type": "link",
+          "tid": "test_variables-link-15",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-16"
         },
         {
           "type": "link",
+          "tid": "test_variables-link-17",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-18"
         },
         {
           "type": "link",
+          "tid": "test_variables-link-19",
           "index": 3
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-20"
         },
         {
           "type": "link",
+          "tid": "test_variables-link-21",
           "index": 4
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-22"
         },
         {
           "type": "link",
+          "tid": "test_variables-link-23",
           "index": 5
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_variables-newline-24"
         },
         {
           "type": "link",
+          "tid": "test_variables-link-25",
           "index": 6
         }
       ]
@@ -562,98 +632,125 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "条件逻辑测试"
+          "content": "条件逻辑测试",
+          "tid": "test_conditions-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-1"
         },
         {
           "type": "text",
-          "content": "计数器："
+          "content": "计数器：",
+          "tid": "test_conditions-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_conditions-variable-3",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-4"
         },
         {
           "type": "text",
-          "content": "状态："
+          "content": "状态：",
+          "tid": "test_conditions-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_conditions-variable-6",
           "path": "show.flag.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-7"
         },
         {
           "type": "text",
-          "content": "基础条件："
+          "content": "基础条件：",
+          "tid": "test_conditions-text-8"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-9"
         },
         {
           "type": "condition",
+          "tid": "test_conditions-condition-10",
           "id": "basic"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-11"
         },
         {
           "type": "text",
-          "content": "复杂条件："
+          "content": "复杂条件：",
+          "tid": "test_conditions-text-12"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-13"
         },
         {
           "type": "condition",
+          "tid": "test_conditions-condition-14",
           "id": "complex"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-15"
         },
         {
           "type": "text",
-          "content": "嵌套条件："
+          "content": "嵌套条件：",
+          "tid": "test_conditions-text-16"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-17"
         },
         {
           "type": "condition",
+          "tid": "test_conditions-condition-18",
           "id": "nested"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-19"
         },
         {
           "type": "link",
+          "tid": "test_conditions-link-20",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-21"
         },
         {
           "type": "link",
+          "tid": "test_conditions-link-22",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-23"
         },
         {
           "type": "link",
+          "tid": "test_conditions-link-24",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_conditions-newline-25"
         },
         {
           "type": "link",
+          "tid": "test_conditions-link-26",
           "index": 3
         }
       ]
@@ -730,88 +827,112 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "随机测试"
+          "content": "随机测试",
+          "tid": "test_random-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-1"
         },
         {
           "type": "text",
-          "content": "基础随机："
+          "content": "基础随机：",
+          "tid": "test_random-text-2"
         },
         {
           "type": "random",
+          "tid": "test_random-random-3",
           "id": "basic"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-4"
         },
         {
           "type": "text",
-          "content": "权重随机："
+          "content": "权重随机：",
+          "tid": "test_random-text-5"
         },
         {
           "type": "random",
+          "tid": "test_random-random-6",
           "id": "weighted"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-7"
         },
         {
           "type": "text",
-          "content": "条件随机："
+          "content": "条件随机：",
+          "tid": "test_random-text-8"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-9"
         },
         {
           "type": "random",
+          "tid": "test_random-random-10",
           "id": "conditional"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-11"
         },
         {
           "type": "text",
-          "content": "(增加计数器到5试试？)"
+          "content": "(增加计数器到5试试？)",
+          "tid": "test_random-text-12"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-13"
         },
         {
           "type": "link",
+          "tid": "test_random-link-14",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-15"
         },
         {
           "type": "link",
+          "tid": "test_random-link-16",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-17"
         },
         {
           "type": "text",
-          "content": "计数器："
+          "content": "计数器：",
+          "tid": "test_random-text-18"
         },
         {
           "type": "variable",
+          "tid": "test_random-variable-19",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-20"
         },
         {
           "type": "link",
+          "tid": "test_random-link-21",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_random-newline-22"
         },
         {
           "type": "link",
+          "tid": "test_random-link-23",
           "index": 3
         }
       ]
@@ -840,40 +961,50 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "图片测试"
+          "content": "图片测试",
+          "tid": "test_images-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_images-newline-1"
         },
         {
           "type": "text",
-          "content": "这是一个宽度为120px的图片"
+          "content": "这是一个宽度为120px的图片",
+          "tid": "test_images-text-2"
         },
         {
           "type": "image",
+          "tid": "test_images-image-3",
           "id": "120px"
         },
         {
           "type": "text",
-          "content": "这是一个多层路径的图片"
+          "content": "这是一个多层路径的图片",
+          "tid": "test_images-text-4"
         },
         {
           "type": "image",
+          "tid": "test_images-image-5",
           "id": "120px.alt"
         },
         {
           "type": "text",
-          "content": "这是一个动态路径的图片"
+          "content": "这是一个动态路径的图片",
+          "tid": "test_images-text-6"
         },
         {
           "type": "image",
+          "tid": "test_images-image-7",
           "id": "dynamic"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_images-newline-8"
         },
         {
           "type": "link",
+          "tid": "test_images-link-9",
           "index": 0
         }
       ]
@@ -892,42 +1023,53 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "存档测试"
+          "content": "存档测试",
+          "tid": "test_save-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save-newline-1"
         },
         {
           "type": "text",
-          "content": "当前计数器："
+          "content": "当前计数器：",
+          "tid": "test_save-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_save-variable-3",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save-newline-4"
         },
         {
           "type": "text",
-          "content": "当前状态："
+          "content": "当前状态：",
+          "tid": "test_save-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_save-variable-6",
           "path": "show.flag.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save-newline-7"
         },
         {
           "type": "link",
+          "tid": "test_save-link-8",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save-newline-9"
         },
         {
           "type": "link",
+          "tid": "test_save-link-10",
           "index": 1
         }
       ]
@@ -963,49 +1105,62 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "修改测试数据"
+          "content": "修改测试数据",
+          "tid": "test_save_modify-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save_modify-newline-1"
         },
         {
           "type": "text",
-          "content": "当前计数器："
+          "content": "当前计数器：",
+          "tid": "test_save_modify-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_save_modify-variable-3",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save_modify-newline-4"
         },
         {
           "type": "text",
-          "content": "当前状态："
+          "content": "当前状态：",
+          "tid": "test_save_modify-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_save_modify-variable-6",
           "path": "show.flag.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save_modify-newline-7"
         },
         {
           "type": "link",
+          "tid": "test_save_modify-link-8",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save_modify-newline-9"
         },
         {
           "type": "link",
+          "tid": "test_save_modify-link-10",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_save_modify-newline-11"
         },
         {
           "type": "link",
+          "tid": "test_save_modify-link-12",
           "index": 2
         }
       ]
@@ -1051,142 +1206,182 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "表达式测试"
+          "content": "表达式测试",
+          "tid": "test_expressions-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-1"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "【简单表达式】"
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-2"
         },
         {
           "type": "text",
-          "content": "10+20*3 = "
+          "content": "【简单表达式】",
+          "tid": "test_expressions-text-3"
+        },
+        {
+          "type": "newline",
+          "tid": "test_expressions-newline-4"
+        },
+        {
+          "type": "text",
+          "content": "10+20*3 = ",
+          "tid": "test_expressions-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_expressions-variable-6",
           "path": "test.expr1"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-7"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "【变量表达式】"
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-8"
         },
         {
           "type": "text",
-          "content": "var.show.counter.value*2+5 = "
+          "content": "【变量表达式】",
+          "tid": "test_expressions-text-9"
+        },
+        {
+          "type": "newline",
+          "tid": "test_expressions-newline-10"
+        },
+        {
+          "type": "text",
+          "content": "var.show.counter.value*2+5 = ",
+          "tid": "test_expressions-text-11"
         },
         {
           "type": "variable",
+          "tid": "test_expressions-variable-12",
           "path": "test.expr2"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-13"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "【条件表达式】"
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-14"
         },
         {
           "type": "text",
-          "content": "var.show.counter.value > 5 ? '大于5' : '小于等于5' = "
+          "content": "【条件表达式】",
+          "tid": "test_expressions-text-15"
+        },
+        {
+          "type": "newline",
+          "tid": "test_expressions-newline-16"
+        },
+        {
+          "type": "text",
+          "content": "var.show.counter.value > 5 ? '大于5' : '小于等于5' = ",
+          "tid": "test_expressions-text-17"
         },
         {
           "type": "variable",
+          "tid": "test_expressions-variable-18",
           "path": "test.expr3"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-19"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "【嵌套表达式】"
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-20"
         },
         {
           "type": "text",
-          "content": "(10 + var.show.counter.value) * (var.show.flag.value ? 2 : 1) = "
+          "content": "【嵌套表达式】",
+          "tid": "test_expressions-text-21"
+        },
+        {
+          "type": "newline",
+          "tid": "test_expressions-newline-22"
+        },
+        {
+          "type": "text",
+          "content": "(10 + var.show.counter.value) * (var.show.flag.value ? 2 : 1) = ",
+          "tid": "test_expressions-text-23"
         },
         {
           "type": "variable",
+          "tid": "test_expressions-variable-24",
           "path": "test.expr4"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-25"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "【复杂嵌套表达式】"
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-26"
         },
         {
           "type": "text",
-          "content": "var.show.counter.value > 10 ? "
+          "content": "【复杂嵌套表达式】",
+          "tid": "test_expressions-text-27"
         },
         {
-          "type": "newline"
-        },
-        {
-          "type": "text",
-          "content": "  (var.show.flag.value ? 'A' : 'B') : "
-        },
-        {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-28"
         },
         {
           "type": "text",
-          "content": "  (var.show.counter.value > 5 ? 'C' : 'D') = "
+          "content": "var.show.counter.value > 10 ? ",
+          "tid": "test_expressions-text-29"
+        },
+        {
+          "type": "newline",
+          "tid": "test_expressions-newline-30"
+        },
+        {
+          "type": "text",
+          "content": "  (var.show.flag.value ? 'A' : 'B') : ",
+          "tid": "test_expressions-text-31"
+        },
+        {
+          "type": "newline",
+          "tid": "test_expressions-newline-32"
+        },
+        {
+          "type": "text",
+          "content": "  (var.show.counter.value > 5 ? 'C' : 'D') = ",
+          "tid": "test_expressions-text-33"
         },
         {
           "type": "variable",
+          "tid": "test_expressions-variable-34",
           "path": "test.expr5"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-35"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-36"
         },
         {
           "type": "link",
+          "tid": "test_expressions-link-37",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_expressions-newline-38"
         },
         {
           "type": "link",
+          "tid": "test_expressions-link-39",
           "index": 1
         }
       ]
@@ -1221,34 +1416,43 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "振动功能测试"
+          "content": "振动功能测试",
+          "tid": "test_vibrate-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_vibrate-newline-1"
         },
         {
           "type": "text",
-          "content": "选择振动类型："
+          "content": "选择振动类型：",
+          "tid": "test_vibrate-text-2"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_vibrate-newline-3"
         },
         {
           "type": "link",
+          "tid": "test_vibrate-link-4",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_vibrate-newline-5"
         },
         {
           "type": "link",
+          "tid": "test_vibrate-link-6",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_vibrate-newline-7"
         },
         {
           "type": "link",
+          "tid": "test_vibrate-link-8",
           "index": 2
         }
       ]
@@ -1319,63 +1523,80 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "监听器测试"
+          "content": "监听器测试",
+          "tid": "test_watcher-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_watcher-newline-1"
         },
         {
           "type": "text",
-          "content": "当前计数器："
+          "content": "当前计数器：",
+          "tid": "test_watcher-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_watcher-variable-3",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_watcher-newline-4"
         },
         {
           "type": "text",
-          "content": "监听器状态："
+          "content": "监听器状态：",
+          "tid": "test_watcher-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_watcher-variable-6",
           "path": "show.watcher.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_watcher-newline-7"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_watcher-text-8"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_watcher-newline-9"
         },
         {
           "type": "link",
+          "tid": "test_watcher-link-10",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_watcher-newline-11"
         },
         {
           "type": "link",
+          "tid": "test_watcher-link-12",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_watcher-newline-13"
         },
         {
           "type": "link",
+          "tid": "test_watcher-link-14",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_watcher-newline-15"
         },
         {
           "type": "link",
+          "tid": "test_watcher-link-16",
           "index": 3
         }
       ]
@@ -1403,45 +1624,57 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "自动存档测试"
+          "content": "自动存档测试",
+          "tid": "test_autosave-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave-newline-1"
         },
         {
           "type": "text",
-          "content": "当前计数器："
+          "content": "当前计数器：",
+          "tid": "test_autosave-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_autosave-variable-3",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave-newline-4"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_autosave-text-5"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave-newline-6"
         },
         {
           "type": "link",
+          "tid": "test_autosave-link-7",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave-newline-8"
         },
         {
           "type": "link",
+          "tid": "test_autosave-link-9",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave-newline-10"
         },
         {
           "type": "link",
+          "tid": "test_autosave-link-11",
           "index": 2
         }
       ]
@@ -1478,38 +1711,48 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "修改测试数据"
+          "content": "修改测试数据",
+          "tid": "test_autosave_modify-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave_modify-newline-1"
         },
         {
           "type": "text",
-          "content": "当前计数器："
+          "content": "当前计数器：",
+          "tid": "test_autosave_modify-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_autosave_modify-variable-3",
           "path": "show.counter.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave_modify-newline-4"
         },
         {
           "type": "link",
+          "tid": "test_autosave_modify-link-5",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave_modify-newline-6"
         },
         {
           "type": "link",
+          "tid": "test_autosave_modify-link-7",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_autosave_modify-newline-8"
         },
         {
           "type": "link",
+          "tid": "test_autosave_modify-link-9",
           "index": 2
         }
       ]
@@ -1554,63 +1797,80 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "时间系统测试"
+          "content": "时间系统测试",
+          "tid": "test_time-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time-newline-1"
         },
         {
           "type": "text",
-          "content": "当前时间："
+          "content": "当前时间：",
+          "tid": "test_time-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_time-variable-3",
           "path": "world.formattedTime"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time-newline-4"
         },
         {
           "type": "text",
-          "content": "当前天数："
+          "content": "当前天数：",
+          "tid": "test_time-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_time-variable-6",
           "path": "world.day"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time-newline-7"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_time-text-8"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time-newline-9"
         },
         {
           "type": "link",
+          "tid": "test_time-link-10",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time-newline-11"
         },
         {
           "type": "link",
+          "tid": "test_time-link-12",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time-newline-13"
         },
         {
           "type": "link",
+          "tid": "test_time-link-14",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time-newline-15"
         },
         {
           "type": "link",
+          "tid": "test_time-link-16",
           "index": 3
         }
       ]
@@ -1695,70 +1955,89 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "时间监听器测试"
+          "content": "时间监听器测试",
+          "tid": "test_time_listeners-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-1"
         },
         {
           "type": "text",
-          "content": "当前时间："
+          "content": "当前时间：",
+          "tid": "test_time_listeners-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_time_listeners-variable-3",
           "path": "world.formattedTime"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-4"
         },
         {
           "type": "text",
-          "content": "监听器状态："
+          "content": "监听器状态：",
+          "tid": "test_time_listeners-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_time_listeners-variable-6",
           "path": "show.watcher.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-7"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_time_listeners-text-8"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-9"
         },
         {
           "type": "link",
+          "tid": "test_time_listeners-link-10",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-11"
         },
         {
           "type": "link",
+          "tid": "test_time_listeners-link-12",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-13"
         },
         {
           "type": "link",
+          "tid": "test_time_listeners-link-14",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-15"
         },
         {
           "type": "link",
+          "tid": "test_time_listeners-link-16",
           "index": 3
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_listeners-newline-17"
         },
         {
           "type": "link",
+          "tid": "test_time_listeners-link-18",
           "index": 4
         }
       ]
@@ -1814,56 +2093,71 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "自定义时间监听测试"
+          "content": "自定义时间监听测试",
+          "tid": "test_time_custom-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_custom-newline-1"
         },
         {
           "type": "text",
-          "content": "当前时间："
+          "content": "当前时间：",
+          "tid": "test_time_custom-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_time_custom-variable-3",
           "path": "world.formattedTime"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_custom-newline-4"
         },
         {
           "type": "text",
-          "content": "监听器状态："
+          "content": "监听器状态：",
+          "tid": "test_time_custom-text-5"
         },
         {
           "type": "variable",
+          "tid": "test_time_custom-variable-6",
           "path": "show.watcher.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_custom-newline-7"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_time_custom-text-8"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_custom-newline-9"
         },
         {
           "type": "link",
+          "tid": "test_time_custom-link-10",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_custom-newline-11"
         },
         {
           "type": "link",
+          "tid": "test_time_custom-link-12",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_time_custom-newline-13"
         },
         {
           "type": "link",
+          "tid": "test_time_custom-link-14",
           "index": 2
         }
       ]
@@ -1924,52 +2218,66 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "Toast消息测试"
+          "content": "Toast消息测试",
+          "tid": "test_toast-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_toast-newline-1"
         },
         {
           "type": "text",
-          "content": "Toast计数："
+          "content": "Toast计数：",
+          "tid": "test_toast-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_toast-variable-3",
           "path": "show.toastCount.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_toast-newline-4"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_toast-text-5"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_toast-newline-6"
         },
         {
           "type": "link",
+          "tid": "test_toast-link-7",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_toast-newline-8"
         },
         {
           "type": "link",
+          "tid": "test_toast-link-9",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_toast-newline-10"
         },
         {
           "type": "link",
+          "tid": "test_toast-link-11",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_toast-newline-12"
         },
         {
           "type": "link",
+          "tid": "test_toast-link-13",
           "index": 3
         }
       ]
@@ -2062,59 +2370,75 @@ export default {
       "segments": [
         {
           "type": "text",
-          "content": "Jump跳转测试"
+          "content": "Jump跳转测试",
+          "tid": "test_jump-text-0"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_jump-newline-1"
         },
         {
           "type": "text",
-          "content": "最近跳转目标："
+          "content": "最近跳转目标：",
+          "tid": "test_jump-text-2"
         },
         {
           "type": "variable",
+          "tid": "test_jump-variable-3",
           "path": "show.jumpTarget.value"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_jump-newline-4"
         },
         {
           "type": "text",
-          "content": "操作选项："
+          "content": "操作选项：",
+          "tid": "test_jump-text-5"
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_jump-newline-6"
         },
         {
           "type": "link",
+          "tid": "test_jump-link-7",
           "index": 0
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_jump-newline-8"
         },
         {
           "type": "link",
+          "tid": "test_jump-link-9",
           "index": 1
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_jump-newline-10"
         },
         {
           "type": "link",
+          "tid": "test_jump-link-11",
           "index": 2
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_jump-newline-12"
         },
         {
           "type": "link",
+          "tid": "test_jump-link-13",
           "index": 3
         },
         {
-          "type": "newline"
+          "type": "newline",
+          "tid": "test_jump-newline-14"
         },
         {
           "type": "link",
+          "tid": "test_jump-link-15",
           "index": 4
         }
       ]

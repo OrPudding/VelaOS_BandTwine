@@ -18,49 +18,52 @@ const STORY_OUTPUT_PATH = path.join(__dirname, '../src/common/story.compiled.js'
 /**
  * 解析包含标记的文本，并将其转换为结构化的指令数组。
  * @param {string} text - 包含标记的原始文本。
+ * @param {string} nodeId - 当前节点的ID，用于生成全局唯一的tid。 // --- 核心修改 ---
  * @returns {Array<Object>} - 代表渲染指令的 segment 对象数组。
  */
-function compileText(text) {
+function compileText(text, nodeId) { // --- 核心修改 ---
     if (typeof text !== 'string' || !text) {
         return [];
     }
     const segments = [];
-    // 正则表达式，用于匹配所有支持的标记类型
     const regex = /(\{\w+\.?[\w.]*\}|\n|\$\([^)]+\))/g;
     let lastIndex = 0;
     let match;
+    let segmentCounter = 0; // --- 核心修改 ---
+
+    const createSegment = (type, data) => { // --- 核心修改: 辅助函数 ---
+        const tid = `${nodeId}-${type}-${segmentCounter++}`;
+        return { type, tid, ...data };
+    };
 
     while ((match = regex.exec(text)) !== null) {
-        // 添加标记前的纯文本部分
         if (match.index > lastIndex) {
-            segments.push({ type: 'text', content: text.substring(lastIndex, match.index) });
+            segments.push(createSegment('text', { content: text.substring(lastIndex, match.index) }));
         }
 
         const matched = match[0];
         if (matched === '\n') {
-            segments.push({ type: 'newline' });
+            segments.push(createSegment('newline', {}));
         } else if (matched.startsWith('{var.')) {
-            segments.push({ type: 'variable', path: matched.slice(5, -1) });
+            segments.push(createSegment('variable', { path: matched.slice(5, -1) }));
         } else if (matched.startsWith('{cond.')) {
-            segments.push({ type: 'condition', id: matched.slice(6, -1) });
+            segments.push(createSegment('condition', { id: matched.slice(6, -1) }));
         } else if (matched.startsWith('{random.')) {
-            segments.push({ type: 'random', id: matched.slice(8, -1) });
+            segments.push(createSegment('random', { id: matched.slice(8, -1) }));
         } else if (matched.startsWith('{img.')) {
-            segments.push({ type: 'image', id: matched.slice(5, -1) });
+            segments.push(createSegment('image', { id: matched.slice(5, -1) }));
         } else if (matched.startsWith('$(')) {
-            segments.push({ type: 'expression', code: matched.slice(2, -1) });
+            segments.push(createSegment('expression', { code: matched.slice(2, -1) }));
         } else if (/^\{\d+\}$/.test(matched)) {
-            segments.push({ type: 'link', index: parseInt(matched.slice(1, -1), 10) });
+            segments.push(createSegment('link', { index: parseInt(matched.slice(1, -1), 10) }));
         } else {
-            // 未知或格式错误的标记，作为纯文本处理
-            segments.push({ type: 'text', content: matched });
+            segments.push(createSegment('text', { content: matched }));
         }
         lastIndex = match.index + matched.length;
     }
 
-    // 添加最后一个标记后的纯文本部分
     if (lastIndex < text.length) {
-        segments.push({ type: 'text', content: text.substring(lastIndex) });
+        segments.push(createSegment('text', { content: text.substring(lastIndex) }));
     }
     return segments;
 }
@@ -208,7 +211,8 @@ function main() {
         for (const nodeId in combinedStoryData.nodes) {
             const node = combinedStoryData.nodes[nodeId];
             if (node.hasOwnProperty('text')) {
-                node.segments = compileText(node.text);
+                // --- 核心修改: 传入 nodeId ---
+                node.segments = compileText(node.text, nodeId);
                 delete node.text; // 删除原始文本，减小最终包体积
                 compiledCount++;
             }
@@ -217,34 +221,41 @@ function main() {
     }
 
     // 6.5. 后处理：合并连续的文本节点
-if (combinedStoryData.nodes) {
-    console.log('开始后处理：合并连续文本节点...');
-    for (const nodeId in combinedStoryData.nodes) {
-        const node = combinedStoryData.nodes[nodeId];
-        if (node.segments && node.segments.length > 1) {
-            const mergedSegments = [];
-            let textBuffer = '';
+    if (combinedStoryData.nodes) {
+        console.log('开始后处理：合并连续文本节点...');
+        for (const nodeId in combinedStoryData.nodes) {
+            const node = combinedStoryData.nodes[nodeId];
+            if (node.segments && node.segments.length > 1) {
+                const mergedSegments = [];
+                let textBuffer = '';
+                let textBlockTid = null; // --- 核心修改: 用于记录合并块的TID ---
 
-            for (const segment of node.segments) {
-                if (segment.type === 'text') {
-                    textBuffer += segment.content;
-                } else {
-                    if (textBuffer) {
-                        mergedSegments.push({ type: 'text', content: textBuffer });
-                        textBuffer = '';
+                for (const segment of node.segments) {
+                    if (segment.type === 'text') {
+                        textBuffer += segment.content;
+                        // --- 核心修改: 如果是第一个文本，则记录其tid ---
+                        if (textBlockTid === null) {
+                            textBlockTid = segment.tid;
+                        }
+                    } else {
+                        if (textBuffer) {
+                            // --- 核心修改: 使用记录的tid ---
+                            mergedSegments.push({ type: 'text', content: textBuffer, tid: textBlockTid });
+                            textBuffer = '';
+                            textBlockTid = null; // 重置
+                        }
+                        mergedSegments.push(segment);
                     }
-                    mergedSegments.push(segment);
                 }
+                if (textBuffer) {
+                    // --- 核心修改: 使用记录的tid ---
+                    mergedSegments.push({ type: 'text', content: textBuffer, tid: textBlockTid });
+                }
+                node.segments = mergedSegments;
             }
-            // 处理结尾可能残留的 textBuffer
-            if (textBuffer) {
-                mergedSegments.push({ type: 'text', content: textBuffer });
-            }
-            node.segments = mergedSegments;
         }
+        console.log('文本节点合并完成。');
     }
-    console.log('文本节点合并完成。');
-}
 
     // 7. 生成并写入最终的 JS 模块
     try {

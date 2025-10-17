@@ -161,7 +161,7 @@
 			</div>
 			<!--内容区域-->
 			<div class="scene">
-				<block for="{{ segments }}">
+				<block for="{{ segments }}" tid="tid">
 					<text if="$item.type === 'text'" class="normal-text">
 						{{ $item.content }}
 					</text>
@@ -312,21 +312,35 @@ export default {
 		this.debugMode = e.checked;
 		this.showToast(`调试模式${e.checked ? "开启" : "关闭"}`);
 	},
-	handleImageError(e) {
-		const index = parseInt(e.target.dataset.index);
-		if (isNaN(index)) return;
-		const segment = this.segments[index];
-		if (segment?.type === "image") {
-			this.pushErrorSegment(`图片加载失败:${segment.path}`);
-		}
-	},
+// file: engine.ux
+
+handleImageError(e) {
+    const index = parseInt(e.target.dataset.index);
+    if (isNaN(index)) return;
+    
+    // 找到原始的image segment，它的tid是稳定的
+    const originalSegment = this.segments[index];
+    if (originalSegment?.type === 'image') {
+        // 创建一个新的error segment，并复用原始image segment的tid
+        // 这样渲染引擎会认为是“原地更新”，而不是“删除一个，新增一个”
+        const errorSegment = {
+            tid: originalSegment.tid, // <-- 复用TID
+            type: 'error',
+            content: `图片加载失败: ${originalSegment.path}`
+        };
+        // 使用 splice 原地替换，这比直接修改更符合数据驱动的原则
+        this.segments.splice(index, 1, errorSegment);
+    }
+},
+
+
 
 // 变更 4: 在 loadNode 函数中增加对“同节点跳转”的判断
 loadNode(nodeId) {
-    try {
-        // --- 增加一个变量来跟踪是否是同节点加载 ---
-        const isSameNodeLoad = (this.currentNodeId === nodeId);
+	        // --- 增加一个变量来跟踪是否是同节点加载 ---
+			const isSameNodeLoad = (this.currentNodeId === nodeId);
 
+    try {
         const jumpTarget = this.beforeLoadNode(nodeId);
         if (jumpTarget) {
             this.log(`监听器触发跳转:${jumpTarget}`);
@@ -366,22 +380,54 @@ loadNode(nodeId) {
 },
 
 // 变更 3: 彻底重构 processPrecompiledSegments，增加文本合并逻辑
+// ========================================================================
+// 最终优化版：processPrecompiledSegments
+// - 适配预编译的全局唯一 tid
+// - 智能处理文本合并时的 tid 稳定性
+// - 为动态生成的 segment 正确传递 tid
+// ========================================================================
 processPrecompiledSegments(segments) {
-    const finalSegments = [];
-    let textBuffer = ''; // 用于合并连续文本的缓冲区
+    // 如果节点没有内容，直接清空并返回
+    if (!segments || segments.length === 0) {
+        this.segments = [];
+        return;
+    }
 
+    const finalSegments = [];
+    let textBuffer = '';      // 用于合并连续文本的缓冲区
+    let textBlockTid = null;  // 记录当前合并文本块的起始TID，确保位置稳定
+
+    // 辅助函数，用于清空文本缓冲区并生成一个文本segment
     const flushTextBuffer = () => {
         if (textBuffer) {
-            finalSegments.push({ type: 'text', content: textBuffer });
+            finalSegments.push({
+                // 使用第一个被合并的segment的tid作为这个合并块的tid
+                tid: textBlockTid,
+                type: 'text',
+                content: textBuffer
+            });
+            // 重置状态
             textBuffer = '';
+            textBlockTid = null;
         }
     };
 
-    segments.forEach(seg => {
+    segments.forEach((seg, index) => {
+        // 如果预编译的segment没有tid，为其生成一个临时的运行时tid以保证渲染不出错
+        // 这种情况理论上不应该发生，但作为代码鲁棒性的保障
+        const currentTid = seg.tid || `runtime-${this.currentNodeId}-${index}`;
+
         let resolvedContent = null;
         let isTextLike = false; // 标记此 segment 是否应被视为文本
 
+        // 如果当前文本缓冲区为空，说明即将开始一个新的文本块
+        // 那么这个segment的tid将成为新文本块的稳定标识
+        if (textBuffer === '' && seg.type !== 'link' && seg.type !== 'image' && seg.type !== 'newline') {
+            textBlockTid = currentTid;
+        }
+
         switch (seg.type) {
+            // --- 文本类 Segment ---
             case 'text':
                 resolvedContent = seg.content;
                 isTextLike = true;
@@ -402,37 +448,48 @@ processPrecompiledSegments(segments) {
                 resolvedContent = this.parseExpression(seg.code);
                 isTextLike = true;
                 break;
-            
-            // 非文本类型，需要先清空缓冲区
+
+            // --- 非文本类 Segment ---
             case 'newline':
                 flushTextBuffer(); // 遇到换行，先将之前的文本推入
-                finalSegments.push(seg);
+                finalSegments.push({ type: 'newline', tid: currentTid });
                 break;
             case 'link':
                 flushTextBuffer(); // 遇到链接，先将之前的文本推入
                 const linkSegment = this.getLinkSegment(seg.index);
-                if (linkSegment) finalSegments.push(linkSegment);
+                if (linkSegment) {
+                    // 关键：将预编译的tid赋给动态生成的segment
+                    linkSegment.tid = currentTid;
+                    finalSegments.push(linkSegment);
+                }
                 break;
             case 'image':
                 flushTextBuffer(); // 遇到图片，先将之前的文本推入
                 const imageSegment = this.getImageSegment(seg.id);
-                if (imageSegment) finalSegments.push(imageSegment);
+                if (imageSegment) {
+                    // 关键：将预编译的tid赋给动态生成的segment
+                    imageSegment.tid = currentTid;
+                    finalSegments.push(imageSegment);
+                }
                 break;
 
             default:
-                console.warn('未知的预编译 segment 类型:', seg.type);
+                // 对于未知的segment类型，直接推入，确保tid存在
+                flushTextBuffer();
+                this.log('debug', `发现未知或未处理的segment类型: ${seg.type}`);
+                finalSegments.push({ ...seg, tid: currentTid });
         }
 
+        // 如果是文本类内容，并且解析出了有效值，则加入缓冲区
         if (isTextLike && resolvedContent !== null && resolvedContent !== undefined) {
-            // 将所有解析出的文本内容（无论来源）都加入缓冲区
-            textBuffer += String(resolvedContent); 
+            textBuffer += String(resolvedContent);
         }
     });
 
     // 循环结束后，不要忘记清空最后一次的缓冲区
     flushTextBuffer();
 
-    // 一次性赋值，高效触发UI更新
+    // 一次性赋值，利用tid机制高效触发UI更新
     this.segments = finalSegments;
 },
 
@@ -1314,9 +1371,12 @@ log(level, message, ...args) {
 		this.pushErrorSegment(msg);
 		this.showToast(msg);
 	},
+
 	pushErrorSegment(message) {
-		this.segments.push({ type: "error", content: message });
-	},
+    // 对于无法找到原始位置的错误，我们生成一个临时的运行时tid
+    const errorTid = `error-${Date.now()}-${Math.random()}`;
+    this.segments.push({ tid: errorTid, type: 'error', content: message });
+},
 };
 </script>
 <style>
